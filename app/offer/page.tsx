@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import styles from '../info-page.module.css';
 
 type Props = {
   title: string;
@@ -7,16 +8,16 @@ type Props = {
 
 function InfoPage({title, children}: Props) {
   return (
-    <div className="container mx-auto safe-px max-w-3xl pt-8 sm:pt-12 pb-16 sm:pb-24">
-      <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-6">
-        <Link href="/" className="hover:text-red-600">
+    <div className={styles.page}>
+      <div className={styles.breadcrumbs}>
+        <Link href="/">
           Главная
         </Link>
         <span>/</span>
-        <span className="text-gray-900">{title}</span>
+        <span className={styles.current}>{title}</span>
       </div>
-      <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-8">{title}</h1>
-      <div className="prose prose-sm max-w-none text-[14px] text-gray-700 leading-relaxed space-y-4">
+      <h1 className={styles.title}>{title}</h1>
+      <div className={styles.content}>
         {children}
       </div>
     </div>
@@ -37,7 +38,7 @@ export default function OfferPage() {
       </p>
       <p>
         По вопросам:{' '}
-        <a href="https://t.me/ducatiparts" className="text-red-600 hover:underline">
+        <a href="https://t.me/ducatiparts">
           @ducatiparts
         </a>
       </p>

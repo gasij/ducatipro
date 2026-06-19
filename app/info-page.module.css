@@ -1,0 +1,62 @@
+.page {
+  width: 100%;
+  max-width: var(--container-narrow);
+  margin: 0 auto;
+  padding: 2rem var(--safe-page-padding) 4rem;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.breadcrumbs a {
+  transition: color 160ms ease;
+}
+
+.breadcrumbs a:hover,
+.content a {
+  color: var(--color-accent);
+}
+
+.current {
+  color: var(--color-text);
+}
+
+.title {
+  margin: 0 0 2rem;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.content {
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.content p {
+  margin: 0;
+}
+
+.content p + p {
+  margin-top: 1rem;
+}
+
+.content a:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 640px) {
+  .page {
+    padding-top: 3rem;
+    padding-bottom: 6rem;
+  }
+}

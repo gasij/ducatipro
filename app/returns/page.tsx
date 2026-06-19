@@ -1,19 +1,20 @@
 import Link from 'next/link';
+import styles from '../info-page.module.css';
 
 export default function ReturnsPage() {
   return (
-    <div className="container mx-auto safe-px max-w-3xl pt-8 sm:pt-12 pb-16 sm:pb-24">
-      <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-6">
-        <Link href="/" className="hover:text-red-600">
+    <div className={styles.page}>
+      <div className={styles.breadcrumbs}>
+        <Link href="/">
           Главная
         </Link>
         <span>/</span>
-        <span className="text-gray-900">Условия обмена и возврата</span>
+        <span className={styles.current}>Условия обмена и возврата</span>
       </div>
-      <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-8">
+      <h1 className={styles.title}>
         Условия обмена и возврата
       </h1>
-      <div className="text-[14px] text-gray-700 leading-relaxed space-y-4">
+      <div className={styles.content}>
         <p>
           Возврат товара надлежащего качества возможен в течение 14 дней с момента получения,
           если сохранён товарный вид и упаковка.
@@ -24,7 +25,7 @@ export default function ReturnsPage() {
         </p>
         <p>
           Для оформления возврата свяжитесь с нами в Telegram:{' '}
-          <a href="https://t.me/ducatiparts" className="text-red-600 hover:underline">
+          <a href="https://t.me/ducatiparts">
             @ducatiparts
           </a>
         </p>

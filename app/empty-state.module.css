@@ -1,0 +1,63 @@
+.page {
+  width: 100%;
+  max-width: var(--container-wide);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  text-align: center;
+}
+
+.largePage {
+  padding-top: 4rem;
+}
+
+.icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1.5rem;
+  color: #d1d5db;
+  stroke-width: 1.5;
+}
+
+.title {
+  margin: 0 0 1rem;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.notFoundTitle {
+  font-size: 2.25rem;
+}
+
+.description {
+  margin: 0 0 2rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.action {
+  display: inline-block;
+  border-radius: 2px;
+  background: #000000;
+  color: #ffffff;
+  padding: 0.75rem 2rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: background-color 160ms ease;
+}
+
+.action:hover {
+  background: #111827;
+}
+
+@media (min-width: 640px) {
+  .page {
+    padding-top: 3rem;
+    padding-bottom: 6rem;
+  }
+
+  .largePage {
+    padding-top: 6rem;
+  }
+}

@@ -1,0 +1,465 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  background: #000000;
+  color: #ffffff;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-wide);
+  margin: 0 auto;
+  padding-right: var(--safe-page-padding);
+  padding-left: var(--safe-page-padding);
+}
+
+.topBar {
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  background: #111111;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  padding: 0.5rem 0;
+}
+
+.desktopTop {
+  display: none;
+}
+
+.mobileTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.topNav,
+.topMeta {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.topLink,
+.phoneLink {
+  transition: color 160ms ease;
+}
+
+.topLink:hover {
+  color: #ffffff;
+}
+
+.phoneLink {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.phoneLink:hover,
+.iconLink:hover,
+.mobileMenuButton:hover {
+  color: #f87171;
+}
+
+.mobilePhone {
+  min-width: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobileHours {
+  flex-shrink: 0;
+  color: #6b7280;
+}
+
+.mainBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.brandRow {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.logoLink {
+  display: flex;
+  min-width: 0;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.logo {
+  width: auto;
+  height: 1.75rem;
+  max-width: 160px;
+  transition: opacity 160ms ease;
+}
+
+.logoLink:hover .logo {
+  opacity: 0.9;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.75rem;
+  color: #d1d5db;
+}
+
+.mobileMenuButton,
+.searchButton,
+.closeButton {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.mobileMenuButton {
+  padding: 0.375rem;
+  transition: color 160ms ease;
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 1.5;
+}
+
+.menuIcon,
+.closeIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.iconLink,
+.cartLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: inherit;
+  transition: color 160ms ease;
+}
+
+.iconLink {
+  padding: 0.25rem;
+}
+
+.cartLink {
+  gap: 0.375rem;
+  padding: 0.25rem;
+}
+
+.iconWithBadge {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  display: flex;
+  width: 1rem;
+  height: 1rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #000000;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font-size: 0.5625rem;
+  font-weight: 700;
+}
+
+.cartTotal {
+  display: none;
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.cartLink:hover .cartTotal {
+  color: #f87171;
+}
+
+.search {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.searchInput {
+  width: 100%;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 2px;
+  outline: 0;
+  background: rgb(255 255 255 / 10%);
+  color: #ffffff;
+  font-size: 0.875rem;
+  padding: 0.625rem 3rem 0.625rem 1rem;
+}
+
+.searchInput::placeholder {
+  color: #6b7280;
+}
+
+.searchInput:focus {
+  border-color: rgb(255 255 255 / 40%);
+}
+
+.searchButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0 2px 2px 0;
+  transition: opacity 160ms ease;
+}
+
+.searchButton:hover {
+  opacity: 0.9;
+}
+
+.searchImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ticker {
+  overflow: hidden;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  background: #0a0a0a;
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.tickerViewport {
+  overflow: hidden;
+}
+
+.tickerTrack {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+}
+
+.tickerContent {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1rem;
+}
+
+.tickerLink:hover {
+  text-decoration: underline;
+}
+
+.tickerSeparator {
+  color: #4b5563;
+}
+
+.mobileOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.mobileBackdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(0 0 0 / 60%);
+  backdrop-filter: blur(4px);
+}
+
+.mobilePanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  width: min(100%, 320px);
+  height: 100%;
+  flex-direction: column;
+  border-left: 1px solid rgb(255 255 255 / 10%);
+  background: #111111;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 50%);
+}
+
+.mobilePanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  padding: 1rem;
+}
+
+.mobilePanelTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.closeButton {
+  padding: 0.5rem;
+  transition: color 160ms ease;
+}
+
+.closeButton:hover {
+  color: #f87171;
+}
+
+.mobileNav {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.5rem 0;
+  list-style: none;
+}
+
+.mobileNavLink {
+  display: block;
+  border-bottom: 1px solid rgb(255 255 255 / 5%);
+  padding: 1rem 1.25rem;
+  font-size: 0.9375rem;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.mobileNavLink:hover {
+  background: rgb(255 255 255 / 5%);
+  color: #f87171;
+}
+
+.mobilePanelFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  color: #9ca3af;
+  font-size: 0.875rem;
+  padding: 1.25rem;
+}
+
+.mobilePanelPhone {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+@media (min-width: 640px) {
+  .logo {
+    height: 2rem;
+    max-width: none;
+  }
+
+  .actions {
+    gap: 1.25rem;
+  }
+
+  .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .cartLink {
+    gap: 0.5rem;
+  }
+
+  .cartTotal {
+    display: inline;
+  }
+
+  .searchInput {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    padding-right: 3.5rem;
+  }
+
+  .searchButton {
+    width: 3.5rem;
+  }
+
+  .ticker {
+    font-size: 0.875rem;
+    padding: 0.75rem 0;
+  }
+
+  .tickerContent {
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .topBar {
+    font-size: 0.8125rem;
+  }
+
+  .mainBar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .brandRow {
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    height: 2.5rem;
+  }
+
+  .actions {
+    gap: 1.75rem;
+  }
+
+  .search {
+    flex: 1;
+  }
+
+  .cartTotal {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktopTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobileTop,
+  .mobileMenuButton,
+  .mobileOverlay {
+    display: none;
+  }
+
+  .mainBar {
+    gap: 2rem;
+  }
+}

@@ -1,0 +1,383 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-wide);
+  margin: 0 auto;
+  padding-right: var(--safe-page-padding);
+  padding-left: var(--safe-page-padding);
+}
+
+.banner {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.bannerImage {
+  width: 100%;
+  min-height: 140px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.productSection {
+  width: 100%;
+  max-width: var(--container-wide);
+  margin: 0 auto;
+  padding-right: var(--safe-page-padding);
+  padding-left: var(--safe-page-padding);
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  padding-right: 0.5rem;
+  color: var(--color-text);
+  font-size: 1.125rem;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  transition: color 160ms ease;
+}
+
+a.sectionTitle:hover {
+  color: var(--color-accent);
+}
+
+.sectionControls {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+  align-self: flex-end;
+}
+
+.sectionControl {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #4b5563;
+  transition: background-color 160ms ease;
+}
+
+.sectionControl:hover {
+  background: #e5e7eb;
+}
+
+.sectionControlIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.promoBlock {
+  margin-top: 1.5rem;
+}
+
+.promoHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.sectionLine {
+  display: none;
+  height: 2px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--color-accent);
+}
+
+.leftLine {
+  transform-origin: left;
+}
+
+.rightLine {
+  transform-origin: right;
+}
+
+.promoText {
+  max-width: 36rem;
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.instagramGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.instagramItem {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: #f3f4f6;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+}
+
+.instagramImage {
+  object-fit: cover;
+}
+
+.feedback {
+  width: 100%;
+  max-width: 42rem;
+  margin: 2.5rem auto 0;
+  padding-right: var(--safe-page-padding);
+  padding-left: var(--safe-page-padding);
+  text-align: center;
+}
+
+.feedbackTitle {
+  margin: 0 0 1.5rem;
+  color: var(--color-text);
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field,
+.message {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  outline: 0;
+  background: var(--color-soft);
+  font-size: 0.8125rem;
+  padding: 1rem 1.25rem;
+  transition: border-color 160ms ease;
+}
+
+.field:focus,
+.message:focus {
+  border-color: var(--color-accent);
+}
+
+.message {
+  resize: none;
+}
+
+.agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 1rem;
+  cursor: pointer;
+}
+
+.checkboxBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  appearance: none;
+  border: 1px solid #d1d5db;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.checkbox:checked {
+  border-color: #1f2937;
+  background: #1f2937;
+}
+
+.checkboxIcon {
+  position: absolute;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkbox:checked + .checkboxIcon {
+  opacity: 1;
+}
+
+.agreementText {
+  padding-top: 0.125rem;
+  color: #4b5563;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  transition: color 160ms ease;
+}
+
+.agreement:hover .agreementText {
+  color: var(--color-text);
+}
+
+.agreementLink {
+  color: var(--color-accent);
+}
+
+.agreementLink:hover {
+  text-decoration: underline;
+}
+
+.submitButton {
+  width: 100%;
+  margin: 2rem auto 0;
+  border: 0;
+  border-radius: 2px;
+  background: #333333;
+  color: #ffffff;
+  padding: 1rem 3rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  transition: background-color 160ms ease;
+}
+
+.submitButton:hover {
+  background: #222222;
+}
+
+@media (min-width: 640px) {
+  .page {
+    gap: 3.5rem;
+    padding-bottom: 4rem;
+  }
+
+  .bannerImage {
+    min-height: 200px;
+  }
+
+  .sectionHeader {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.25rem;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .promoBlock {
+    margin-top: 3rem;
+  }
+
+  .promoHeader {
+    flex-direction: row;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .sectionLine {
+    display: block;
+  }
+
+  .instagramGrid {
+    gap: 1.5rem;
+  }
+
+  .feedback {
+    margin-top: 4rem;
+  }
+
+  .feedbackTitle {
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .page {
+    gap: 4rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+
+  .promoText {
+    font-size: 1.125rem;
+  }
+
+  .instagramGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .formRow {
+    flex-direction: row;
+  }
+
+  .field {
+    flex: 1;
+  }
+
+  .submitButton {
+    width: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .productGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .productGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

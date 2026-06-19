@@ -1,0 +1,207 @@
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.badgeGroup {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10;
+  display: flex;
+  max-width: 70%;
+  gap: 0.25rem;
+}
+
+.discountGroup {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.badge {
+  border-radius: 2px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.greenBadge {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.grayBadge {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.discountBadge {
+  border-radius: 2px;
+  background: var(--color-accent);
+  color: #ffffff;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.imageBox {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.image {
+  object-fit: contain;
+  padding: 1rem;
+  mix-blend-mode: multiply;
+  transition: transform 500ms ease;
+}
+
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  border-top: 1px solid #f9fafb;
+  padding-top: 0.5rem;
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-transform: uppercase;
+  transition: color 160ms ease;
+}
+
+.card:hover .title {
+  color: var(--color-accent);
+}
+
+.description {
+  flex: 1;
+  margin: 0 0 1rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.availability {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin-top: auto;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+  background: #f9fafb;
+  padding: 0.5rem;
+}
+
+.availabilityIcon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.125rem;
+  color: #16a34a;
+  stroke-width: 3;
+}
+
+.availabilityText {
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.milanStock {
+  display: flex;
+  flex-direction: column;
+  margin-top: auto;
+  margin-bottom: 1rem;
+}
+
+.milanTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+  color: #1f2937;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.fireBadge {
+  border: 1px solid #fee2e2;
+  border-radius: 3px;
+  background: #fef2f2;
+  padding: 0 0.25rem;
+  font-size: 0.875rem;
+}
+
+.milanNote {
+  color: #9ca3af;
+  font-size: 0.625rem;
+  line-height: 1.25;
+}
+
+.priceBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.oldPrice {
+  margin-bottom: -0.25rem;
+  color: #9ca3af;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
+.price {
+  color: var(--color-text);
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 640px) {
+  .card {
+    padding: 1.25rem;
+  }
+
+  .badgeGroup {
+    top: 1rem;
+    left: 1rem;
+  }
+
+  .price {
+    font-size: 1.375rem;
+  }
+}

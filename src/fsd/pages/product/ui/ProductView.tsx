@@ -6,6 +6,7 @@ import Link from 'next/link';
 import {ChevronRight, Heart, Star} from 'lucide-react';
 import type {Product} from '@/src/fsd/entities/product';
 import {gsap, registerGsap} from '@/src/fsd/shared/lib';
+import styles from './ProductView.module.css';
 
 export default function ProductView({product}: {product: Product}) {
   const ref = useRef<HTMLDivElement>(null);
@@ -13,14 +14,14 @@ export default function ProductView({product}: {product: Product}) {
   useEffect(() => {
     registerGsap();
     const ctx = gsap.context(() => {
-      gsap.from('.product-gallery', {
+      gsap.from(`.${styles.gallery}`, {
         x: -60,
         opacity: 0,
         duration: 0.9,
         ease: 'power3.out',
       });
 
-      gsap.from('.product-info > *', {
+      gsap.from(`.${styles.info} > *`, {
         y: 40,
         opacity: 0,
         duration: 0.6,
@@ -29,14 +30,14 @@ export default function ProductView({product}: {product: Product}) {
         delay: 0.15,
       });
 
-      gsap.from('.product-block', {
+      gsap.from(`.${styles.contentBlock}, .${styles.reviewsBlock}`, {
         y: 50,
         opacity: 0,
         duration: 0.7,
         stagger: 0.15,
         ease: 'power3.out',
         scrollTrigger: {
-          trigger: '.product-details',
+          trigger: `.${styles.details}`,
           start: 'top 85%',
         },
       });
@@ -45,127 +46,110 @@ export default function ProductView({product}: {product: Product}) {
     return () => ctx.revert();
   }, [product.id]);
 
+  const statusBadgeClass =
+    product.badgeColor === 'gray'
+      ? `${styles.badge} ${styles.grayBadge}`
+      : `${styles.badge} ${styles.greenBadge}`;
+
   return (
-    <div ref={ref} className="container mx-auto safe-px max-w-7xl pt-6 sm:pt-8 pb-16 sm:pb-24">
-      <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-[12px] text-gray-500 mb-6 sm:mb-8 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
-        <Link href="/" className="hover:text-red-600">
-          Главная
-        </Link>
-        <ChevronRight className="w-3 h-3" />
-        <Link href="/catalog" className="hover:text-red-600">
-          Каталог
-        </Link>
-        <ChevronRight className="w-3 h-3" />
-        <span className="text-gray-400 truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">{product.title}</span>
+    <div ref={ref} className={styles.page}>
+      <div className={styles.breadcrumbs}>
+        <Link href="/">Главная</Link>
+        <ChevronRight className={styles.breadcrumbIcon} />
+        <Link href="/catalog">Каталог</Link>
+        <ChevronRight className={styles.breadcrumbIcon} />
+        <span className={styles.breadcrumbCurrent}>{product.title}</span>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-20">
-        <div className="product-gallery flex flex-col-reverse md:flex-row gap-3 sm:gap-4 md:gap-6 lg:w-1/2 w-full">
-          <div className="flex flex-row md:flex-col gap-2 md:gap-3 shrink-0 overflow-x-auto md:overflow-visible no-scrollbar pb-1 md:pb-0">
+      <div className={styles.summary}>
+        <div className={styles.gallery}>
+          <div className={styles.thumbnails}>
             {[0, 1, 2, 3].map((i) => (
               <button
                 key={i}
-                className={`w-16 h-16 sm:w-20 sm:h-20 border rounded-sm relative bg-white shrink-0 ${i === 0 ? 'border-gray-800' : 'border-gray-200'}`}
+                type="button"
+                className={`${styles.thumbnail} ${i === 0 ? styles.thumbnailActive : ''}`}
               >
                 <Image
                   src={`https://picsum.photos/seed/${product.id}thumb${i}/100/100`}
                   fill
                   alt="thumb"
-                  className="object-contain p-2 mix-blend-multiply"
+                  className={styles.thumbnailImage}
                   referrerPolicy="no-referrer"
                 />
               </button>
             ))}
           </div>
-          <div className="flex-1 bg-white relative aspect-square border border-gray-100 rounded-sm min-h-[280px] sm:min-h-0">
+          <div className={styles.mainImageBox}>
             {product.badgeText && (
-              <div className="absolute top-4 left-4 z-10 flex gap-1">
-                <span
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-sm tracking-wide ${
-                    product.badgeColor === 'gray'
-                      ? 'bg-gray-200 text-gray-600'
-                      : 'bg-green-500 text-white'
-                  }`}
-                >
-                  {product.badgeText}
-                </span>
+              <div className={styles.badgeGroup}>
+                <span className={statusBadgeClass}>{product.badgeText}</span>
               </div>
             )}
             <Image
               src={product.image}
               fill
               alt={product.title}
-              className="object-contain p-8 mix-blend-multiply"
+              className={styles.mainImage}
               priority
               referrerPolicy="no-referrer"
             />
           </div>
         </div>
 
-        <div className="product-info lg:w-1/2 flex flex-col w-full">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-tight mb-4 uppercase tracking-tighter">
-            {product.title}
-          </h1>
+        <div className={styles.info}>
+          <h1 className={styles.title}>{product.title}</h1>
 
-          <div className="flex flex-wrap items-center gap-4 sm:gap-8 mb-6 border-b border-gray-100 pb-6">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <div className="flex">
+          <div className={styles.ratingRow}>
+            <div className={styles.rating}>
+              <div className={styles.stars}>
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 stroke-[1.5]" />
+                  <Star key={i} className={styles.starIcon} />
                 ))}
               </div>
               <span>(0)</span>
             </div>
-            <Link
-              href="/favorites"
-              className="flex items-center gap-2 text-[13px] text-gray-600 hover:text-red-600 transition-colors"
-            >
-              <Heart className="w-4 h-4 stroke-[1.5]" />
+            <Link href="/favorites" className={styles.favoriteLink}>
+              <Heart className={styles.favoriteIcon} />
               В избранное
             </Link>
           </div>
 
-          <div className="bg-[#f9f9f9] p-4 sm:p-6 rounded-sm mb-6 flex flex-col gap-5 sm:gap-6">
-            <div className="flex flex-col">
-              {product.oldPrice && (
-                <span className="text-[14px] sm:text-[16px] text-gray-400 line-through font-medium">
-                  {product.oldPrice}
-                </span>
-              )}
-              <div className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">
-                {product.priceFormatted}
-              </div>
+          <div className={styles.purchaseBox}>
+            <div className={styles.priceGroup}>
+              {product.oldPrice && <span className={styles.oldPrice}>{product.oldPrice}</span>}
+              <div className={styles.price}>{product.priceFormatted}</div>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-              <div className="flex items-center border border-gray-300 rounded-sm bg-white h-12 w-fit">
-                <button type="button" className="px-4 text-gray-500 hover:text-black">-</button>
-                <input type="text" value="1" readOnly className="w-10 text-center font-bold outline-none" />
-                <button type="button" className="px-4 text-gray-500 hover:text-black">+</button>
+            <div className={styles.purchaseActions}>
+              <div className={styles.quantity}>
+                <button type="button" className={styles.quantityButton}>
+                  -
+                </button>
+                <input type="text" value="1" readOnly className={styles.quantityInput} />
+                <button type="button" className={styles.quantityButton}>
+                  +
+                </button>
               </div>
-              <Link
-                href="/cart"
-                className="bg-black hover:bg-gray-900 text-white px-6 sm:px-8 h-12 rounded-sm font-bold tracking-wide transition-colors flex flex-col items-center justify-center leading-none flex-1 sm:flex-none text-center"
-              >
+              <Link href="/cart" className={styles.cartButton}>
                 В корзину 1 шт
-                <span className="text-[10px] font-normal mt-1 opacity-70">Перейти</span>
+                <span className={styles.cartHint}>Перейти</span>
               </Link>
             </div>
           </div>
 
-          <div className="text-[13px] text-gray-600 leading-relaxed max-w-md">
+          <div className={styles.deliveryNote}>
             {product.isAvailableInMoscow && (
-              <p className="text-green-600 font-medium mb-2">В наличии на складе в Москве</p>
+              <p className={styles.greenText}>В наличии на складе в Москве</p>
             )}
             {product.isLastInMilan && (
-              <p className="mb-2">
+              <p>
                 Last items in stock 🔥 Цена указана &quot;до двери&quot; после всех расходов и
                 пошлин.
               </p>
             )}
             {!product.isAvailableInMoscow && !product.isLastInMilan && (
               <p>
-                Предзаказ.{' '}
-                <span className="text-green-600 font-medium">Цена указана до двери</span> 📦 после
+                Предзаказ. <span className={styles.greenText}>Цена указана до двери</span> 📦 после
                 всех расходов и пошлин. Общий срок поставки в Россию 4-6 недель
               </p>
             )}
@@ -173,11 +157,11 @@ export default function ProductView({product}: {product: Product}) {
         </div>
       </div>
 
-      <div className="product-details mt-12 sm:mt-20">
-        <div className="flex flex-col gap-8 sm:gap-12 max-w-4xl">
-          <div className="product-block bg-[#fcfcfc] p-5 sm:p-8 md:p-12 rounded-sm border border-gray-100">
-            <h3 className="text-xl font-black mb-6 tracking-tight text-gray-900">Описание</h3>
-            <div className="text-[14px] text-gray-700 leading-relaxed space-y-6">
+      <div className={styles.details}>
+        <div className={styles.detailsInner}>
+          <div className={styles.contentBlock}>
+            <h3 className={styles.blockTitle}>Описание</h3>
+            <div className={styles.textContent}>
               {product.desc && <p>{product.desc}</p>}
               {product.description ? (
                 <p>{product.description}</p>
@@ -191,32 +175,23 @@ export default function ProductView({product}: {product: Product}) {
           </div>
 
           {product.specs && product.specs.length > 0 && (
-            <div className="product-block bg-[#fcfcfc] p-5 sm:p-8 md:p-12 rounded-sm border border-gray-100">
-              <h3 className="text-xl font-black mb-8 tracking-tight text-gray-900">
-                Характеристики
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+            <div className={styles.contentBlock}>
+              <h3 className={styles.blockTitle}>Характеристики</h3>
+              <div className={styles.specGrid}>
                 {product.specs.map((spec) => (
-                  <div
-                    key={spec.label}
-                    className="flex items-end justify-between border-b border-gray-200 border-dotted pb-1"
-                  >
-                    <span className="text-[14px] text-gray-500 bg-[#fcfcfc] pr-2 -mb-1 relative z-10">
-                      {spec.label}
-                    </span>
-                    <span className="text-[14px] text-gray-900 font-medium bg-[#fcfcfc] pl-2 -mb-1 relative z-10 text-right">
-                      {spec.value}
-                    </span>
+                  <div key={spec.label} className={styles.specRow}>
+                    <span className={styles.specLabel}>{spec.label}</span>
+                    <span className={styles.specValue}>{spec.value}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="product-block pt-4">
-            <h3 className="text-2xl font-black mb-6 tracking-tight text-gray-900">Отзывы</h3>
-            <p className="text-[14px] text-gray-500 mb-6">Отзывов еще никто не оставлял</p>
-            <button className="bg-black hover:bg-gray-900 text-white px-8 py-3 rounded-sm font-medium transition-colors text-[13px]">
+          <div className={styles.reviewsBlock}>
+            <h3 className={`${styles.blockTitle} ${styles.reviewTitle}`}>Отзывы</h3>
+            <p className={styles.reviewText}>Отзывов еще никто не оставлял</p>
+            <button type="button" className={styles.reviewButton}>
               Написать отзыв
             </button>
           </div>
