@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Heart, Menu, ShoppingCart, X} from 'lucide-react';
-import {gsap, registerGsap} from '../lib/gsap';
+import {gsap, registerGsap} from '@/src/fsd/shared/lib';
 
 const TICKER_TEXT =
   'Весь экип (шлема, куртки, штаны, перчи, боты, защиты и все что угодно), а также повседневка в полном ассортименте в любом европейском магазине за нашу символическую комиссию 10%';

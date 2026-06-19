@@ -4,8 +4,8 @@ import {useEffect, useRef} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Check} from 'lucide-react';
-import {gsap} from '../lib/gsap';
-import type {Product} from '../lib/products';
+import {gsap} from '@/src/fsd/shared/lib';
+import type {Product} from '../model/products';
 
 export default function ProductCard({
   id,

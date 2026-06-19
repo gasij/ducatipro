@@ -1,7 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import {Footer} from '@/src/fsd/widgets/footer';
+import {Header} from '@/src/fsd/widgets/header';
 
 export const metadata: Metadata = {
   title: 'Запчасти в наличии для мотоциклов дукати',

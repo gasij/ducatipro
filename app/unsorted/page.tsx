@@ -1,5 +1,5 @@
-import CatalogLayout from '../../components/CatalogLayout';
-import {getProductsByCategory} from '../../lib/products';
+import {getProductsByCategory} from '@/src/fsd/entities/product';
+import {CatalogLayout} from '@/src/fsd/pages/catalog';
 
 export default function UnsortedPage() {
   return (

@@ -1,5 +1,5 @@
-import HomePage from '../components/HomePage';
-import {getProductsByCategory} from '../lib/products';
+import {getProductsByCategory} from '@/src/fsd/entities/product';
+import {HomePage} from '@/src/fsd/pages/home';
 
 export default function Home() {
   return (

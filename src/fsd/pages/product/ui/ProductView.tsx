@@ -4,8 +4,8 @@ import {useEffect, useRef} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {ChevronRight, Heart, Star} from 'lucide-react';
-import {gsap, registerGsap} from '../lib/gsap';
-import type {Product} from '../lib/products';
+import type {Product} from '@/src/fsd/entities/product';
+import {gsap, registerGsap} from '@/src/fsd/shared/lib';
 
 export default function ProductView({product}: {product: Product}) {
   const ref = useRef<HTMLDivElement>(null);

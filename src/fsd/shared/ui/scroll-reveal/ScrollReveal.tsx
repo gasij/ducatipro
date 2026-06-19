@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useRef, type ReactNode} from 'react';
-import {gsap, registerGsap, ScrollTrigger} from '../../lib/gsap';
+import {gsap, registerGsap, ScrollTrigger} from '@/src/fsd/shared/lib';
 
 type Props = {
   children: ReactNode;

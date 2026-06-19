@@ -1,6 +1,6 @@
 import {notFound} from 'next/navigation';
-import ProductView from '../../../components/ProductView';
-import {getProduct, products} from '../../../lib/products';
+import {getProduct, products} from '@/src/fsd/entities/product';
+import {ProductView} from '@/src/fsd/pages/product';
 
 type Props = {
   params: Promise<{id: string}>;
