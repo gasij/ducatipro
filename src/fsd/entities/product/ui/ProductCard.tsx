@@ -1,10 +1,8 @@
 'use client';
 
-import {useEffect, useRef} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Check} from 'lucide-react';
-import {gsap} from '@/src/fsd/shared/lib';
 import type {Product} from '../model/products';
 import styles from './ProductCard.module.css';
 
@@ -34,42 +32,11 @@ export default function ProductCard({
   | 'isAvailableInMoscow'
   | 'isLastInMilan'
 >) {
-  const cardRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    const onEnter = () => {
-      gsap.to(card, {
-        y: -6,
-        boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
-        duration: 0.35,
-        ease: 'power2.out',
-      });
-    };
-    const onLeave = () => {
-      gsap.to(card, {
-        y: 0,
-        boxShadow: '0 0 0 rgba(0,0,0,0)',
-        duration: 0.35,
-        ease: 'power2.out',
-      });
-    };
-
-    card.addEventListener('mouseenter', onEnter);
-    card.addEventListener('mouseleave', onLeave);
-    return () => {
-      card.removeEventListener('mouseenter', onEnter);
-      card.removeEventListener('mouseleave', onLeave);
-    };
-  }, []);
-
   const statusBadgeClass =
     badgeColor === 'gray' ? `${styles.badge} ${styles.grayBadge}` : `${styles.badge} ${styles.greenBadge}`;
 
   return (
-    <Link ref={cardRef} href={`/product/${id}`} className={styles.card}>
+    <Link href={`/product/${id}`} className={styles.card}>
       <div className={styles.badgeGroup}>
         {badgeText && <span className={statusBadgeClass}>{badgeText}</span>}
       </div>

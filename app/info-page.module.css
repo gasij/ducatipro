@@ -9,9 +9,16 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  overflow-x: auto;
   margin-bottom: 1.5rem;
   color: var(--color-muted);
   font-size: 0.75rem;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.breadcrumbs::-webkit-scrollbar {
+  display: none;
 }
 
 .breadcrumbs a {
@@ -33,7 +40,8 @@
   font-size: 1.5rem;
   font-weight: 900;
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .content {

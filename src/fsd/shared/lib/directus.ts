@@ -1,13 +1,17 @@
-const DIRECTUS_URL = process.env.DIRECTUS_URL;
-
-if (!DIRECTUS_URL) {
-  throw new Error('DIRECTUS_URL is not set in environment variables');
+export function isDirectusConfigured() {
+  return Boolean(process.env.DIRECTUS_URL);
 }
 
-export const directusUrl = DIRECTUS_URL;
+export function getDirectusUrl() {
+  const url = process.env.DIRECTUS_URL;
+  if (!url) {
+    throw new Error('DIRECTUS_URL is not set in environment variables');
+  }
+  return url;
+}
 
 export async function directusFetch(path: string, init?: RequestInit) {
-  const url = `${directusUrl}${path}`;
+  const url = `${getDirectusUrl()}${path}`;
   return fetch(url, {
     ...init,
     headers: {

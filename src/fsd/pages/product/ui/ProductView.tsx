@@ -3,42 +3,54 @@
 import {useEffect, useRef} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {ChevronRight, Heart, Star} from 'lucide-react';
+import {ChevronRight, Heart, PackageCheck, ShieldCheck, Star, Truck} from 'lucide-react';
 import type {Product} from '@/src/fsd/entities/product';
 import {gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
+
+const CATEGORY_LABELS: Record<Product['category'], string> = {
+  new: 'Новинка',
+  discounted: 'Скидка в России',
+  outlet: 'Аутлет в Милане',
+  unsorted: 'Без сортировки',
+};
 
 export default function ProductView({product}: {product: Product}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
     registerGsap();
     const ctx = gsap.context(() => {
       gsap.from(`.${styles.gallery}`, {
-        x: -60,
+        x: -24,
         opacity: 0,
-        duration: 0.9,
-        ease: 'power3.out',
+        duration: 0.55,
+        ease: 'power2.out',
       });
 
       gsap.from(`.${styles.info} > *`, {
-        y: 40,
+        y: 18,
         opacity: 0,
-        duration: 0.6,
+        duration: 0.45,
         stagger: 0.1,
-        ease: 'power3.out',
-        delay: 0.15,
+        ease: 'power2.out',
+        delay: 0.12,
       });
 
       gsap.from(`.${styles.contentBlock}, .${styles.reviewsBlock}`, {
-        y: 50,
+        y: 22,
         opacity: 0,
-        duration: 0.7,
+        duration: 0.5,
         stagger: 0.15,
-        ease: 'power3.out',
+        ease: 'power2.out',
         scrollTrigger: {
           trigger: `.${styles.details}`,
           start: 'top 85%',
+          once: true,
         },
       });
     }, ref);
@@ -50,6 +62,17 @@ export default function ProductView({product}: {product: Product}) {
     product.badgeColor === 'gray'
       ? `${styles.badge} ${styles.grayBadge}`
       : `${styles.badge} ${styles.greenBadge}`;
+  const article = product.title.split(' ')[0];
+  const deliveryTitle = product.isAvailableInMoscow
+    ? 'Склад в Москве'
+    : product.isLastInMilan
+      ? 'Склад в Милане'
+      : 'Предзаказ из Италии';
+  const deliveryText = product.isAvailableInMoscow
+    ? 'Товар уже в России. Менеджер подтвердит наличие и способ получения.'
+    : product.isLastInMilan
+      ? 'Последние позиции на складе. Цена указана до двери после расходов и пошлин.'
+      : 'Поставка занимает 4-6 недель. Цена указана до двери после расходов и пошлин.';
 
   return (
     <div ref={ref} className={styles.page}>
@@ -98,6 +121,11 @@ export default function ProductView({product}: {product: Product}) {
         </div>
 
         <div className={styles.info}>
+          <div className={styles.kickerRow}>
+            <span className={styles.categoryPill}>{CATEGORY_LABELS[product.category]}</span>
+            <span className={styles.article}>Артикул: {article}</span>
+          </div>
+
           <h1 className={styles.title}>{product.title}</h1>
 
           <div className={styles.ratingRow}>
@@ -115,11 +143,18 @@ export default function ProductView({product}: {product: Product}) {
             </Link>
           </div>
 
-          <div className={styles.purchaseBox}>
-            <div className={styles.priceGroup}>
-              {product.oldPrice && <span className={styles.oldPrice}>{product.oldPrice}</span>}
-              <div className={styles.price}>{product.priceFormatted}</div>
+          <div className={styles.purchasePanel}>
+            <div className={styles.purchaseHeader}>
+              <div className={styles.priceGroup}>
+                {product.oldPrice && <span className={styles.oldPrice}>{product.oldPrice}</span>}
+                <div className={styles.price}>{product.priceFormatted}</div>
+                <span className={styles.priceNote}>Итоговая цена для заказа</span>
+              </div>
+              {product.discountBadge && (
+                <span className={styles.saleBadge}>{product.discountBadge}</span>
+              )}
             </div>
+
             <div className={styles.purchaseActions}>
               <div className={styles.quantity}>
                 <button type="button" className={styles.quantityButton}>
@@ -135,31 +170,47 @@ export default function ProductView({product}: {product: Product}) {
                 <span className={styles.cartHint}>Перейти</span>
               </Link>
             </div>
+
+            <div className={styles.deliveryCard}>
+              <div className={styles.deliveryIconWrap}>
+                <Truck className={styles.deliveryIcon} />
+              </div>
+              <div>
+                <h2 className={styles.deliveryTitle}>{deliveryTitle}</h2>
+                <p className={styles.deliveryText}>{deliveryText}</p>
+              </div>
+            </div>
           </div>
 
-          <div className={styles.deliveryNote}>
-            {product.isAvailableInMoscow && (
-              <p className={styles.greenText}>В наличии на складе в Москве</p>
-            )}
-            {product.isLastInMilan && (
-              <p>
-                Last items in stock 🔥 Цена указана &quot;до двери&quot; после всех расходов и
-                пошлин.
-              </p>
-            )}
-            {!product.isAvailableInMoscow && !product.isLastInMilan && (
-              <p>
-                Предзаказ. <span className={styles.greenText}>Цена указана до двери</span> 📦 после
-                всех расходов и пошлин. Общий срок поставки в Россию 4-6 недель
-              </p>
-            )}
+          <div className={styles.quickFacts}>
+            <div className={styles.fact}>
+              <PackageCheck className={styles.factIcon} />
+              <div>
+                <span className={styles.factLabel}>Статус</span>
+                <strong>{product.badgeText || 'Под заказ'}</strong>
+              </div>
+            </div>
+            <div className={styles.fact}>
+              <Truck className={styles.factIcon} />
+              <div>
+                <span className={styles.factLabel}>Доставка</span>
+                <strong>До двери</strong>
+              </div>
+            </div>
+            <div className={styles.fact}>
+              <ShieldCheck className={styles.factIcon} />
+              <div>
+                <span className={styles.factLabel}>Проверка</span>
+                <strong>Менеджером</strong>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div className={styles.details}>
         <div className={styles.detailsInner}>
-          <div className={styles.contentBlock}>
+          <div className={`${styles.contentBlock} ${styles.descriptionBlock}`}>
             <h3 className={styles.blockTitle}>Описание</h3>
             <div className={styles.textContent}>
               {product.desc && <p>{product.desc}</p>}
@@ -175,7 +226,7 @@ export default function ProductView({product}: {product: Product}) {
           </div>
 
           {product.specs && product.specs.length > 0 && (
-            <div className={styles.contentBlock}>
+            <div className={`${styles.contentBlock} ${styles.specsBlock}`}>
               <h3 className={styles.blockTitle}>Характеристики</h3>
               <div className={styles.specGrid}>
                 {product.specs.map((spec) => (

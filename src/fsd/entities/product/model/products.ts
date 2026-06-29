@@ -12,6 +12,7 @@ export type Product = {
   isAvailableInMoscow?: boolean;
   isLastInMilan?: boolean;
   category: 'new' | 'discounted' | 'outlet' | 'unsorted';
+  models?: string[];
   description?: string;
   specs?: {label: string; value: string}[];
 };
@@ -25,6 +26,7 @@ export const products: Product[] = [
     priceFormatted: '220 477 ₽',
     badgeText: 'Предзаказ',
     category: 'new',
+    models: ['Diavel 1260'],
     description:
       "DVL 1260 /S '21-22 (EURO 5). The Zard exhaust Racing for Ducati Diavel 1260 E5 2021-2022 with steel slip-on and steel end cap, is a masterpiece of Italian craftsmanship and engineering.",
     specs: [
@@ -42,6 +44,7 @@ export const products: Product[] = [
     priceFormatted: '231 435 ₽',
     badgeText: 'Предзаказ',
     category: 'new',
+    models: ['Monster 1200', 'Monster 821'],
   },
   {
     id: '3',
@@ -51,6 +54,7 @@ export const products: Product[] = [
     priceFormatted: '139 532 ₽',
     badgeText: 'Предзаказ',
     category: 'new',
+    models: ['Panigale V4', 'Streetfighter V4'],
   },
   {
     id: '4',
@@ -60,6 +64,7 @@ export const products: Product[] = [
     priceFormatted: '205 808 ₽',
     badgeText: 'Предзаказ',
     category: 'new',
+    models: ['Panigale V2', 'Streetfighter V2'],
   },
   {
     id: '5',
@@ -69,6 +74,7 @@ export const products: Product[] = [
     priceFormatted: '246 546 ₽',
     badgeText: 'Предзаказ',
     category: 'new',
+    models: ['Diavel 1260'],
   },
   {
     id: '6',
@@ -82,6 +88,7 @@ export const products: Product[] = [
     discountBadge: '-10%',
     isAvailableInMoscow: true,
     category: 'discounted',
+    models: ['Monster 1200', 'Monster 821'],
   },
   {
     id: '7',
@@ -95,6 +102,7 @@ export const products: Product[] = [
     discountBadge: '-30%',
     isAvailableInMoscow: true,
     category: 'discounted',
+    models: ['Panigale V4'],
   },
   {
     id: '8',
@@ -108,6 +116,7 @@ export const products: Product[] = [
     badgeColor: 'gray',
     discountBadge: '-25%',
     category: 'discounted',
+    models: ['Monster 937', 'Multistrada V4', 'DesertX'],
   },
   {
     id: '9',
@@ -121,6 +130,7 @@ export const products: Product[] = [
     badgeColor: 'gray',
     discountBadge: '-25%',
     category: 'discounted',
+    models: ['Diavel 1260'],
   },
   {
     id: '10',
@@ -134,6 +144,7 @@ export const products: Product[] = [
     discountBadge: '-25%',
     desc: 'В наличии на складе в Милане. Цена указана до двери...',
     category: 'outlet',
+    models: ['Monster 937'],
   },
   {
     id: '11',
@@ -145,6 +156,7 @@ export const products: Product[] = [
     badgeColor: 'gray',
     isLastInMilan: true,
     category: 'outlet',
+    models: ['Panigale V4', 'Streetfighter V4'],
   },
   {
     id: '12',
@@ -158,6 +170,7 @@ export const products: Product[] = [
     discountBadge: '-10%',
     isLastInMilan: true,
     category: 'outlet',
+    models: ['Hypermotard 950'],
   },
   {
     id: '13',
@@ -169,6 +182,7 @@ export const products: Product[] = [
     badgeColor: 'gray',
     isLastInMilan: true,
     category: 'outlet',
+    models: ['DesertX'],
   },
   {
     id: '14',
@@ -179,6 +193,7 @@ export const products: Product[] = [
     badgeText: 'Без сортировки',
     badgeColor: 'gray',
     category: 'unsorted',
+    models: ['Monster 937', 'Panigale V4', 'Multistrada V4'],
   },
   {
     id: '15',
@@ -189,6 +204,7 @@ export const products: Product[] = [
     badgeText: 'Без сортировки',
     badgeColor: 'gray',
     category: 'unsorted',
+    models: ['Monster 1200', 'Monster 821', 'Monster 937'],
   },
   {
     id: '16',
@@ -199,6 +215,7 @@ export const products: Product[] = [
     badgeText: 'Без сортировки',
     badgeColor: 'gray',
     category: 'unsorted',
+    models: ['Diavel 1260', 'Multistrada V4'],
   },
 ];
 

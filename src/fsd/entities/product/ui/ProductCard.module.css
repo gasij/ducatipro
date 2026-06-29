@@ -1,18 +1,28 @@
 .card {
   position: relative;
   display: flex;
+  height: 100%;
   min-width: 0;
   flex-direction: column;
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 6px;
   background: #ffffff;
-  padding: 1rem;
+  padding: 0.75rem;
+  box-shadow: 0 1px 2px rgb(17 24 39 / 4%);
+  transition:
+    border-color 220ms var(--ease-standard),
+    box-shadow 260ms var(--ease-out);
+}
+
+.card:hover {
+  border-color: rgb(227 6 19 / 18%);
+  box-shadow: 0 18px 42px rgb(17 24 39 / 10%);
 }
 
 .badgeGroup {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
+  top: 0.5rem;
+  left: 0.5rem;
   z-index: 10;
   display: flex;
   max-width: 70%;
@@ -21,8 +31,8 @@
 
 .discountGroup {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 0.5rem;
+  right: 0.5rem;
   z-index: 10;
   display: flex;
   gap: 0.25rem;
@@ -30,10 +40,11 @@
 
 .badge {
   border-radius: 2px;
-  padding: 0.25rem 0.625rem;
-  font-size: 0.6875rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  letter-spacing: 0.025em;
+  letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .greenBadge {
@@ -50,10 +61,11 @@
   border-radius: 2px;
   background: var(--color-accent);
   color: #ffffff;
-  padding: 0.25rem 0.625rem;
-  font-size: 0.6875rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  letter-spacing: 0.025em;
+  letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .imageBox {
@@ -61,14 +73,14 @@
   width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.875rem;
 }
 
 .image {
   object-fit: contain;
-  padding: 1rem;
+  padding: 0.75rem;
   mix-blend-mode: multiply;
-  transition: transform 500ms ease;
+  transition: transform 520ms var(--ease-out);
 }
 
 .card:hover .image {
@@ -84,13 +96,18 @@
 }
 
 .title {
+  display: -webkit-box;
+  overflow: hidden;
   margin: 0 0 0.5rem;
   color: var(--color-text);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   line-height: 1.35;
   text-transform: uppercase;
-  transition: color 160ms ease;
+  overflow-wrap: anywhere;
+  transition: color 180ms ease;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .card:hover .title {
@@ -98,11 +115,16 @@
 }
 
 .description {
+  display: -webkit-box;
+  overflow: hidden;
   flex: 1;
   margin: 0 0 1rem;
   color: var(--color-muted);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .spacer {
@@ -117,7 +139,7 @@
   margin-bottom: 1rem;
   border-radius: 2px;
   background: #f9fafb;
-  padding: 0.5rem;
+  padding: 0.45rem;
 }
 
 .availabilityIcon {
@@ -131,7 +153,7 @@
 
 .availabilityText {
   color: var(--color-muted);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 500;
   line-height: 1.25;
 }
@@ -151,6 +173,7 @@
   color: #1f2937;
   font-size: 0.6875rem;
   font-weight: 700;
+  line-height: 1.25;
 }
 
 .fireBadge {
@@ -173,22 +196,23 @@
   align-items: flex-start;
   gap: 0.25rem;
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.75rem;
 }
 
 .oldPrice {
   margin-bottom: -0.25rem;
   color: #9ca3af;
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   text-decoration: line-through;
 }
 
 .price {
   color: var(--color-text);
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  line-height: 1.1;
 }
 
 @media (min-width: 640px) {
@@ -202,6 +226,22 @@
   }
 
   .price {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .price {
     font-size: 1.375rem;
+  }
+}
+
+@media (hover: none) {
+  .card:hover {
+    box-shadow: 0 1px 2px rgb(17 24 39 / 4%);
+  }
+
+  .card:hover .image {
+    transform: none;
   }
 }

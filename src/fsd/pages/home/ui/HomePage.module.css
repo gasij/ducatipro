@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: clamp(2rem, 6vw, 4.5rem);
   padding-bottom: 2.5rem;
 }
 
@@ -21,7 +21,7 @@
 
 .bannerImage {
   width: 100%;
-  min-height: 140px;
+  min-height: clamp(150px, 30vw, 420px);
   object-fit: cover;
   object-position: center;
 }
@@ -36,7 +36,8 @@
 
 .sectionHeader {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  flex-direction: row;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--color-border);
@@ -47,10 +48,11 @@
   margin: 0;
   padding-right: 0.5rem;
   color: var(--color-text);
-  font-size: 1.125rem;
+  font-size: clamp(1.05rem, 3.2vw, 1.5rem);
   font-weight: 900;
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
   transition: color 160ms ease;
 }
 
@@ -62,7 +64,7 @@ a.sectionTitle:hover {
   display: flex;
   flex-shrink: 0;
   gap: 0.5rem;
-  align-self: flex-end;
+  margin-left: auto;
 }
 
 .sectionControl {
@@ -75,11 +77,16 @@ a.sectionTitle:hover {
   border-radius: 4px;
   background: #f3f4f6;
   color: #4b5563;
-  transition: background-color 160ms ease;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 180ms var(--ease-out);
 }
 
 .sectionControl:hover {
   background: #e5e7eb;
+  color: #111827;
+  transform: translateY(-1px);
 }
 
 .sectionControlIcon {
@@ -89,8 +96,9 @@ a.sectionTitle:hover {
 
 .productGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 0.75rem;
 }
 
 .promoBlock {
@@ -143,7 +151,7 @@ a.sectionTitle:hover {
   overflow: hidden;
   aspect-ratio: 1;
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 6px;
   background: #f3f4f6;
   box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
@@ -166,7 +174,7 @@ a.sectionTitle:hover {
   color: var(--color-text);
   font-size: 1.25rem;
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .contactForm {
@@ -186,7 +194,7 @@ a.sectionTitle:hover {
 .message {
   width: 100%;
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 4px;
   outline: 0;
   background: var(--color-soft);
   font-size: 0.8125rem;
@@ -224,7 +232,7 @@ a.sectionTitle:hover {
   margin: 0;
   appearance: none;
   border: 1px solid #d1d5db;
-  border-radius: 2px;
+  border-radius: 4px;
   cursor: pointer;
   transition: background-color 160ms ease, border-color 160ms ease;
 }
@@ -271,18 +279,21 @@ a.sectionTitle:hover {
   width: 100%;
   margin: 2rem auto 0;
   border: 0;
-  border-radius: 2px;
+  border-radius: 4px;
   background: #333333;
   color: #ffffff;
   padding: 1rem 3rem;
   font-size: 0.9375rem;
   font-weight: 700;
-  letter-spacing: 0.025em;
-  transition: background-color 160ms ease;
+  letter-spacing: 0;
+  transition:
+    background-color 160ms ease,
+    transform 180ms var(--ease-out);
 }
 
 .submitButton:hover {
   background: #222222;
+  transform: translateY(-1px);
 }
 
 @media (min-width: 640px) {
@@ -308,7 +319,7 @@ a.sectionTitle:hover {
   }
 
   .productGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
     gap: 1.5rem;
   }
 
@@ -345,10 +356,6 @@ a.sectionTitle:hover {
     gap: 4rem;
   }
 
-  .sectionTitle {
-    font-size: 1.5rem;
-  }
-
   .promoText {
     font-size: 1.125rem;
   }
@@ -367,12 +374,6 @@ a.sectionTitle:hover {
 
   .submitButton {
     width: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .productGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

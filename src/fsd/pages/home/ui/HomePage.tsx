@@ -18,13 +18,17 @@ export default function HomePage({newArrivals, discounted, milanOutlet}: Props) 
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
     registerGsap();
     const ctx = gsap.context(() => {
       gsap.from(`.${styles.banner} img`, {
-        scale: 1.08,
+        scale: 1.035,
         opacity: 0,
-        duration: 1.2,
-        ease: 'power3.out',
+        duration: 0.9,
+        ease: 'power2.out',
       });
 
       gsap.utils.toArray<HTMLElement>(`.${styles.productSection}`).forEach((section) => {
@@ -35,57 +39,58 @@ export default function HomePage({newArrivals, discounted, milanOutlet}: Props) 
         if (line) {
           gsap.from(line, {
             scaleX: 0,
-            duration: 0.8,
+            duration: 0.55,
             ease: 'power2.out',
-            scrollTrigger: {trigger: section, start: 'top 85%'},
+            scrollTrigger: {trigger: section, start: 'top 86%', once: true},
           });
         }
 
         if (title) {
           gsap.from(title, {
-            x: -40,
+            y: 18,
             opacity: 0,
-            duration: 0.7,
-            ease: 'power3.out',
-            scrollTrigger: {trigger: section, start: 'top 85%'},
+            duration: 0.5,
+            ease: 'power2.out',
+            scrollTrigger: {trigger: section, start: 'top 86%', once: true},
           });
         }
 
         if (grid) {
           gsap.from(grid.children, {
-            y: 60,
+            y: 24,
             opacity: 0,
-            duration: 0.6,
+            duration: 0.5,
             stagger: 0.1,
-            ease: 'power3.out',
-            scrollTrigger: {trigger: grid, start: 'top 90%'},
+            ease: 'power2.out',
+            scrollTrigger: {trigger: grid, start: 'top 90%', once: true},
           });
         }
       });
 
       gsap.from(`.${styles.promoText}`, {
         opacity: 0,
-        y: 30,
-        duration: 0.8,
-        scrollTrigger: {trigger: `.${styles.promoBlock}`, start: 'top 85%'},
+        y: 16,
+        duration: 0.5,
+        ease: 'power2.out',
+        scrollTrigger: {trigger: `.${styles.promoBlock}`, start: 'top 85%', once: true},
       });
 
       gsap.from(`.${styles.instagramItem}`, {
-        scale: 0.85,
+        scale: 0.96,
         opacity: 0,
         duration: 0.5,
         stagger: 0.12,
-        ease: 'back.out(1.4)',
-        scrollTrigger: {trigger: `.${styles.instagramGrid}`, start: 'top 88%'},
+        ease: 'power2.out',
+        scrollTrigger: {trigger: `.${styles.instagramGrid}`, start: 'top 88%', once: true},
       });
 
       gsap.from(`.${styles.contactForm} > *`, {
-        y: 40,
+        y: 18,
         opacity: 0,
-        duration: 0.6,
+        duration: 0.48,
         stagger: 0.1,
-        ease: 'power3.out',
-        scrollTrigger: {trigger: `.${styles.contactForm}`, start: 'top 85%'},
+        ease: 'power2.out',
+        scrollTrigger: {trigger: `.${styles.contactForm}`, start: 'top 85%', once: true},
       });
     }, rootRef);
 

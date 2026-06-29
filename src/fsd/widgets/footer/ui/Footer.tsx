@@ -1,6 +1,7 @@
 'use client';
 
 import {ArrowUp} from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import styles from './Footer.module.css';
 
@@ -72,17 +73,13 @@ export default function Footer() {
 
         <div className={styles.bottom}>
           <Link href="/" className={styles.brand}>
-            <div className={styles.flag}>
-              <div className={`${styles.flagStripe} ${styles.flagGreen}`} />
-              <div className={`${styles.flagStripe} ${styles.flagWhite}`} />
-              <div className={`${styles.flagStripe} ${styles.flagRed}`} />
-            </div>
-            <div className={styles.brandText}>
-              <div className={styles.brandMain}>
-                Запчасти в <span className={styles.brandHighlight}>наличии</span>
-              </div>
-              <div className={styles.brandSub}>Для мотоциклов дукати</div>
-            </div>
+            <Image
+              src="/logo.svg"
+              alt="Оригинальные запчасти Дукати"
+              width={220}
+              height={42}
+              className={styles.logo}
+            />
           </Link>
 
           <div className={styles.payments}>

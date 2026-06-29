@@ -31,28 +31,32 @@ export default function Header() {
   }, [menuOpen]);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
     registerGsap();
     const ctx = gsap.context(() => {
       gsap.from(`.${styles.topBar}`, {
-        y: -20,
+        y: -12,
         opacity: 0,
-        duration: 0.6,
-        ease: 'power3.out',
+        duration: 0.45,
+        ease: 'power2.out',
       });
 
       gsap.from(`.${styles.mainBar} > *`, {
-        y: 24,
+        y: 14,
         opacity: 0,
-        duration: 0.7,
+        duration: 0.55,
         stagger: 0.08,
-        delay: 0.15,
-        ease: 'power3.out',
+        delay: 0.08,
+        ease: 'power2.out',
       });
 
       gsap.from(`.${styles.ticker}`, {
         opacity: 0,
-        duration: 0.5,
-        delay: 0.4,
+        duration: 0.35,
+        delay: 0.25,
       });
 
       const ticker = tickerRef.current;
@@ -63,7 +67,7 @@ export default function Header() {
           const width = (content as HTMLElement).offsetWidth;
           gsap.to(track, {
             x: -width,
-            duration: 30,
+            duration: 34,
             ease: 'none',
             repeat: -1,
           });
