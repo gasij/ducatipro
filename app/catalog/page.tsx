@@ -1,7 +1,9 @@
-import {products} from '@/src/fsd/entities/product';
+import {getProducts} from '@/src/fsd/entities/product';
 import {CatalogLayout} from '@/src/fsd/pages/catalog';
 
-export default function CatalogPage() {
+export default async function CatalogPage() {
+  const products = await getProducts();
+
   return (
     <CatalogLayout
       title="Каталог"

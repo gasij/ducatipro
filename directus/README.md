@@ -1,6 +1,40 @@
-# Настройка Directus для заказов
+# Настройка Directus
 
-## 1. Коллекция `orders`
+## 1. Коллекция `products`
+
+Сайт читает товары из коллекции `products`. Если коллекция называется иначе, задайте
+`DIRECTUS_PRODUCTS_COLLECTION`.
+
+Минимальные поля:
+
+| Поле | Тип | Примечание |
+|------|-----|------------|
+| `id` | UUID/String/Integer | используется в URL `/product/<id>` |
+| `title` | String | название товара |
+| `price` | Integer/Decimal/String | цена в рублях |
+| `image` | File или URL | главное изображение |
+| `category` | Dropdown | `new`, `discounted`, `outlet`, `unsorted` |
+
+Дополнительные поддерживаемые поля:
+
+| Поле | Тип |
+|------|-----|
+| `desc` или `short_description` | Text |
+| `description` или `full_description` | Text |
+| `price_formatted` | String |
+| `old_price` или `old_price_formatted` | String |
+| `badge_text` | String |
+| `badge_color` | String: `green` или `gray` |
+| `discount_badge` | String |
+| `is_available_in_moscow` | Boolean |
+| `is_last_in_milan` | Boolean |
+| `models` | JSON/CSV/M2M |
+| `specs` | JSON-массив `{ "label": "...", "value": "..." }` |
+
+Для приватной коллекции создайте Static Token с правом `read` на `products` и добавьте его в
+`DIRECTUS_TOKEN`. Если Directus недоступен или коллекция пуста, сайт покажет локальные демо-товары.
+
+## 2. Коллекция `orders`
 
 Создайте коллекцию **orders** со следующими полями:
 
@@ -27,18 +61,19 @@
 
 Создайте Static Token в Directus с правами на создание и чтение `orders`.
 
-## 2. Переменные окружения сайта
+## 3. Переменные окружения сайта
 
 ```env
 DIRECTUS_URL=https://your-directus.example.com
 DIRECTUS_TOKEN=your-static-token
+DIRECTUS_PRODUCTS_COLLECTION=products
 DIRECTUS_WEBHOOK_SECRET=random-secret-string
 
 RESEND_API_KEY=re_...
 EMAIL_FROM="Ducati Parts <orders@yourdomain.com>"
 ```
 
-## 3. Flow: письмо клиенту после подтверждения
+## 4. Flow: письмо клиенту после подтверждения
 
 В Directus → **Settings → Flows** создайте flow:
 
@@ -62,7 +97,7 @@ EMAIL_FROM="Ducati Parts <orders@yourdomain.com>"
      }
      ```
 
-## 4. Рабочий процесс
+## 5. Рабочий процесс
 
 1. Клиент оформляет заказ на `/checkout` → заказ создаётся в Directus со статусом `pending`
 2. Администратор проверяет заказ в Directus
@@ -70,6 +105,6 @@ EMAIL_FROM="Ducati Parts <orders@yourdomain.com>"
 4. Flow вызывает `/api/orders/notify` → клиенту уходит email с составом заказа
 5. Поле `email_sent_at` обновляется, повторная отправка не произойдёт
 
-## 5. Отклонение заказа
+## 6. Отклонение заказа
 
 При статусе `rejected` или `cancelled` письмо не отправляется. При необходимости можно добавить отдельный flow.

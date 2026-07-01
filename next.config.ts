@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**', // This allows any path under the hostname
       },
+      {
+        protocol: 'http',
+        hostname: '91.92.43.31',
+        port: '8055',
+        pathname: '/assets/**',
+      },
     ],
   },
   output: 'standalone',

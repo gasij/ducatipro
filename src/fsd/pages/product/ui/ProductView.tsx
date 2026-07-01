@@ -67,7 +67,7 @@ export default function ProductView({product}: {product: Product}) {
     ? 'Склад в Москве'
     : product.isLastInMilan
       ? 'Склад в Милане'
-      : 'Предзаказ из Италии';
+      : 'Доставка из Италии';
   const deliveryText = product.isAvailableInMoscow
     ? 'Товар уже в России. Менеджер подтвердит наличие и способ получения.'
     : product.isLastInMilan

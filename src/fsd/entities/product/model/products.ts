@@ -17,14 +17,287 @@ export type Product = {
   specs?: {label: string; value: string}[];
 };
 
-export const products: Product[] = [
+type DirectusProduct = Record<string, unknown>;
+
+const DEFAULT_PRODUCTS_COLLECTION = 'products';
+
+function formatPrice(amount: number) {
+  return `${amount.toLocaleString('ru-RU')} ₽`;
+}
+
+function getString(item: DirectusProduct, fields: string[]) {
+  for (const field of fields) {
+    const value = item[field];
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+    if (typeof value === 'number') {
+      return String(value);
+    }
+  }
+
+  return undefined;
+}
+
+function getNumber(item: DirectusProduct, fields: string[]) {
+  for (const field of fields) {
+    const value = item[field];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value.replace(/[^\d.-]/g, ''));
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function getBoolean(item: DirectusProduct, fields: string[]) {
+  for (const field of fields) {
+    const value = item[field];
+    if (typeof value === 'boolean') {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function getStringArray(item: DirectusProduct, fields: string[]) {
+  for (const field of fields) {
+    const value = item[field];
+    if (Array.isArray(value)) {
+      return value
+        .map((entry) => {
+          if (typeof entry === 'string') {
+            return entry;
+          }
+          if (entry && typeof entry === 'object') {
+            return getString(entry as DirectusProduct, ['name', 'title', 'model']);
+          }
+          return undefined;
+        })
+        .filter((entry): entry is string => Boolean(entry));
+    }
+    if (typeof value === 'string' && value.trim()) {
+      return value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return undefined;
+}
+
+function getSpecs(item: DirectusProduct) {
+  const specs = item.specs || item.specifications || item.characteristics;
+
+  if (!Array.isArray(specs)) {
+    return undefined;
+  }
+
+  return specs
+    .map((spec) => {
+      if (!spec || typeof spec !== 'object') {
+        return null;
+      }
+
+      const specRecord = spec as DirectusProduct;
+      const label = getString(specRecord, ['label', 'name', 'title']);
+      const value = getString(specRecord, ['value', 'text']);
+
+      return label && value ? {label, value} : null;
+    })
+    .filter((spec): spec is {label: string; value: string} => Boolean(spec));
+}
+
+function getAssetUrl(asset: unknown) {
+  const directusUrl = process.env.DIRECTUS_URL;
+
+  if (!asset) {
+    return undefined;
+  }
+
+  if (typeof asset === 'string') {
+    if (/^https?:\/\//.test(asset)) {
+      return asset;
+    }
+    return directusUrl ? `${directusUrl}/assets/${asset}` : asset;
+  }
+
+  if (typeof asset === 'object') {
+    const assetRecord = asset as DirectusProduct;
+    const directUrl = getString(assetRecord, ['url']);
+    const id = getString(assetRecord, ['id']);
+
+    if (directUrl) {
+      return directUrl;
+    }
+    if (id && directusUrl) {
+      return `${directusUrl}/assets/${id}`;
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeCategory(value?: string): Product['category'] | undefined {
+  const category = value?.trim().toLowerCase();
+
+  if (!category) {
+    return undefined;
+  }
+
+  if (category === 'new' || category === 'новинки' || category === 'новинка') {
+    return 'new';
+  }
+
+  if (
+    category === 'discounted' ||
+    category === 'discount' ||
+    category === 'sale' ||
+    category === 'скидка' ||
+    category === 'скидки'
+  ) {
+    return 'discounted';
+  }
+
+  if (category === 'outlet' || category === 'аутлет') {
+    return 'outlet';
+  }
+
+  if (category === 'unsorted' || category === 'без сортировки') {
+    return 'unsorted';
+  }
+
+  return undefined;
+}
+
+function getCategory(item: DirectusProduct): Product['category'] {
+  const category = normalizeCategory(getString(item, ['category', 'primary_category', 'status', 'type']));
+
+  if (category) {
+    return category;
+  }
+
+  if (getBoolean(item, ['is_outlet'])) {
+    return 'outlet';
+  }
+
+  if (getBoolean(item, ['is_discounted'])) {
+    return 'discounted';
+  }
+
+  if (getBoolean(item, ['is_new'])) {
+    return 'new';
+  }
+
+  return 'unsorted';
+}
+
+function normalizeLocation(value?: string) {
+  const location = value?.trim().toLowerCase();
+
+  if (!location) {
+    return undefined;
+  }
+
+  if (location === 'moscow' || location === 'москва' || location === 'msk') {
+    return 'moscow';
+  }
+
+  if (location === 'milan' || location === 'милан' || location === 'milano') {
+    return 'milan';
+  }
+
+  return undefined;
+}
+
+function normalizeProduct(item: DirectusProduct, index: number): Product {
+  const price = getNumber(item, ['price', 'amount', 'total']) || 0;
+  const oldPrice = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
+  const stockLocation = normalizeLocation(getString(item, ['stock_location']));
+  const image =
+    getAssetUrl(item.image) ||
+    getAssetUrl(item.main_image) ||
+    getAssetUrl(item.photo) ||
+    `https://picsum.photos/seed/directus-${index}/800/800`;
+
+  return {
+    id: getString(item, ['id', 'slug', 'article', 'sku']) || String(index + 1),
+    image,
+    title: getString(item, ['title', 'name', 'product_name']) || 'Товар Ducati',
+    desc: getString(item, ['desc', 'short_description', 'subtitle']),
+    price,
+    priceFormatted: getString(item, ['priceFormatted', 'price_formatted']) || formatPrice(price),
+    oldPrice,
+    badgeText:
+      getString(item, ['badgeText', 'badge_text', 'badge']) ||
+      (getBoolean(item, ['is_outlet'])
+        ? 'Склад в Милане'
+        : getBoolean(item, ['is_discounted'])
+          ? 'Склад в России'
+          : undefined),
+    badgeColor: getString(item, ['badgeColor', 'badge_color']) === 'gray' ? 'gray' : 'green',
+    discountBadge: getString(item, ['discountBadge', 'discount_badge', 'discount']),
+    isAvailableInMoscow:
+      getBoolean(item, ['isAvailableInMoscow', 'is_available_in_moscow']) ||
+      stockLocation === 'moscow',
+    isLastInMilan:
+      getBoolean(item, ['isLastInMilan', 'is_last_in_milan']) ||
+      stockLocation === 'milan',
+    category: getCategory(item),
+    models: getStringArray(item, ['models', 'model_names', 'ducati_models']),
+    description: getString(item, ['description', 'full_description']),
+    specs: getSpecs(item),
+  };
+}
+
+async function getProductsFromDirectus() {
+  const directusUrl = process.env.DIRECTUS_URL;
+  const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
+
+  if (!directusUrl) {
+    return null;
+  }
+
+  const url = new URL(`/items/${collection}`, directusUrl);
+  url.searchParams.set('fields', '*.*');
+  url.searchParams.set('limit', '-1');
+
+  const res = await fetch(url, {
+    headers: process.env.DIRECTUS_TOKEN
+      ? {
+          Authorization: `Bearer ${process.env.DIRECTUS_TOKEN}`,
+        }
+      : undefined,
+    next: {revalidate: 60},
+  });
+
+  if (!res.ok) {
+    return null;
+  }
+
+  const payload = (await res.json()) as {data?: DirectusProduct[]};
+  if (!Array.isArray(payload.data)) {
+    return null;
+  }
+
+  return payload.data.map(normalizeProduct);
+}
+
+export const fallbackProducts: Product[] = [
   {
     id: '1',
     image: 'https://picsum.photos/seed/mainprod/800/800',
     title: 'ZDU129S00SSRE5 ZARD RACING STEEL EXHAUST SLIP-ON E5 (DVL 1260)',
     price: 220477,
     priceFormatted: '220 477 ₽',
-    badgeText: 'Предзаказ',
     category: 'new',
     models: ['Diavel 1260'],
     description:
@@ -42,7 +315,6 @@ export const products: Product[] = [
     title: 'ZDU005SI0TTR ZARD PAIR OF COMPENSED TITANIUM SILENCERS',
     price: 231435,
     priceFormatted: '231 435 ₽',
-    badgeText: 'Предзаказ',
     category: 'new',
     models: ['Monster 1200', 'Monster 821'],
   },
@@ -52,7 +324,6 @@ export const products: Product[] = [
     title: '71160PK ARROW PAIR OF TITANIUM SILENCERS W/ LINK',
     price: 139532,
     priceFormatted: '139 532 ₽',
-    badgeText: 'Предзаказ',
     category: 'new',
     models: ['Panigale V4', 'Streetfighter V4'],
   },
@@ -62,7 +333,6 @@ export const products: Product[] = [
     title: '71162PK ARROW PAIR OF TITANIUM SILENCERS W/ LINK',
     price: 205808,
     priceFormatted: '205 808 ₽',
-    badgeText: 'Предзаказ',
     category: 'new',
     models: ['Panigale V2', 'Streetfighter V2'],
   },
@@ -72,7 +342,6 @@ export const products: Product[] = [
     title: 'ZDU129S00SSRE5-B ZARD RACING BLACK STEEL EXHAUST',
     price: 246546,
     priceFormatted: '246 546 ₽',
-    badgeText: 'Предзаказ',
     category: 'new',
     models: ['Diavel 1260'],
   },
@@ -219,10 +488,23 @@ export const products: Product[] = [
   },
 ];
 
-export function getProduct(id: string): Product | undefined {
-  return products.find((p) => p.id === id);
+export const products = fallbackProducts;
+
+export async function getProducts(): Promise<Product[]> {
+  try {
+    const directusProducts = await getProductsFromDirectus();
+    return directusProducts && directusProducts.length > 0 ? directusProducts : fallbackProducts;
+  } catch {
+    return fallbackProducts;
+  }
 }
 
-export function getProductsByCategory(category: Product['category']): Product[] {
-  return products.filter((p) => p.category === category);
+export async function getProduct(id: string): Promise<Product | undefined> {
+  const items = await getProducts();
+  return items.find((p) => p.id === id);
+}
+
+export async function getProductsByCategory(category: Product['category']): Promise<Product[]> {
+  const items = await getProducts();
+  return items.filter((p) => p.category === category);
 }

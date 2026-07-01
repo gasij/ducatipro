@@ -2,8 +2,8 @@ import {getProduct} from '@/src/fsd/entities/product';
 import CheckoutForm from './CheckoutForm';
 import styles from './checkout-page.module.css';
 
-export default function CheckoutPage() {
-  const cartItem = getProduct('1');
+export default async function CheckoutPage() {
+  const cartItem = await getProduct('1');
 
   if (!cartItem) {
     return null;
