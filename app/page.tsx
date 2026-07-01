@@ -1,16 +1,15 @@
-import {getProducts} from '@/src/fsd/entities/product';
+import {getProducts, hasProductCategory} from '@/src/fsd/entities/product';
 import {HomePage} from '@/src/fsd/pages/home';
 
 export default async function Home() {
   const products = await getProducts();
-  const newArrivals = products.filter((product) => product.category === 'new');
-  const discounted = products.filter((product) => product.category === 'discounted');
-  const milanOutlet = products.filter((product) => product.category === 'outlet');
-  const uncategorized = products.filter((product) => product.category === 'unsorted');
+  const newArrivals = products.filter((product) => hasProductCategory(product, 'new'));
+  const discounted = products.filter((product) => hasProductCategory(product, 'discounted'));
+  const milanOutlet = products.filter((product) => hasProductCategory(product, 'outlet'));
 
   return (
     <HomePage
-      newArrivals={newArrivals.length > 0 ? newArrivals : uncategorized}
+      newArrivals={newArrivals}
       discounted={discounted}
       milanOutlet={milanOutlet}
     />

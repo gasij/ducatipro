@@ -1,267 +1,214 @@
 .footer {
-  margin-top: clamp(3rem, 8vw, 6rem);
-  border-top: 1px solid rgb(255 255 255 / 10%);
-  background: #050505;
-  color: #ffffff;
-  padding: 2.5rem 0 1.5rem;
+    margin-top: clamp(3rem, 8vw, 6rem);
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    background: #050505;
+    color: #ffffff;
+    padding: 2.5rem 0 1.5rem;
 }
 
 .container {
-  position: relative;
-  width: 100%;
-  max-width: var(--container-wide);
-  margin: 0 auto;
-  padding-right: var(--safe-page-padding);
-  padding-left: var(--safe-page-padding);
+    position: relative;
+    width: 100%;
+    max-width: var(--container-wide);
+    margin: 0 auto;
+    padding-right: var(--safe-page-padding);
+    padding-left: var(--safe-page-padding);
 }
 
 .columns {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  margin-bottom: 2.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .columnTitle {
-  margin: 0 0 1rem;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 700;
+    margin: 0 0 1rem;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 700;
 }
 
 .linkList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0;
-  color: #a1a1aa;
-  font-size: 0.8125rem;
-  list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    color: #a1a1aa;
+    font-size: 0.8125rem;
+    list-style: none;
 }
 
 .footerLink,
 .contactLink {
-  transition: color 160ms ease;
+    transition: color 160ms ease;
 }
 
 .footerLink:hover,
 .contactLink:hover {
-  color: var(--color-accent);
+    color: var(--color-accent);
 }
 
 .contacts {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 0.5rem;
 }
 
-.contactGroup + .contactGroup {
-  margin-top: 1.5rem;
+.contactGroup+.contactGroup {
+    margin-top: 1.5rem;
 }
 
 .contactLink {
-  color: #ffffff;
-  font-size: clamp(1.125rem, 5vw, 1.5rem);
-  font-weight: 900;
-  letter-spacing: 0;
-  overflow-wrap: anywhere;
+    color: #ffffff;
+    font-size: clamp(1.125rem, 5vw, 1.5rem);
+    font-weight: 900;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
 }
 
 .contactNote {
-  margin-top: 0.25rem;
-  color: #71717a;
-  font-size: 0.6875rem;
+    margin-top: 0.25rem;
+    color: #71717a;
+    font-size: 0.6875rem;
 }
 
 .bottom {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.25rem;
-  border-top: 1px solid rgb(255 255 255 / 10%);
-  padding-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    padding-top: 1.5rem;
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  transition:
-    opacity 160ms ease,
-    transform 180ms var(--ease-out);
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    transition: opacity 160ms ease, transform 180ms var(--ease-out);
 }
 
 .brand:hover {
-  opacity: 1;
-  transform: translateY(-1px);
+    opacity: 1;
+    transform: translateY(-1px);
 }
 
 .logo {
-  width: auto;
-  height: 2rem;
-  max-width: min(220px, 62vw);
+    width: auto;
+    height: 2rem;
+    max-width: min(220px, 62vw);
 }
 
 .payments {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
 }
 
 .mastercard {
-  display: flex;
-  gap: 0.25rem;
-  padding-top: 0.25rem;
+    display: flex;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
 }
 
 .cardCircle {
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 999px;
-  opacity: 0.9;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    opacity: 0.9;
 }
 
-.cardCircle + .cardCircle {
-  margin-left: -0.75rem;
+.cardCircle+.cardCircle {
+    margin-left: -0.75rem;
 }
 
 .cardRed {
-  background: #ef4444;
+    background: #ef4444;
 }
 
 .cardYellow {
-  background: #eab308;
+    background: #eab308;
 }
 
 .visa {
-  color: #dbeafe;
-  font-size: 1.125rem;
-  font-style: italic;
-  font-weight: 900;
-  letter-spacing: 0;
+    color: #dbeafe;
+    font-size: 1.125rem;
+    font-style: italic;
+    font-weight: 900;
+    letter-spacing: 0;
 }
 
 .mir {
-  color: #86efac;
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.scrollTop {
-  position: fixed;
-  right: 1rem;
-  bottom: 1.25rem;
-  z-index: 40;
-  border: 0;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #000000;
-  padding: 0.75rem;
-  box-shadow: 0 10px 24px rgb(0 0 0 / 35%);
-  transition:
-    background-color 160ms ease,
-    transform 180ms var(--ease-out);
-}
-
-.scrollTop:hover {
-  background: #e5e7eb;
-  transform: translateY(-1px);
-}
-
-.scrollTopIcon {
-  width: 1.25rem;
-  height: 1.25rem;
+    color: #86efac;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0;
 }
 
 @media (min-width: 640px) {
-  .footer {
-    margin-top: 6rem;
-    padding-top: 4rem;
-    padding-bottom: 2rem;
-  }
-
-  .columns {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 3rem;
-    margin-bottom: 4rem;
-  }
-
-  .columnTitle {
-    margin-bottom: 1.5rem;
-  }
-
-  .linkList {
-    gap: 1rem;
-  }
-
-  .contacts {
-    grid-column: span 2;
-    align-items: flex-end;
-    text-align: right;
-    padding-top: 0;
-  }
-
-  .contactGroup + .contactGroup {
-    margin-top: 2rem;
-  }
-
-  .bottom {
-    flex-direction: row;
-    align-items: center;
-    padding-top: 2rem;
-  }
-
-  .logo {
-    height: 2.25rem;
-    max-width: 220px;
-  }
-
-  .payments {
-    gap: 1.5rem;
-  }
-
-  .cardCircle {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  .visa {
-    font-size: 1.25rem;
-  }
-
-  .mir {
-    font-size: 1.125rem;
-  }
-
-  .scrollTop {
-    right: 1.5rem;
-    bottom: 1.5rem;
-  }
+    .footer {
+        margin-top: 6rem;
+        padding-top: 4rem;
+        padding-bottom: 2rem;
+    }
+    .columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3rem;
+        margin-bottom: 4rem;
+    }
+    .columnTitle {
+        margin-bottom: 1.5rem;
+    }
+    .linkList {
+        gap: 1rem;
+    }
+    .contacts {
+        grid-column: span 2;
+        align-items: flex-end;
+        text-align: right;
+        padding-top: 0;
+    }
+    .contactGroup+.contactGroup {
+        margin-top: 2rem;
+    }
+    .bottom {
+        flex-direction: row;
+        align-items: center;
+        padding-top: 2rem;
+    }
+    .logo {
+        height: 2.25rem;
+        max-width: 220px;
+    }
+    .payments {
+        gap: 1.5rem;
+    }
+    .cardCircle {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+    .visa {
+        font-size: 1.25rem;
+    }
+    .mir {
+        font-size: 1.125rem;
+    }
+    .scrollTop {
+        right: 1.5rem;
+        bottom: 1.5rem;
+    }
 }
 
 @media (min-width: 1024px) {
-  .columns {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .contacts {
-    grid-column: span 2;
-  }
-
-  .scrollTop {
-    position: absolute;
-    top: 50%;
-    right: -0.5rem;
-    bottom: auto;
-    transform: translateY(-50%);
-  }
-
-  .scrollTop:hover {
-    transform: translateY(calc(-50% - 1px));
-  }
+    .columns {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .contacts {
+        grid-column: span 2;
+    }
 }

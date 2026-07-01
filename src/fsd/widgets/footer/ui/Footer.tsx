@@ -92,14 +92,6 @@ export default function Footer() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
-          className={styles.scrollTop}
-          aria-label="Наверх"
-        >
-          <ArrowUp className={styles.scrollTopIcon} />
-        </button>
       </div>
     </footer>
   );

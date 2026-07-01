@@ -3,7 +3,7 @@
 import {useEffect, useRef} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {ChevronRight, Heart, PackageCheck, ShieldCheck, Star, Truck} from 'lucide-react';
+import {ChevronRight, Heart, ShieldCheck, Star, Truck} from 'lucide-react';
 import type {Product} from '@/src/fsd/entities/product';
 import {gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
@@ -58,21 +58,7 @@ export default function ProductView({product}: {product: Product}) {
     return () => ctx.revert();
   }, [product.id]);
 
-  const statusBadgeClass =
-    product.badgeColor === 'gray'
-      ? `${styles.badge} ${styles.grayBadge}`
-      : `${styles.badge} ${styles.greenBadge}`;
   const article = product.title.split(' ')[0];
-  const deliveryTitle = product.isAvailableInMoscow
-    ? 'Склад в Москве'
-    : product.isLastInMilan
-      ? 'Склад в Милане'
-      : 'Доставка из Италии';
-  const deliveryText = product.isAvailableInMoscow
-    ? 'Товар уже в России. Менеджер подтвердит наличие и способ получения.'
-    : product.isLastInMilan
-      ? 'Последние позиции на складе. Цена указана до двери после расходов и пошлин.'
-      : 'Поставка занимает 4-6 недель. Цена указана до двери после расходов и пошлин.';
 
   return (
     <div ref={ref} className={styles.page}>
@@ -104,11 +90,6 @@ export default function ProductView({product}: {product: Product}) {
             ))}
           </div>
           <div className={styles.mainImageBox}>
-            {product.badgeText && (
-              <div className={styles.badgeGroup}>
-                <span className={statusBadgeClass}>{product.badgeText}</span>
-              </div>
-            )}
             <Image
               src={product.image}
               fill
@@ -176,20 +157,15 @@ export default function ProductView({product}: {product: Product}) {
                 <Truck className={styles.deliveryIcon} />
               </div>
               <div>
-                <h2 className={styles.deliveryTitle}>{deliveryTitle}</h2>
-                <p className={styles.deliveryText}>{deliveryText}</p>
+                <h2 className={styles.deliveryTitle}>Доставка до двери</h2>
+                <p className={styles.deliveryText}>
+                  Менеджер уточнит сроки и финальные условия после оформления заказа.
+                </p>
               </div>
             </div>
           </div>
 
           <div className={styles.quickFacts}>
-            <div className={styles.fact}>
-              <PackageCheck className={styles.factIcon} />
-              <div>
-                <span className={styles.factLabel}>Статус</span>
-                <strong>{product.badgeText || 'Под заказ'}</strong>
-              </div>
-            </div>
             <div className={styles.fact}>
               <Truck className={styles.factIcon} />
               <div>

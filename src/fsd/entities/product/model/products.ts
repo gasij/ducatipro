@@ -9,6 +9,9 @@ export type Product = {
   badgeText?: string;
   badgeColor?: 'green' | 'gray';
   discountBadge?: string;
+  isNew?: boolean;
+  isDiscounted?: boolean;
+  isOutlet?: boolean;
   isAvailableInMoscow?: boolean;
   isLastInMilan?: boolean;
   category: 'new' | 'discounted' | 'outlet' | 'unsorted';
@@ -178,23 +181,26 @@ function normalizeCategory(value?: string): Product['category'] | undefined {
   return undefined;
 }
 
-function getCategory(item: DirectusProduct): Product['category'] {
+function getCategory(
+  item: DirectusProduct,
+  flags?: {isNew?: boolean; isDiscounted?: boolean; isOutlet?: boolean},
+): Product['category'] {
   const category = normalizeCategory(getString(item, ['category', 'primary_category', 'status', 'type']));
 
   if (category) {
     return category;
   }
 
-  if (getBoolean(item, ['is_outlet'])) {
-    return 'outlet';
+  if (flags?.isNew) {
+    return 'new';
   }
 
-  if (getBoolean(item, ['is_discounted'])) {
+  if (flags?.isDiscounted) {
     return 'discounted';
   }
 
-  if (getBoolean(item, ['is_new'])) {
-    return 'new';
+  if (flags?.isOutlet) {
+    return 'outlet';
   }
 
   return 'unsorted';
@@ -222,6 +228,9 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
   const price = getNumber(item, ['price', 'amount', 'total']) || 0;
   const oldPrice = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
   const stockLocation = normalizeLocation(getString(item, ['stock_location']));
+  const isNew = getBoolean(item, ['isNew', 'is_new']);
+  const isDiscounted = getBoolean(item, ['isDiscounted', 'is_discounted']);
+  const isOutlet = getBoolean(item, ['isOutlet', 'is_outlet']);
   const image =
     getAssetUrl(item.image) ||
     getAssetUrl(item.main_image) ||
@@ -238,20 +247,23 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
     oldPrice,
     badgeText:
       getString(item, ['badgeText', 'badge_text', 'badge']) ||
-      (getBoolean(item, ['is_outlet'])
+      (isOutlet
         ? 'Склад в Милане'
-        : getBoolean(item, ['is_discounted'])
+        : isDiscounted
           ? 'Склад в России'
           : undefined),
     badgeColor: getString(item, ['badgeColor', 'badge_color']) === 'gray' ? 'gray' : 'green',
     discountBadge: getString(item, ['discountBadge', 'discount_badge', 'discount']),
+    isNew,
+    isDiscounted,
+    isOutlet,
     isAvailableInMoscow:
       getBoolean(item, ['isAvailableInMoscow', 'is_available_in_moscow']) ||
       stockLocation === 'moscow',
     isLastInMilan:
       getBoolean(item, ['isLastInMilan', 'is_last_in_milan']) ||
       stockLocation === 'milan',
-    category: getCategory(item),
+    category: getCategory(item, {isNew, isDiscounted, isOutlet}),
     models: getStringArray(item, ['models', 'model_names', 'ducati_models']),
     description: getString(item, ['description', 'full_description']),
     specs: getSpecs(item),
@@ -506,5 +518,21 @@ export async function getProduct(id: string): Promise<Product | undefined> {
 
 export async function getProductsByCategory(category: Product['category']): Promise<Product[]> {
   const items = await getProducts();
-  return items.filter((p) => p.category === category);
+  return items.filter((product) => hasProductCategory(product, category));
+}
+
+export function hasProductCategory(product: Product, category: Product['category']) {
+  if (category === 'new') {
+    return product.isNew || product.category === 'new';
+  }
+
+  if (category === 'discounted') {
+    return product.isDiscounted || product.category === 'discounted';
+  }
+
+  if (category === 'outlet') {
+    return product.isOutlet || product.category === 'outlet';
+  }
+
+  return product.category === 'unsorted' && !product.isNew && !product.isDiscounted && !product.isOutlet;
 }
