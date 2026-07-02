@@ -1,5 +1,5 @@
 import {notFound} from 'next/navigation';
-import {getProduct, getProducts} from '@/src/fsd/entities/product';
+import {getProduct, getProductArticle, getProducts} from '@/src/fsd/entities/product';
 import {ProductView} from '@/src/fsd/pages/product';
 
 type Props = {
@@ -8,7 +8,7 @@ type Props = {
 
 export async function generateStaticParams() {
   const products = await getProducts();
-  return products.map((p) => ({id: p.id}));
+  return products.map((product) => ({id: getProductArticle(product)}));
 }
 
 export default async function ProductPage({params}: Props) {

@@ -1,10 +1,10 @@
 'use client';
 
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {BadgeDollarSign, Check, CreditCard, Landmark, ShoppingCart, Trash2, Wallet} from 'lucide-react';
-import type {Product} from '@/src/fsd/entities/product';
+import {getProductHref, type Product} from '@/src/fsd/entities/product';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
 
@@ -15,7 +15,10 @@ type CartLine = {
 
 type Props = {
   initialItem: Product;
+  products: Product[];
 };
+
+const CART_STORAGE_KEY = 'ducati-cart';
 
 const PROMO_CODES: Record<string, number> = {
   DUCATI10: 10,
@@ -33,7 +36,7 @@ function formatPrice(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₽`;
 }
 
-export default function CartClient({initialItem}: Props) {
+export default function CartClient({initialItem, products}: Props) {
   const [line, setLine] = useState<CartLine | null>(null);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
@@ -45,32 +48,82 @@ export default function CartClient({initialItem}: Props) {
   const total = Math.max(subtotal - discountAmount, 0);
 
   const recentItem = initialItem;
+  const checkoutHref = line
+    ? `/checkout?items=${encodeURIComponent(
+        JSON.stringify([{product_id: line.product.id, quantity: line.quantity}]),
+      )}`
+    : '/checkout';
   const itemCountLabel = useMemo(() => {
     if (quantity === 1) return 'Товар (1)';
     return `Товары (${quantity})`;
   }, [quantity]);
 
-  function increase() {
-    setLine((current) =>
-      current ? {...current, quantity: Math.min(current.quantity + 1, 99)} : current,
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const rawCart = window.localStorage.getItem(CART_STORAGE_KEY);
+      if (!rawCart) {
+        return;
+      }
+
+      try {
+        const cart = JSON.parse(rawCart) as Array<{product_id: string; quantity: number}>;
+        const firstItem = cart.find((item) => item.product_id && item.quantity > 0);
+        const product = products.find((item) => item.id === firstItem?.product_id);
+
+        if (firstItem && product) {
+          setLine({
+            product,
+            quantity: Math.min(Math.max(Math.floor(firstItem.quantity), 1), 99),
+          });
+        }
+      } catch {
+        window.localStorage.removeItem(CART_STORAGE_KEY);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [products]);
+
+  function persistLine(nextLine: CartLine | null) {
+    if (!nextLine) {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify([{product_id: nextLine.product.id, quantity: nextLine.quantity}]),
     );
+  }
+
+  function increase() {
+    setLine((current) => {
+      const next = current ? {...current, quantity: Math.min(current.quantity + 1, 99)} : current;
+      persistLine(next);
+      return next;
+    });
   }
 
   function decrease() {
     setLine((current) => {
       if (!current) return current;
-      return {...current, quantity: Math.max(current.quantity - 1, 1)};
+      const next = {...current, quantity: Math.max(current.quantity - 1, 1)};
+      persistLine(next);
+      return next;
     });
   }
 
   function removeItem() {
     setLine(null);
+    persistLine(null);
     setAppliedPromo(null);
     setPromoMessage('');
   }
 
   function restoreItem() {
-    setLine({product: initialItem, quantity: 1});
+    const next = {product: initialItem, quantity: 1};
+    setLine(next);
+    persistLine(next);
   }
 
   function applyPromo() {
@@ -108,7 +161,7 @@ export default function CartClient({initialItem}: Props) {
           {line ? (
             <div className={styles.items}>
               <div className={styles.cartItem}>
-                <Link href={`/product/${line.product.id}`} className={styles.itemImageLink}>
+                <Link href={getProductHref(line.product)} className={styles.itemImageLink}>
                   <Image
                     src={line.product.image}
                     fill
@@ -120,7 +173,7 @@ export default function CartClient({initialItem}: Props) {
 
                 <div className={styles.itemInfo}>
                   <div className={styles.itemHeader}>
-                    <Link href={`/product/${line.product.id}`} className={styles.itemTitle}>
+                    <Link href={getProductHref(line.product)} className={styles.itemTitle}>
                       {line.product.title}
                     </Link>
                     <button
@@ -180,7 +233,7 @@ export default function CartClient({initialItem}: Props) {
           <div className={styles.recent}>
             <h2 className={styles.sectionTitle}>Ранее просмотренные</h2>
             <div className={styles.recentGrid}>
-              <Link href={`/product/${recentItem.id}`} className={styles.recentCard}>
+              <Link href={getProductHref(recentItem)} className={styles.recentCard}>
                 <div className={styles.recentImageBox}>
                   <Image
                     src={recentItem.image}
@@ -260,7 +313,7 @@ export default function CartClient({initialItem}: Props) {
             </div>
 
             {line ? (
-              <Link href="/checkout" className={styles.checkoutLink}>
+              <Link href={checkoutHref} className={styles.checkoutLink}>
                 Оформить заказ
               </Link>
             ) : (

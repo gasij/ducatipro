@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import type {Product} from '../model/products';
+import {getProductHref, type Product} from '../model/products';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({
@@ -13,9 +13,11 @@ export default function ProductCard({
   priceFormatted,
   oldPrice,
   discountBadge,
+  sku,
 }: Pick<
   Product,
   | 'id'
+  | 'sku'
   | 'image'
   | 'title'
   | 'desc'
@@ -24,7 +26,7 @@ export default function ProductCard({
   | 'discountBadge'
 >) {
   return (
-    <Link href={`/product/${id}`} className={styles.card}>
+    <Link href={getProductHref({id, sku, title})} className={styles.card}>
       <div className={styles.discountGroup}>
         {discountBadge && <span className={styles.discountBadge}>{discountBadge}</span>}
       </div>

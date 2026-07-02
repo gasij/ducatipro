@@ -9,6 +9,10 @@ export default async function OutletPage() {
       title="Аутлет в Милане"
       description="Товары со склада в Милане — цена указана до двери"
       items={products}
+      currentPage={1}
+      totalPages={1}
+      totalItems={products.length}
+      pageSize={products.length}
     />
   );
 }

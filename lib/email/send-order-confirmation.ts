@@ -17,13 +17,17 @@ export function isEmailConfigured() {
 }
 
 function buildItemsHtml(order: DirectusOrder) {
-  const rows = order.items
+  const items = order.items || [];
+  const rows = items
     .map(
       (item) => `
       <tr>
-        <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;">${item.title}</td>
+        <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;">
+          ${item.product_title}
+          <div style="font-size:12px;color:#777;margin-top:4px;">${item.product_sku}</div>
+        </td>
         <td style="padding:12px 8px;border-bottom:1px solid #eee;font-size:14px;text-align:center;">${item.quantity}</td>
-        <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;text-align:right;white-space:nowrap;">${item.price_formatted}</td>
+        <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;text-align:right;white-space:nowrap;">${formatKopecks(item.price)}</td>
       </tr>
     `,
     )
@@ -43,6 +47,10 @@ function buildItemsHtml(order: DirectusOrder) {
   `;
 }
 
+function formatKopecks(amount: number) {
+  return `${(amount / 100).toLocaleString('ru-RU')} ₽`;
+}
+
 export async function sendOrderConfirmationEmail(order: DirectusOrder) {
   const resend = getResend();
   if (!resend) {
@@ -53,19 +61,25 @@ export async function sendOrderConfirmationEmail(order: DirectusOrder) {
     <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#111;">
       <h1 style="font-size:22px;margin:0 0 16px;">Ваш заказ подтверждён</h1>
       <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
-        Здравствуйте, ${order.customer_name}! Мы подтвердили ваш заказ <strong>${order.order_number}</strong>.
+        Здравствуйте, ${order.customer_name}! Мы подтвердили ваш заказ.
         Ниже — состав заказа и данные доставки.
       </p>
 
       ${buildItemsHtml(order)}
 
       <p style="font-size:20px;font-weight:700;margin:24px 0 24px;text-align:right;">
-        Итого: ${order.total_formatted}
+        Итого: ${formatKopecks(order.total)}
       </p>
 
       <div style="background:#f9f9f9;border:1px solid #eee;border-radius:4px;padding:16px;margin-bottom:24px;">
-        <p style="margin:0 0 8px;font-size:14px;"><strong>Телефон:</strong> ${order.customer_phone}</p>
-        <p style="margin:0 0 8px;font-size:14px;"><strong>Адрес:</strong> ${order.delivery_address}</p>
+        <p style="margin:0 0 8px;font-size:14px;"><strong>Телефон:</strong> ${order.phone}</p>
+        <p style="margin:0 0 8px;font-size:14px;"><strong>Город:</strong> ${order.city}</p>
+        <p style="margin:0 0 8px;font-size:14px;"><strong>Почтовый адрес:</strong> ${order.postal_address}</p>
+        ${
+          order.cdek_address
+            ? `<p style="margin:0 0 8px;font-size:14px;"><strong>СДЭК:</strong> ${order.cdek_address}</p>`
+            : ''
+        }
         ${
           order.comment
             ? `<p style="margin:0;font-size:14px;"><strong>Комментарий:</strong> ${order.comment}</p>`
@@ -82,8 +96,8 @@ export async function sendOrderConfirmationEmail(order: DirectusOrder) {
 
   const {error} = await resend.client.emails.send({
     from: resend.from,
-    to: order.customer_email,
-    subject: `Заказ ${order.order_number} подтверждён — Ducati Parts`,
+    to: order.email,
+    subject: `Заказ подтверждён — Ducati Parts`,
     html,
   });
 

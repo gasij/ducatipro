@@ -9,6 +9,10 @@ export default async function UnsortedPage() {
       title="Товары без сортировки"
       description="Позиции, которые ещё не разнесены по категориям"
       items={products}
+      currentPage={1}
+      totalPages={1}
+      totalItems={products.length}
+      pageSize={products.length}
     />
   );
 }

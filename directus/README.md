@@ -23,6 +23,7 @@
 | `description` или `full_description` | Text |
 | `price_formatted` | String |
 | `old_price` или `old_price_formatted` | String |
+| `sku` | String |
 | `badge_text` | String |
 | `badge_color` | String: `green` или `gray` |
 | `discount_badge` | String |
@@ -41,27 +42,43 @@
 | Поле | Тип | Настройки |
 |------|-----|-----------|
 | `id` | UUID | Primary Key |
-| `status` | Dropdown | значения: `pending`, `confirmed`, `rejected`, `cancelled`, default: `pending` |
-| `order_number` | String | уникальный номер заказа |
+| `status` | Dropdown | `pending`, `confirmed`, `paid`, `shipped`, `delivered`, `cancelled`, default: `pending` |
 | `customer_name` | String | |
-| `customer_email` | String | |
-| `customer_phone` | String | |
-| `delivery_address` | Text | |
+| `phone` | String | |
+| `email` | String | |
+| `city` | String | |
+| `postal_address` | Text | |
+| `cdek_address` | Text | nullable |
 | `comment` | Text | nullable |
-| `total` | Integer | сумма в рублях |
-| `total_formatted` | String | например `220 477 ₽` |
-| `items` | JSON | массив позиций заказа |
-| `date_confirmed` | DateTime | nullable |
-| `email_sent_at` | DateTime | nullable |
+| `total` | Integer | сумма заказа в копейках |
+| `payment_method` | String | |
+| `delivery_method` | String | |
+| `agreed_to_terms` | Boolean | согласие с офертой |
+| `items` | O2M | связь на `order_items.order_id` |
+
+## 3. Коллекция `order_items`
+
+| Поле | Тип | Настройки |
+|------|-----|-----------|
+| `id` | UUID | Primary Key |
+| `order_id` | M2O | связь на `orders` |
+| `product_id` | M2O | связь на `products` |
+| `product_title` | String | снапшот названия товара |
+| `product_sku` | String | снапшот артикула |
+| `price` | Integer | снапшот цены в копейках |
+| `quantity` | Integer | количество |
+
+`product_title`, `product_sku` и `price` заполняются кодом сайта при создании заказа. Это
+защищает заказ от изменений цены/названия товара после оформления.
 
 ### Права доступа
 
-- Роль **Public** или сервисный токен: **create** на `orders` (только через API сайта)
+- Сервисный токен: `create/read/update` на `orders`, `create/read` на `order_items`, `read` на `products`
 - Роль **Administrator**: полный доступ на чтение/редактирование
 
-Создайте Static Token в Directus с правами на создание и чтение `orders`.
+Создайте Static Token в Directus и добавьте его в `DIRECTUS_TOKEN`.
 
-## 3. Переменные окружения сайта
+## 4. Переменные окружения сайта
 
 ```env
 DIRECTUS_URL=https://your-directus.example.com
@@ -73,7 +90,7 @@ RESEND_API_KEY=re_...
 EMAIL_FROM="Ducati Parts <orders@yourdomain.com>"
 ```
 
-## 4. Flow: письмо клиенту после подтверждения
+## 5. Flow: письмо клиенту после подтверждения
 
 В Directus → **Settings → Flows** создайте flow:
 
@@ -97,14 +114,14 @@ EMAIL_FROM="Ducati Parts <orders@yourdomain.com>"
      }
      ```
 
-## 5. Рабочий процесс
+## 6. Рабочий процесс
 
 1. Клиент оформляет заказ на `/checkout` → заказ создаётся в Directus со статусом `pending`
 2. Администратор проверяет заказ в Directus
-3. Администратор меняет статус на `confirmed` и при необходимости заполняет `date_confirmed`
+3. Администратор меняет статус на `confirmed`
 4. Flow вызывает `/api/orders/notify` → клиенту уходит email с составом заказа
-5. Поле `email_sent_at` обновляется, повторная отправка не произойдёт
+5. Если в `orders` есть поле `email_sent_at`, сайт может использовать его для защиты от повторной отправки
 
-## 6. Отклонение заказа
+## 7. Отклонение заказа
 
-При статусе `rejected` или `cancelled` письмо не отправляется. При необходимости можно добавить отдельный flow.
+При статусе `cancelled` письмо не отправляется. При необходимости можно добавить отдельный flow.

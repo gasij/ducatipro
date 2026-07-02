@@ -1,8 +1,10 @@
 import {createDirectus, createItem, readItem, rest, staticToken, updateItem} from '@directus/sdk';
 import type {CreateOrderPayload, DirectusOrder, OrderItem} from './orders/types';
+import {getProduct, getProductArticle} from '@/src/fsd/entities/product';
 
 type Schema = {
   orders: DirectusOrder[];
+  order_items: OrderItem[];
 };
 
 function getConfig() {
@@ -29,39 +31,56 @@ function getClient() {
   return createDirectus<Schema>(config.url).with(staticToken(config.token)).with(rest());
 }
 
-function formatPrice(amount: number) {
-  return `${amount.toLocaleString('ru-RU')} ₽`;
-}
-
-function buildOrderNumber() {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `DP-${date}-${random}`;
-}
-
 function calcTotal(items: OrderItem[]) {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
+function toKopecks(price: number) {
+  return Math.round(price * 100);
+}
+
+async function buildOrderItems(items: CreateOrderPayload['items']): Promise<OrderItem[]> {
+  const snapshots = await Promise.all(
+    items.map(async (item) => {
+      const product = await getProduct(item.product_id);
+
+      if (!product) {
+        throw new Error(`Product ${item.product_id} was not found`);
+      }
+
+      return {
+        product_id: product.id,
+        product_title: product.title,
+        product_sku: getProductArticle(product),
+        price: toKopecks(product.price),
+        quantity: item.quantity,
+      };
+    }),
+  );
+
+  return snapshots;
+}
+
 export async function createOrderInDirectus(payload: CreateOrderPayload) {
   const client = getClient();
-  const total = calcTotal(payload.items);
+  const items = await buildOrderItems(payload.items);
+  const total = calcTotal(items);
 
   const order = await client.request(
     createItem('orders', {
       status: 'pending',
-      order_number: buildOrderNumber(),
       customer_name: payload.customer_name,
-      customer_email: payload.customer_email,
-      customer_phone: payload.customer_phone,
-      delivery_address: payload.delivery_address,
+      phone: payload.phone,
+      email: payload.email,
+      city: payload.city,
+      postal_address: payload.postal_address,
+      cdek_address: payload.cdek_address || null,
       comment: payload.comment || null,
+      payment_method: payload.payment_method,
+      delivery_method: payload.delivery_method,
+      agreed_to_terms: payload.agreed_to_terms,
       total,
-      total_formatted: formatPrice(total),
-      items: payload.items,
-      date_confirmed: null,
-      email_sent_at: null,
+      items,
     }),
   );
 
@@ -70,7 +89,11 @@ export async function createOrderInDirectus(payload: CreateOrderPayload) {
 
 export async function getOrderFromDirectus(id: string) {
   const client = getClient();
-  return client.request(readItem('orders', id));
+  return client.request(
+    readItem('orders', id, {
+      fields: ['*', {items: ['*']}],
+    }),
+  );
 }
 
 export async function markOrderEmailSent(id: string) {

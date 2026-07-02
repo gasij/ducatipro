@@ -1,10 +1,11 @@
 'use client';
 
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import {ChevronRight, Heart, ShieldCheck, Star, Truck} from 'lucide-react';
-import type {Product} from '@/src/fsd/entities/product';
+import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
 
@@ -16,7 +17,9 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
 };
 
 export default function ProductView({product}: {product: Product}) {
+  const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -58,7 +61,29 @@ export default function ProductView({product}: {product: Product}) {
     return () => ctx.revert();
   }, [product.id]);
 
-  const article = product.title.split(' ')[0];
+  const article = getProductArticle(product);
+
+  function addToCart() {
+    const storageKey = 'ducati-cart';
+    const rawCart = window.localStorage.getItem(storageKey);
+    let cart: Array<{product_id: string; quantity: number}> = [];
+
+    try {
+      cart = rawCart ? (JSON.parse(rawCart) as Array<{product_id: string; quantity: number}>) : [];
+    } catch {
+      cart = [];
+    }
+    const existing = cart.find((item) => item.product_id === product.id);
+
+    if (existing) {
+      existing.quantity = Math.min(existing.quantity + quantity, 99);
+    } else {
+      cart.push({product_id: product.id, quantity});
+    }
+
+    window.localStorage.setItem(storageKey, JSON.stringify(cart));
+    router.push('/cart');
+  }
 
   return (
     <div ref={ref} className={styles.page}>
@@ -138,18 +163,26 @@ export default function ProductView({product}: {product: Product}) {
 
             <div className={styles.purchaseActions}>
               <div className={styles.quantity}>
-                <button type="button" className={styles.quantityButton}>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((current) => Math.max(current - 1, 1))}
+                  className={styles.quantityButton}
+                >
                   -
                 </button>
-                <input type="text" value="1" readOnly className={styles.quantityInput} />
-                <button type="button" className={styles.quantityButton}>
+                <input type="text" value={quantity} readOnly className={styles.quantityInput} />
+                <button
+                  type="button"
+                  onClick={() => setQuantity((current) => Math.min(current + 1, 99))}
+                  className={styles.quantityButton}
+                >
                   +
                 </button>
               </div>
-              <Link href="/cart" className={styles.cartButton}>
-                В корзину 1 шт
+              <button type="button" onClick={addToCart} className={styles.cartButton}>
+                В корзину {quantity} шт
                 <span className={styles.cartHint}>Перейти</span>
-              </Link>
+              </button>
             </div>
 
             <div className={styles.deliveryCard}>

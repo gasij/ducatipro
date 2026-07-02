@@ -1,5 +1,7 @@
 export type Product = {
   id: string;
+  sku?: string;
+  slug?: string;
   image: string;
   title: string;
   desc?: string;
@@ -37,7 +39,7 @@ function formatPrice(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₽`;
 }
 
-function getString(item: DirectusProduct, fields: string[]) {
+function getString(item: DirectusProduct, fields: string[]): string | undefined {
   for (const field of fields) {
     const value = item[field];
     if (typeof value === 'string' && value.trim()) {
@@ -45,6 +47,12 @@ function getString(item: DirectusProduct, fields: string[]) {
     }
     if (typeof value === 'number') {
       return String(value);
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const nested = getString(value as DirectusProduct, ['name', 'title', 'slug', 'model', 'category']);
+      if (nested) {
+        return nested;
+      }
     }
   }
 
@@ -236,6 +244,8 @@ function normalizeLocation(value?: string) {
 function normalizeProduct(item: DirectusProduct, index: number): Product {
   const price = getNumber(item, ['price', 'amount', 'total']) || 0;
   const oldPrice = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
+  const sku = getString(item, ['sku', 'article', 'vendor_code']);
+  const slug = getString(item, ['slug']);
   const stockLocation = normalizeLocation(getString(item, ['stock_location']));
   const isNew = getBoolean(item, ['isNew', 'is_new']);
   const isDiscounted = getBoolean(item, ['isDiscounted', 'is_discounted']);
@@ -248,6 +258,8 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
 
   return {
     id: getString(item, ['id', 'slug', 'article', 'sku']) || String(index + 1),
+    sku,
+    slug,
     image,
     title: getString(item, ['title', 'name', 'product_name']) || 'Товар Ducati',
     desc: getString(item, ['desc', 'short_description', 'subtitle']),
@@ -273,7 +285,13 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
       getBoolean(item, ['isLastInMilan', 'is_last_in_milan']) ||
       stockLocation === 'milan',
     category: getCategory(item, {isNew, isDiscounted, isOutlet}),
-    models: getStringArray(item, ['models', 'model_names', 'ducati_models']),
+    models: getStringArray(item, [
+      'models',
+      'model_names',
+      'ducati_models',
+      'motorcycles',
+      'compatible_products',
+    ]),
     description: getString(item, ['description', 'full_description']),
     specs: getSpecs(item),
   };
@@ -291,7 +309,7 @@ async function getProductsFromDirectusPage(page: number, pageSize: number) {
   const safePageSize = Math.max(1, pageSize);
 
   const url = new URL(`/items/${collection}`, directusUrl);
-  url.searchParams.set('fields', '*.*');
+  url.searchParams.set('fields', '*,primary_category.*,categories.*,compatible_products.*');
   url.searchParams.set('limit', String(safePageSize));
   url.searchParams.set('offset', String((safePage - 1) * safePageSize));
   url.searchParams.set('meta', 'filter_count');
@@ -562,7 +580,13 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   const items = await getProducts();
-  return items.find((p) => p.id === id);
+  const normalizedId = normalizeLookupValue(id);
+
+  return items.find((product) =>
+    [product.id, product.sku, product.slug, getProductArticle(product)]
+      .filter((value): value is string => Boolean(value))
+      .some((value) => normalizeLookupValue(value) === normalizedId),
+  );
 }
 
 export async function getProductsByCategory(category: Product['category']): Promise<Product[]> {
@@ -584,4 +608,16 @@ export function hasProductCategory(product: Product, category: Product['category
   }
 
   return product.category === 'unsorted' && !product.isNew && !product.isDiscounted && !product.isOutlet;
+}
+
+export function getProductArticle(product: Pick<Product, 'sku' | 'title'>) {
+  return product.sku || product.title.split(' ')[0];
+}
+
+export function getProductHref(product: Pick<Product, 'id' | 'sku' | 'title'>) {
+  return `/product/${encodeURIComponent(product.sku || getProductArticle(product) || product.id)}`;
+}
+
+function normalizeLookupValue(value: string) {
+  return decodeURIComponent(value).trim().toLowerCase();
 }

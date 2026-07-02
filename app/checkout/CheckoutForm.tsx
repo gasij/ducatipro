@@ -3,11 +3,11 @@
 import {useState} from 'react';
 import Link from 'next/link';
 import {Check, Loader2} from 'lucide-react';
-import type {OrderItem} from '@/lib/orders/types';
+import type {CreateOrderInputItem} from '@/lib/orders/types';
 import styles from './checkout-page.module.css';
 
 type Props = {
-  items: OrderItem[];
+  items: CreateOrderInputItem[];
   totalFormatted: string;
 };
 
@@ -27,7 +27,7 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<{orderNumber: string} | null>(null);
+  const [success, setSuccess] = useState<{orderId: string} | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -38,14 +38,9 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
       return;
     }
 
-    const deliveryDetails = [
+    const extraComment = [
       country ? `Страна: ${country}` : '',
-      city ? `Город: ${city}` : '',
-      postalAddress ? `Почта России: ${postalAddress}` : '',
-      pickupAddress ? `ПВЗ СДЭК: ${pickupAddress}` : '',
-      deliveryMethod ? `Метод доставки: ${deliveryMethod}` : '',
       expectedDeliveryDate ? `Ожидаемая дата доставки: ${expectedDeliveryDate}` : '',
-      paymentMethod ? `Вариант оплаты: ${paymentMethod}` : '',
       messengerContact ? `Мессенджер: ${messengerContact}` : '',
     ]
       .filter(Boolean)
@@ -59,10 +54,15 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           customer_name: name,
-          customer_email: email,
-          customer_phone: phone,
-          delivery_address: [country, city, postalAddress, pickupAddress].filter(Boolean).join('\n'),
-          comment: [comment, deliveryDetails].filter(Boolean).join('\n\n'),
+          email,
+          phone,
+          city,
+          postal_address: postalAddress,
+          cdek_address: pickupAddress,
+          comment: [comment, extraComment].filter(Boolean).join('\n\n'),
+          payment_method: paymentMethod,
+          delivery_method: deliveryMethod,
+          agreed_to_terms: agreed,
           items,
         }),
       });
@@ -73,7 +73,7 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
         throw new Error(data.error || 'Не удалось оформить заказ');
       }
 
-      setSuccess({orderNumber: data.order_number});
+      setSuccess({orderId: data.id});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось оформить заказ');
     } finally {
@@ -87,7 +87,7 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
         <div className={styles.successIcon}>✓</div>
         <h2 className={styles.successTitle}>Заказ принят</h2>
         <p className={styles.successText}>
-          Номер заказа: <strong>{success.orderNumber}</strong>
+          ID заказа: <strong>{success.orderId}</strong>
         </p>
         <p className={styles.successHint}>
           Мы проверим наличие и свяжемся с вами. После подтверждения администратором на{' '}

@@ -56,9 +56,11 @@ export async function POST(request: Request) {
     }
 
     await sendOrderConfirmationEmail(order);
-    await markOrderEmailSent(order.id);
+    if ('email_sent_at' in order) {
+      await markOrderEmailSent(order.id);
+    }
 
-    return NextResponse.json({ok: true, order_number: order.order_number});
+    return NextResponse.json({ok: true, id: order.id});
   } catch (error) {
     console.error('Order notify error:', error);
     return NextResponse.json({error: 'Failed to send confirmation email'}, {status: 500});

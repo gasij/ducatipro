@@ -9,5 +9,5 @@ export default async function CartPage() {
     return null;
   }
 
-  return <CartClient initialItem={cartItem} />;
+  return <CartClient initialItem={cartItem} products={products} />;
 }

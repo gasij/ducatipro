@@ -1,37 +1,37 @@
 import {NextResponse} from 'next/server';
 import {createOrderInDirectus, isDirectusConfigured} from '@/lib/directus';
-import type {CreateOrderPayload, OrderItem} from '@/lib/orders/types';
+import type {CreateOrderInputItem, CreateOrderPayload} from '@/lib/orders/types';
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function parseItems(items: unknown): OrderItem[] | null {
+function parseItems(items: unknown): CreateOrderInputItem[] | null {
   if (!Array.isArray(items) || items.length === 0) {
     return null;
   }
 
-  const parsed: OrderItem[] = [];
+  const parsed: CreateOrderInputItem[] = [];
 
   for (const item of items) {
     if (
       typeof item !== 'object' ||
       item === null ||
-      typeof (item as OrderItem).product_id !== 'string' ||
-      typeof (item as OrderItem).title !== 'string' ||
-      typeof (item as OrderItem).quantity !== 'number' ||
-      typeof (item as OrderItem).price !== 'number' ||
-      typeof (item as OrderItem).price_formatted !== 'string'
+      typeof (item as CreateOrderInputItem).product_id !== 'string' ||
+      typeof (item as CreateOrderInputItem).quantity !== 'number'
     ) {
       return null;
     }
 
-    const row = item as OrderItem;
-    if (row.quantity < 1) {
+    const row = item as CreateOrderInputItem;
+    if (!row.product_id.trim() || row.quantity < 1) {
       return null;
     }
 
-    parsed.push(row);
+    parsed.push({
+      product_id: row.product_id.trim(),
+      quantity: Math.floor(row.quantity),
+    });
   }
 
   return parsed;
@@ -62,31 +62,39 @@ export async function POST(request: Request) {
 
   if (
     !data.customer_name?.trim() ||
-    !data.customer_email?.trim() ||
-    !data.customer_phone?.trim() ||
-    !data.delivery_address?.trim() ||
+    !data.email?.trim() ||
+    !data.phone?.trim() ||
+    !data.city?.trim() ||
+    !data.postal_address?.trim() ||
+    !data.payment_method?.trim() ||
+    !data.delivery_method?.trim() ||
+    data.agreed_to_terms !== true ||
     !items
   ) {
     return NextResponse.json({error: 'Заполните все обязательные поля'}, {status: 400});
   }
 
-  if (!isValidEmail(data.customer_email.trim())) {
+  if (!isValidEmail(data.email.trim())) {
     return NextResponse.json({error: 'Укажите корректный email'}, {status: 400});
   }
 
   try {
     const order = await createOrderInDirectus({
       customer_name: data.customer_name.trim(),
-      customer_email: data.customer_email.trim(),
-      customer_phone: data.customer_phone.trim(),
-      delivery_address: data.delivery_address.trim(),
+      email: data.email.trim(),
+      phone: data.phone.trim(),
+      city: data.city.trim(),
+      postal_address: data.postal_address.trim(),
+      cdek_address: data.cdek_address?.trim() || undefined,
       comment: data.comment?.trim() || undefined,
+      payment_method: data.payment_method.trim(),
+      delivery_method: data.delivery_method.trim(),
+      agreed_to_terms: true,
       items,
     });
 
     return NextResponse.json({
       ok: true,
-      order_number: order.order_number,
       id: order.id,
     });
   } catch (error) {

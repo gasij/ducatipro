@@ -1,8 +1,9 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react';
+import {type FormEvent, useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import {Heart, Menu, ShoppingCart, X} from 'lucide-react';
 import {gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './Header.module.css';
@@ -19,9 +20,22 @@ const NAV_LINKS = [
 ];
 
 export default function Header() {
+  const router = useRouter();
   const headerRef = useRef<HTMLElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = searchQuery.trim();
+
+    if (!query) {
+      return;
+    }
+
+    router.push(`/product/${encodeURIComponent(query)}`);
+  };
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
@@ -145,9 +159,15 @@ export default function Header() {
           </div>
         </div>
 
-        <div className={styles.search}>
-          <input type="search" placeholder="Поиск" className={styles.searchInput} />
-          <button type="button" className={styles.searchButton} aria-label="Поиск">
+        <form className={styles.search} onSubmit={handleSearch}>
+          <input
+            type="search"
+            placeholder="Поиск по артикулу"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className={styles.searchInput}
+          />
+          <button type="submit" className={styles.searchButton} aria-label="Поиск">
             <Image
               src="/search-button.png"
               alt=""
@@ -156,7 +176,7 @@ export default function Header() {
               className={styles.searchImage}
             />
           </button>
-        </div>
+        </form>
       </div>
 
       <div className={styles.ticker}>
