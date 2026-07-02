@@ -22,7 +22,16 @@ export type Product = {
 
 type DirectusProduct = Record<string, unknown>;
 
+export type ProductsPageResult = {
+  items: Product[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
 const DEFAULT_PRODUCTS_COLLECTION = 'products';
+const DEFAULT_PAGE_SIZE = 10;
 
 function formatPrice(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₽`;
@@ -270,7 +279,7 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
   };
 }
 
-async function getProductsFromDirectus() {
+async function getProductsFromDirectusPage(page: number, pageSize: number) {
   const directusUrl = process.env.DIRECTUS_URL;
   const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
 
@@ -278,9 +287,14 @@ async function getProductsFromDirectus() {
     return null;
   }
 
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+
   const url = new URL(`/items/${collection}`, directusUrl);
   url.searchParams.set('fields', '*.*');
-  url.searchParams.set('limit', '-1');
+  url.searchParams.set('limit', String(safePageSize));
+  url.searchParams.set('offset', String((safePage - 1) * safePageSize));
+  url.searchParams.set('meta', 'filter_count');
 
   const res = await fetch(url, {
     headers: process.env.DIRECTUS_TOKEN
@@ -295,12 +309,17 @@ async function getProductsFromDirectus() {
     return null;
   }
 
-  const payload = (await res.json()) as {data?: DirectusProduct[]};
+  const payload = (await res.json()) as {data?: DirectusProduct[]; meta?: {filter_count?: number}};
   if (!Array.isArray(payload.data)) {
     return null;
   }
 
-  return payload.data.map(normalizeProduct);
+  const total = typeof payload.meta?.filter_count === 'number' ? payload.meta.filter_count : payload.data.length;
+
+  return {
+    items: payload.data.map(normalizeProduct),
+    total,
+  };
 }
 
 export const fallbackProducts: Product[] = [
@@ -502,13 +521,43 @@ export const fallbackProducts: Product[] = [
 
 export const products = fallbackProducts;
 
-export async function getProducts(): Promise<Product[]> {
+export async function getProductsPage(page = 1, pageSize = DEFAULT_PAGE_SIZE): Promise<ProductsPageResult> {
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+
   try {
-    const directusProducts = await getProductsFromDirectus();
-    return directusProducts && directusProducts.length > 0 ? directusProducts : fallbackProducts;
+    const directusPage = await getProductsFromDirectusPage(safePage, safePageSize);
+
+    if (directusPage && directusPage.items.length > 0) {
+      const totalPages = Math.max(1, Math.ceil(directusPage.total / safePageSize));
+      return {
+        items: directusPage.items,
+        total: directusPage.total,
+        page: Math.min(safePage, totalPages),
+        pageSize: safePageSize,
+        totalPages,
+      };
+    }
   } catch {
-    return fallbackProducts;
+    // fall back to local demo data below
   }
+
+  const start = (safePage - 1) * safePageSize;
+  const items = fallbackProducts.slice(start, start + safePageSize);
+  const total = fallbackProducts.length;
+
+  return {
+    items,
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.max(1, Math.ceil(total / safePageSize)),
+  };
+}
+
+export async function getProducts(): Promise<Product[]> {
+  const result = await getProductsPage(1, 1000);
+  return result.items;
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {

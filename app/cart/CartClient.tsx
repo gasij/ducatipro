@@ -3,7 +3,7 @@
 import {useMemo, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {Check, ShoppingCart, Trash2} from 'lucide-react';
+import {BadgeDollarSign, Check, CreditCard, Landmark, ShoppingCart, Trash2, Wallet} from 'lucide-react';
 import type {Product} from '@/src/fsd/entities/product';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
@@ -22,12 +22,19 @@ const PROMO_CODES: Record<string, number> = {
   COFFEE: 5,
 };
 
+const PAYMENT_METHODS = [
+  {Icon: CreditCard, label: 'Карта'},
+  {Icon: Landmark, label: 'Банковский перевод'},
+  {Icon: Wallet, label: 'Электронный кошелек'},
+  {Icon: BadgeDollarSign, label: 'SWIFT / PayPal'},
+];
+
 function formatPrice(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₽`;
 }
 
 export default function CartClient({initialItem}: Props) {
-  const [line, setLine] = useState<CartLine | null>({product: initialItem, quantity: 1});
+  const [line, setLine] = useState<CartLine | null>(null);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
   const [promoMessage, setPromoMessage] = useState('');
@@ -240,6 +247,18 @@ export default function CartClient({initialItem}: Props) {
               <span className={styles.summaryLabel}>Итого:</span>
               <span className={styles.summaryPrice}>{formatPrice(total)}</span>
             </div>
+
+            <div className={styles.paymentBlock}>
+              <div className={styles.paymentTitle}>Оплата</div>
+              <div className={styles.paymentIcons}>
+                {PAYMENT_METHODS.map(({Icon, label}) => (
+                  <div key={label} className={styles.paymentBadge} title={label}>
+                    <Icon className={styles.paymentIcon} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {line ? (
               <Link href="/checkout" className={styles.checkoutLink}>
                 Оформить заказ

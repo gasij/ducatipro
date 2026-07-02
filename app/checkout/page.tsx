@@ -1,9 +1,10 @@
-import {getProduct} from '@/src/fsd/entities/product';
+import {getProducts} from '@/src/fsd/entities/product';
 import CheckoutForm from './CheckoutForm';
 import styles from './checkout-page.module.css';
 
 export default async function CheckoutPage() {
-  const cartItem = await getProduct('1');
+  const products = await getProducts();
+  const cartItem = products.find((product) => product.id === '1') ?? products[0];
 
   if (!cartItem) {
     return null;

@@ -138,9 +138,9 @@ export default function Header() {
             <Link href="/cart" className={styles.cartLink}>
               <div className={styles.iconWithBadge}>
                 <ShoppingCart className={styles.icon} />
-                <span className={styles.badge}>1</span>
+                <span className={styles.badge}>0</span>
               </div>
-              <span className={styles.cartTotal}>220 477 ₽</span>
+              <span className={styles.cartTotal}>Пусто</span>
             </Link>
           </div>
         </div>

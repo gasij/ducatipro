@@ -1,3 +1,10 @@
 export {default as ProductCard} from './ui/ProductCard';
-export type {Product} from './model/products';
-export {getProduct, getProducts, getProductsByCategory, hasProductCategory, products} from './model/products';
+export type {Product, ProductsPageResult} from './model/products';
+export {
+  getProduct,
+  getProducts,
+  getProductsPage,
+  getProductsByCategory,
+  hasProductCategory,
+  products,
+} from './model/products';
