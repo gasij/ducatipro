@@ -1,10 +1,65 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
-import {Check, Loader2} from 'lucide-react';
+import Script from 'next/script';
+import {Check, Loader2, MapPin} from 'lucide-react';
 import type {CreateOrderInputItem} from '@/lib/orders/types';
 import styles from './checkout-page.module.css';
+
+const CART_STORAGE_KEY = 'ducati-cart';
+const CDEK_WIDGET_SCRIPT = 'https://cdn.jsdelivr.net/npm/@cdek-it/widget@3';
+const CDEK_WIDGET_ROOT = 'cdek-map';
+const CDEK_SERVICE_PATH = '/api/cdek/widget';
+const CDEK_FROM_LOCATION = process.env.NEXT_PUBLIC_CDEK_FROM_LOCATION || 'Москва';
+const CDEK_YANDEX_API_KEY = process.env.NEXT_PUBLIC_CDEK_YANDEX_API_KEY || '';
+
+type CdekOfficeAddress = {
+  city?: string;
+  code: string;
+  name: string;
+  address: string;
+  work_time?: string;
+  postal_code?: string;
+  type?: string;
+};
+
+type CdekTariff = {
+  tariff_code?: number;
+  tariff_name?: string;
+  delivery_sum?: number;
+  period_min?: number;
+  period_max?: number;
+};
+
+type CdekDeliveryMode = 'office' | 'door';
+
+type CdekWidgetConstructor = new (config: {
+  from: string;
+  root: string;
+  apiKey: string;
+  servicePath: string;
+  canChoose: boolean;
+  defaultLocation?: string;
+  lang: 'rus';
+  currency: 'RUB';
+  goods: Array<{width: number; height: number; length: number; weight: number}>;
+  hideDeliveryOptions: {door: boolean; office: boolean};
+  forceFilters: {type: 'PVZ'};
+  tariffs: {office: number[]};
+  onReady?: () => void;
+  onChoose?: (
+    mode: CdekDeliveryMode,
+    tariff: CdekTariff | null,
+    address: CdekOfficeAddress,
+  ) => void;
+}) => unknown;
+
+declare global {
+  interface Window {
+    CDEKWidget?: CdekWidgetConstructor;
+  }
+};
 
 type Props = {
   items: CreateOrderInputItem[];
@@ -28,6 +83,66 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<{orderId: string} | null>(null);
+  const [cdekScriptReady, setCdekScriptReady] = useState(false);
+  const [cdekReady, setCdekReady] = useState(false);
+  const [cdekError, setCdekError] = useState(
+    CDEK_YANDEX_API_KEY ? '' : 'Добавьте NEXT_PUBLIC_CDEK_YANDEX_API_KEY для карты СДЭК',
+  );
+  const [selectedCdekCode, setSelectedCdekCode] = useState('');
+  const cdekWidgetRef = useRef<unknown>(null);
+
+  useEffect(() => {
+    if (!cdekScriptReady || !CDEK_YANDEX_API_KEY || cdekWidgetRef.current || !window.CDEKWidget) {
+      return;
+    }
+
+    try {
+      cdekWidgetRef.current = new window.CDEKWidget({
+        from: CDEK_FROM_LOCATION,
+        root: CDEK_WIDGET_ROOT,
+        apiKey: CDEK_YANDEX_API_KEY,
+        servicePath: CDEK_SERVICE_PATH,
+        canChoose: true,
+        defaultLocation: city || 'Москва',
+        lang: 'rus',
+        currency: 'RUB',
+        goods: [{width: 20, height: 10, length: 30, weight: 1000}],
+        hideDeliveryOptions: {door: true, office: false},
+        forceFilters: {type: 'PVZ'},
+        tariffs: {office: [136, 234, 138]},
+        onReady() {
+          setCdekReady(true);
+          setCdekError('');
+        },
+        onChoose(mode, tariff, address) {
+          if (mode !== 'office') {
+            return;
+          }
+
+          setSelectedCdekCode(address.code);
+          setPickupAddress(
+            [
+              `СДЭК ${address.code}: ${address.city ? `${address.city}, ` : ''}${address.address}`,
+              address.name,
+              address.work_time ? `Время работы: ${address.work_time}` : '',
+              address.postal_code ? `Индекс: ${address.postal_code}` : '',
+              tariff?.tariff_name ? `Тариф: ${tariff.tariff_name}` : '',
+              typeof tariff?.delivery_sum === 'number' ? `Стоимость доставки: ${tariff.delivery_sum} ₽` : '',
+              tariff?.period_min && tariff?.period_max
+                ? `Срок: ${tariff.period_min}-${tariff.period_max} дн.`
+                : '',
+            ]
+              .filter(Boolean)
+              .join('\n'),
+          );
+        },
+      });
+    } catch (err) {
+      window.setTimeout(() => {
+        setCdekError(err instanceof Error ? err.message : 'Не удалось загрузить виджет СДЭК');
+      }, 0);
+    }
+  }, [cdekScriptReady, city]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -73,6 +188,7 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
         throw new Error(data.error || 'Не удалось оформить заказ');
       }
 
+      window.localStorage.removeItem(CART_STORAGE_KEY);
       setSuccess({orderId: data.id});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось оформить заказ');
@@ -102,6 +218,12 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      <Script
+        src={CDEK_WIDGET_SCRIPT}
+        strategy="afterInteractive"
+        onLoad={() => setCdekScriptReady(true)}
+        onError={() => setCdekError('Не удалось загрузить виджет СДЭК')}
+      />
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Получатель и адрес доставки</h2>
         <div className={styles.grid}>
@@ -178,12 +300,38 @@ export default function CheckoutForm({items, totalFormatted}: Props) {
 
           <label className={`${styles.field} ${styles.fieldFull}`}>
             <span>Адрес ПВЗ СДЭК, где удобно получить товар</span>
+            <div className={styles.cdekTools}>
+              <span className={styles.cdekStatus}>
+                {cdekReady ? 'Карта СДЭК готова' : 'Загружаем карту СДЭК...'}
+              </span>
+              {selectedCdekCode && (
+                <span className={styles.cdekSelected}>Выбран: {selectedCdekCode}</span>
+              )}
+            </div>
+            {cdekError && <span className={styles.cdekError}>{cdekError}</span>}
+            <div className={styles.cdekWidgetWrap}>
+              <div id={CDEK_WIDGET_ROOT} className={styles.cdekWidget} />
+              {!CDEK_YANDEX_API_KEY && (
+                <div className={styles.cdekWidgetFallback}>
+                  <MapPin className={styles.cdekPointIcon} />
+                  <span>
+                    Карта появится после настройки ключа Яндекс.Карт. Адрес ПВЗ можно указать
+                    вручную ниже.
+                  </span>
+                </div>
+              )}
+            </div>
             <textarea
-              rows={3}
+              rows={4}
               value={pickupAddress}
-              onChange={(e) => setPickupAddress(e.target.value)}
+              onChange={(e) => {
+                setPickupAddress(e.target.value);
+                if (!e.target.value.trim()) {
+                  setSelectedCdekCode('');
+                }
+              }}
               className={styles.textarea}
-              placeholder="Адрес пункта выдачи"
+              placeholder="Выберите ПВЗ на карте или укажите адрес вручную"
             />
           </label>
         </div>

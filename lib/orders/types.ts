@@ -5,7 +5,7 @@ export type OrderItem = {
   product_title: string;
   product_sku: string;
   quantity: number;
-  price: number;
+  price: number | string;
 };
 
 export type CreateOrderInputItem = {
@@ -37,7 +37,7 @@ export type DirectusOrder = {
   postal_address: string;
   cdek_address: string | null;
   comment: string | null;
-  total: number;
+  total: number | string;
   payment_method: string;
   delivery_method: string;
   agreed_to_terms: boolean;

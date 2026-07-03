@@ -3,9 +3,14 @@ import type {CreateOrderPayload, DirectusOrder, OrderItem} from './orders/types'
 import {getProduct, getProductArticle} from '@/src/fsd/entities/product';
 
 type Schema = {
+  order: DirectusOrder[];
   orders: DirectusOrder[];
   order_items: OrderItem[];
 };
+
+type OrdersCollection = 'order' | 'orders';
+
+const DEFAULT_ORDERS_COLLECTION: OrdersCollection = 'orders';
 
 function getConfig() {
   const url = process.env.DIRECTUS_URL;
@@ -22,6 +27,10 @@ export function isDirectusConfigured() {
   return getConfig() !== null;
 }
 
+function getOrdersCollection(): OrdersCollection {
+  return (process.env.DIRECTUS_ORDERS_COLLECTION || DEFAULT_ORDERS_COLLECTION) as OrdersCollection;
+}
+
 function getClient() {
   const config = getConfig();
   if (!config) {
@@ -32,11 +41,7 @@ function getClient() {
 }
 
 function calcTotal(items: OrderItem[]) {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-}
-
-function toKopecks(price: number) {
-  return Math.round(price * 100);
+  return items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 }
 
 async function buildOrderItems(items: CreateOrderPayload['items']): Promise<OrderItem[]> {
@@ -52,7 +57,7 @@ async function buildOrderItems(items: CreateOrderPayload['items']): Promise<Orde
         product_id: product.id,
         product_title: product.title,
         product_sku: getProductArticle(product),
-        price: toKopecks(product.price),
+        price: product.price,
         quantity: item.quantity,
       };
     }),
@@ -63,11 +68,12 @@ async function buildOrderItems(items: CreateOrderPayload['items']): Promise<Orde
 
 export async function createOrderInDirectus(payload: CreateOrderPayload) {
   const client = getClient();
+  const ordersCollection = getOrdersCollection();
   const items = await buildOrderItems(payload.items);
   const total = calcTotal(items);
 
   const order = await client.request(
-    createItem('orders', {
+    createItem(ordersCollection, {
       status: 'pending',
       customer_name: payload.customer_name,
       phone: payload.phone,
@@ -89,8 +95,9 @@ export async function createOrderInDirectus(payload: CreateOrderPayload) {
 
 export async function getOrderFromDirectus(id: string) {
   const client = getClient();
+  const ordersCollection = getOrdersCollection();
   return client.request(
-    readItem('orders', id, {
+    readItem(ordersCollection, id, {
       fields: ['*', {items: ['*']}],
     }),
   );
@@ -98,8 +105,9 @@ export async function getOrderFromDirectus(id: string) {
 
 export async function markOrderEmailSent(id: string) {
   const client = getClient();
+  const ordersCollection = getOrdersCollection();
   return client.request(
-    updateItem('orders', id, {
+    updateItem(ordersCollection, id, {
       email_sent_at: new Date().toISOString(),
     }),
   );

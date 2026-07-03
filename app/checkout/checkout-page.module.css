@@ -123,6 +123,67 @@
     min-height: 88px;
 }
 
+.cdekTools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cdekStatus {
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.cdekSelected {
+    color: #166534;
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.cdekError {
+    color: var(--color-accent);
+    font-size: 0.8125rem;
+}
+
+.cdekWidgetWrap {
+    position: relative;
+    min-height: 420px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.cdekWidget {
+    width: 100%;
+    height: 420px;
+}
+
+.cdekWidgetFallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    background: var(--color-soft);
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    padding: 1rem;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.cdekPointIcon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--color-accent);
+}
+
 .infoCard {
     display: flex;
     flex-direction: column;

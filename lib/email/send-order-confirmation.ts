@@ -27,7 +27,7 @@ function buildItemsHtml(order: DirectusOrder) {
           <div style="font-size:12px;color:#777;margin-top:4px;">${item.product_sku}</div>
         </td>
         <td style="padding:12px 8px;border-bottom:1px solid #eee;font-size:14px;text-align:center;">${item.quantity}</td>
-        <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;text-align:right;white-space:nowrap;">${formatKopecks(item.price)}</td>
+        <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;text-align:right;white-space:nowrap;">${formatRubles(item.price)}</td>
       </tr>
     `,
     )
@@ -47,8 +47,8 @@ function buildItemsHtml(order: DirectusOrder) {
   `;
 }
 
-function formatKopecks(amount: number) {
-  return `${(amount / 100).toLocaleString('ru-RU')} ₽`;
+function formatRubles(amount: number | string) {
+  return `${Number(amount).toLocaleString('ru-RU')} ₽`;
 }
 
 export async function sendOrderConfirmationEmail(order: DirectusOrder) {
@@ -68,7 +68,7 @@ export async function sendOrderConfirmationEmail(order: DirectusOrder) {
       ${buildItemsHtml(order)}
 
       <p style="font-size:20px;font-weight:700;margin:24px 0 24px;text-align:right;">
-        Итого: ${formatKopecks(order.total)}
+        Итого: ${formatRubles(order.total)}
       </p>
 
       <div style="background:#f9f9f9;border:1px solid #eee;border-radius:4px;padding:16px;margin-bottom:24px;">

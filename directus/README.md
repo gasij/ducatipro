@@ -37,7 +37,8 @@
 
 ## 2. Коллекция `orders`
 
-Создайте коллекцию **orders** со следующими полями:
+Создайте коллекцию **orders** со следующими полями. Если в Directus используется другое
+название, задайте его в `DIRECTUS_ORDERS_COLLECTION`.
 
 | Поле | Тип | Настройки |
 |------|-----|-----------|
@@ -50,7 +51,7 @@
 | `postal_address` | Text | |
 | `cdek_address` | Text | nullable |
 | `comment` | Text | nullable |
-| `total` | Integer | сумма заказа в копейках |
+| `total` | Decimal | сумма заказа в рублях |
 | `payment_method` | String | |
 | `delivery_method` | String | |
 | `agreed_to_terms` | Boolean | согласие с офертой |
@@ -65,7 +66,7 @@
 | `product_id` | M2O | связь на `products` |
 | `product_title` | String | снапшот названия товара |
 | `product_sku` | String | снапшот артикула |
-| `price` | Integer | снапшот цены в копейках |
+| `price` | String/Decimal | снапшот цены в рублях |
 | `quantity` | Integer | количество |
 
 `product_title`, `product_sku` и `price` заполняются кодом сайта при создании заказа. Это
@@ -84,11 +85,28 @@
 DIRECTUS_URL=https://your-directus.example.com
 DIRECTUS_TOKEN=your-static-token
 DIRECTUS_PRODUCTS_COLLECTION=products
+DIRECTUS_ORDERS_COLLECTION=orders
 DIRECTUS_WEBHOOK_SECRET=random-secret-string
+CDEK_CLIENT_ID=your-cdek-client-id
+CDEK_CLIENT_SECRET=your-cdek-client-secret
+CDEK_API_URL=https://api.cdek.ru/v2
+NEXT_PUBLIC_CDEK_YANDEX_API_KEY=your-yandex-maps-api-key
+NEXT_PUBLIC_CDEK_FROM_LOCATION=Москва
+# Также поддерживаются старые названия:
+# CDEK_ACCOUNT=your-cdek-account
+# CDEK_SECURE_PASSWORD=your-cdek-secure-password
 
 RESEND_API_KEY=re_...
 EMAIL_FROM="Ducati Parts <orders@yourdomain.com>"
 ```
+
+Официальный виджет СДЭК подключается на checkout через `@cdek-it/widget@3`.
+`CDEK_CLIENT_ID` и `CDEK_CLIENT_SECRET` используются серверным endpoint `/api/cdek/widget`,
+который заменяет `service.php` из документации виджета. Если в кабинете СДЭК ключи называются
+`account` и `secure_password`, можно использовать `CDEK_ACCOUNT` и `CDEK_SECURE_PASSWORD`.
+`NEXT_PUBLIC_CDEK_YANDEX_API_KEY` — ключ JavaScript API Яндекс.Карт; для него нужно задать
+HTTP Referrer вашего домена. Если ключи не заданы, оформление заказа остаётся доступным, но адрес
+СДЭК нужно вводить вручную.
 
 ## 5. Flow: письмо клиенту после подтверждения
 
