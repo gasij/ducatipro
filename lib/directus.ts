@@ -80,7 +80,6 @@ export async function createOrderInDirectus(payload: CreateOrderPayload) {
       email: payload.email,
       city: payload.city,
       postal_address: payload.postal_address,
-      cdek_address: payload.cdek_address || null,
       comment: payload.comment || null,
       payment_method: payload.payment_method,
       delivery_method: payload.delivery_method,

@@ -7,10 +7,6 @@ type CartItemParam = {
   quantity: number;
 };
 
-function formatPrice(amount: number) {
-  return `${amount.toLocaleString('ru-RU')} ₽`;
-}
-
 function parseCartItems(value?: string | string[]): CartItemParam[] {
   const rawValue = Array.isArray(value) ? value[0] : value;
 
@@ -81,27 +77,7 @@ export default async function CheckoutPage({
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Оформление заказа</h1>
-      <p className={styles.subtitle}>
-        Заполните данные для доставки. Заказ попадёт к администраторам на проверку. После
-        подтверждения вам на email придёт письмо с составом заказа.
-      </p>
-
-      <div className={styles.layout}>
-        <CheckoutForm items={items} totalFormatted={formatPrice(total)} />
-
-        <aside className={styles.summary}>
-          <h2 className={styles.summaryTitle}>Ваш заказ</h2>
-          {checkoutItems.map((item) => (
-            <div key={item.product.id} className={styles.item}>
-              <div className={styles.itemTitle}>{item.product.title}</div>
-              <div className={styles.itemMeta}>
-                {item.quantity} × {item.product.priceFormatted}
-              </div>
-            </div>
-          ))}
-        </aside>
-      </div>
+      <CheckoutForm items={items} checkoutItems={checkoutItems} subtotal={total} />
     </div>
   );
 }

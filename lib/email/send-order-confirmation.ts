@@ -76,11 +76,6 @@ export async function sendOrderConfirmationEmail(order: DirectusOrder) {
         <p style="margin:0 0 8px;font-size:14px;"><strong>Город:</strong> ${order.city}</p>
         <p style="margin:0 0 8px;font-size:14px;"><strong>Почтовый адрес:</strong> ${order.postal_address}</p>
         ${
-          order.cdek_address
-            ? `<p style="margin:0 0 8px;font-size:14px;"><strong>СДЭК:</strong> ${order.cdek_address}</p>`
-            : ''
-        }
-        ${
           order.comment
             ? `<p style="margin:0;font-size:14px;"><strong>Комментарий:</strong> ${order.comment}</p>`
             : ''

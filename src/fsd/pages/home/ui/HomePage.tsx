@@ -182,6 +182,15 @@ function ProductSection({
   items: Product[];
   linkHref?: string;
 }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  function scrollProducts(direction: -1 | 1) {
+    gridRef.current?.scrollBy({
+      left: direction * 320,
+      behavior: 'smooth',
+    });
+  }
+
   return (
     <section className={styles.productSection}>
       <div className={styles.sectionHeader}>
@@ -193,16 +202,26 @@ function ProductSection({
           <h2 className={styles.sectionTitle}>{title}</h2>
         )}
         <div className={styles.sectionControls}>
-          <button type="button" className={styles.sectionControl} aria-label="Предыдущие товары">
+          <button
+            type="button"
+            onClick={() => scrollProducts(-1)}
+            className={styles.sectionControl}
+            aria-label="Предыдущие товары"
+          >
             <ChevronLeft className={styles.sectionControlIcon} />
           </button>
-          <button type="button" className={styles.sectionControl} aria-label="Следующие товары">
+          <button
+            type="button"
+            onClick={() => scrollProducts(1)}
+            className={styles.sectionControl}
+            aria-label="Следующие товары"
+          >
             <ChevronRight className={styles.sectionControlIcon} />
           </button>
         </div>
       </div>
 
-      <div className={styles.productGrid}>
+      <div ref={gridRef} className={styles.productGrid}>
         {items.map((p) => (
           <ProductCard key={p.id} {...p} />
         ))}

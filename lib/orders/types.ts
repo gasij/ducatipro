@@ -19,7 +19,6 @@ export type CreateOrderPayload = {
   email: string;
   city: string;
   postal_address: string;
-  cdek_address?: string;
   comment?: string;
   payment_method: string;
   delivery_method: string;
@@ -35,7 +34,6 @@ export type DirectusOrder = {
   email: string;
   city: string;
   postal_address: string;
-  cdek_address: string | null;
   comment: string | null;
   total: number | string;
   payment_method: string;

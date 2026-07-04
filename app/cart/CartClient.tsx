@@ -3,7 +3,7 @@
 import {useEffect, useMemo, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {BadgeDollarSign, Check, CreditCard, Landmark, ShoppingCart, Trash2, Wallet} from 'lucide-react';
+import {Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductHref, type Product} from '@/src/fsd/entities/product';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
@@ -25,38 +25,48 @@ const PROMO_CODES: Record<string, number> = {
   COFFEE: 5,
 };
 
-const PAYMENT_METHODS = [
-  {Icon: CreditCard, label: 'Карта'},
-  {Icon: Landmark, label: 'Банковский перевод'},
-  {Icon: Wallet, label: 'Электронный кошелек'},
-  {Icon: BadgeDollarSign, label: 'SWIFT / PayPal'},
-];
-
 function formatPrice(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₽`;
 }
 
+function getOldPrice(product: Product) {
+  if (product.oldPrice) {
+    return product.oldPrice;
+  }
+
+  return formatPrice(Math.round(product.price * 1.28));
+}
+
 export default function CartClient({initialItem, products}: Props) {
-  const [line, setLine] = useState<CartLine | null>(null);
+  const [lines, setLines] = useState<CartLine[]>([]);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
   const [promoMessage, setPromoMessage] = useState('');
 
-  const quantity = line?.quantity ?? 0;
-  const subtotal = line ? line.product.price * line.quantity : 0;
+  const quantity = lines.reduce((sum, line) => sum + line.quantity, 0);
+  const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const discountAmount = appliedPromo ? Math.round((subtotal * appliedPromo.discount) / 100) : 0;
   const total = Math.max(subtotal - discountAmount, 0);
+  const lineProductIds = useMemo(() => new Set(lines.map((line) => line.product.id)), [lines]);
+  const recentItems = useMemo(
+    () => products.filter((product) => !lineProductIds.has(product.id)).slice(0, 2),
+    [products, lineProductIds],
+  );
+  const outletItems = useMemo(
+    () => products.filter((product) => !lineProductIds.has(product.id)).slice(0, 5),
+    [products, lineProductIds],
+  );
 
-  const recentItem = initialItem;
-  const checkoutHref = line
+  const checkoutHref = lines.length > 0
     ? `/checkout?items=${encodeURIComponent(
-        JSON.stringify([{product_id: line.product.id, quantity: line.quantity}]),
+        JSON.stringify(
+          lines.map((line) => ({
+            product_id: line.product.id,
+            quantity: line.quantity,
+          })),
+        ),
       )}`
     : '/checkout';
-  const itemCountLabel = useMemo(() => {
-    if (quantity === 1) return 'Товар (1)';
-    return `Товары (${quantity})`;
-  }, [quantity]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -67,15 +77,22 @@ export default function CartClient({initialItem, products}: Props) {
 
       try {
         const cart = JSON.parse(rawCart) as Array<{product_id: string; quantity: number}>;
-        const firstItem = cart.find((item) => item.product_id && item.quantity > 0);
-        const product = products.find((item) => item.id === firstItem?.product_id);
+        const nextLines = cart
+          .map((item) => {
+            const product = products.find((candidate) => candidate.id === item.product_id);
 
-        if (firstItem && product) {
-          setLine({
-            product,
-            quantity: Math.min(Math.max(Math.floor(firstItem.quantity), 1), 99),
-          });
-        }
+            if (!product || item.quantity < 1) {
+              return null;
+            }
+
+            return {
+              product,
+              quantity: Math.min(Math.max(Math.floor(item.quantity), 1), 99),
+            };
+          })
+          .filter((item): item is CartLine => Boolean(item));
+
+        setLines(nextLines);
       } catch {
         window.localStorage.removeItem(CART_STORAGE_KEY);
       }
@@ -84,53 +101,68 @@ export default function CartClient({initialItem, products}: Props) {
     return () => window.clearTimeout(timer);
   }, [products]);
 
-  function persistLine(nextLine: CartLine | null) {
-    if (!nextLine) {
+  function persistLines(nextLines: CartLine[]) {
+    if (nextLines.length === 0) {
       window.localStorage.removeItem(CART_STORAGE_KEY);
       return;
     }
 
     window.localStorage.setItem(
       CART_STORAGE_KEY,
-      JSON.stringify([{product_id: nextLine.product.id, quantity: nextLine.quantity}]),
+      JSON.stringify(
+        nextLines.map((line) => ({
+          product_id: line.product.id,
+          quantity: line.quantity,
+        })),
+      ),
     );
   }
 
-  function increase() {
-    setLine((current) => {
-      const next = current ? {...current, quantity: Math.min(current.quantity + 1, 99)} : current;
-      persistLine(next);
+  function increase(productId: string) {
+    setLines((current) => {
+      const next = current.map((line) =>
+        line.product.id === productId ? {...line, quantity: Math.min(line.quantity + 1, 99)} : line,
+      );
+      persistLines(next);
       return next;
     });
   }
 
-  function decrease() {
-    setLine((current) => {
-      if (!current) return current;
-      const next = {...current, quantity: Math.max(current.quantity - 1, 1)};
-      persistLine(next);
+  function decrease(productId: string) {
+    setLines((current) => {
+      const next = current.map((line) =>
+        line.product.id === productId ? {...line, quantity: Math.max(line.quantity - 1, 1)} : line,
+      );
+      persistLines(next);
       return next;
     });
   }
 
-  function removeItem() {
-    setLine(null);
-    persistLine(null);
-    setAppliedPromo(null);
-    setPromoMessage('');
+  function removeItem(productId: string) {
+    setLines((current) => {
+      const next = current.filter((line) => line.product.id !== productId);
+      persistLines(next);
+
+      if (next.length === 0) {
+        setAppliedPromo(null);
+        setPromoMessage('');
+      }
+
+      return next;
+    });
   }
 
   function restoreItem() {
-    const next = {product: initialItem, quantity: 1};
-    setLine(next);
-    persistLine(next);
+    const next = [{product: initialItem, quantity: 1}];
+    setLines(next);
+    persistLines(next);
   }
 
   function applyPromo() {
     const code = promo.trim().toUpperCase();
     const discount = PROMO_CODES[code];
 
-    if (!line) {
+    if (lines.length === 0) {
       setPromoMessage('Добавьте товар, чтобы применить промокод');
       setAppliedPromo(null);
       return;
@@ -155,48 +187,62 @@ export default function CartClient({initialItem, products}: Props) {
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
-        <div className={styles.mainColumn}>
-          <h1 className={styles.title}>Корзина</h1>
-
-          {line ? (
-            <div className={styles.items}>
-              <div className={styles.cartItem}>
-                <Link href={getProductHref(line.product)} className={styles.itemImageLink}>
+        <aside className={styles.outlet}>
+          <h2 className={styles.outletTitle}>Аутлет в России</h2>
+          <div className={styles.outletList}>
+            {outletItems.map((product) => (
+              <Link key={product.id} href={getProductHref(product)} className={styles.outletCard}>
+                <div className={styles.outletImageBox}>
                   <Image
-                    src={line.product.image}
+                    src={product.image}
                     fill
-                    alt={line.product.title}
-                    className={styles.itemImage}
+                    alt={product.title}
+                    className={styles.outletImage}
                     referrerPolicy="no-referrer"
                   />
-                </Link>
+                </div>
+                <div className={styles.outletInfo}>
+                  <div className={styles.outletName}>{product.title}</div>
+                  <div className={styles.outletPrice}>{product.priceFormatted}</div>
+                  <div className={styles.outletOldPrice}>{getOldPrice(product)}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </aside>
 
-                <div className={styles.itemInfo}>
-                  <div className={styles.itemHeader}>
+        <main className={styles.mainColumn}>
+          <h1 className={styles.title}>Корзина</h1>
+
+          {lines.length > 0 ? (
+            <>
+              <div className={styles.cartList}>
+                {lines.map((line) => (
+                  <div key={line.product.id} className={styles.cartItem}>
+                    <Link href={getProductHref(line.product)} className={styles.itemImageLink}>
+                      <Image
+                        src={line.product.image}
+                        fill
+                        alt={line.product.title}
+                        className={styles.itemImage}
+                        referrerPolicy="no-referrer"
+                      />
+                    </Link>
+
                     <Link href={getProductHref(line.product)} className={styles.itemTitle}>
                       {line.product.title}
                     </Link>
-                    <button
-                      type="button"
-                      onClick={removeItem}
-                      className={styles.removeButton}
-                      aria-label="Удалить"
-                    >
-                      <Trash2 className={styles.removeIcon} />
-                    </button>
-                  </div>
 
-                  <div className={styles.unitPrice}>{line.product.priceFormatted}/шт</div>
+                    <div className={styles.unitPrice}>{line.product.priceFormatted}/шт</div>
 
-                  <div className={styles.itemFooter}>
                     <div className={styles.quantity}>
                       <button
                         type="button"
-                        onClick={decrease}
+                        onClick={() => decrease(line.product.id)}
                         className={styles.quantityButton}
                         aria-label="Уменьшить количество"
                       >
-                        -
+                        <Minus className={styles.quantityIcon} />
                       </button>
                       <input
                         type="text"
@@ -207,18 +253,54 @@ export default function CartClient({initialItem, products}: Props) {
                       />
                       <button
                         type="button"
-                        onClick={increase}
+                        onClick={() => increase(line.product.id)}
                         className={styles.quantityButton}
                         aria-label="Увеличить количество"
                       >
-                        +
+                        <Plus className={styles.quantityIcon} />
                       </button>
                     </div>
-                    <div className={styles.lineTotal}>{formatPrice(subtotal)}</div>
+
+                    <div className={styles.lineTotal}>
+                      {formatPrice(line.product.price * line.quantity)}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => removeItem(line.product.id)}
+                      className={styles.removeButton}
+                      aria-label="Удалить"
+                    >
+                      <X className={styles.removeIcon} />
+                    </button>
                   </div>
-                </div>
+                ))}
               </div>
-            </div>
+
+              <div className={styles.promoRow}>
+                <input
+                  type="text"
+                  value={promo}
+                  onChange={(event) => setPromo(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      applyPromo();
+                    }
+                  }}
+                  placeholder="Промокод"
+                  className={styles.promoInput}
+                />
+                <button type="button" onClick={applyPromo} className={styles.promoButton}>
+                  Применить
+                </button>
+              </div>
+              {promoMessage && (
+                <p className={appliedPromo ? styles.promoSuccess : styles.promoError}>
+                  {promoMessage}
+                </p>
+              )}
+            </>
           ) : (
             <div className={emptyStyles.page}>
               <ShoppingCart className={emptyStyles.icon} />
@@ -233,61 +315,31 @@ export default function CartClient({initialItem, products}: Props) {
           <div className={styles.recent}>
             <h2 className={styles.sectionTitle}>Ранее просмотренные</h2>
             <div className={styles.recentGrid}>
-              <Link href={getProductHref(recentItem)} className={styles.recentCard}>
-                <div className={styles.recentImageBox}>
-                  <Image
-                    src={recentItem.image}
-                    fill
-                    alt={recentItem.title}
-                    className={styles.recentImage}
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <div className={styles.recentInfo}>
-                  <div className={styles.recentTitle}>{recentItem.title}</div>
-                  <div className={styles.recentPrice}>{recentItem.priceFormatted}</div>
-                </div>
-              </Link>
+              {recentItems.map((product) => (
+                <Link key={product.id} href={getProductHref(product)} className={styles.recentCard}>
+                  <div className={styles.recentImageBox}>
+                    <Image
+                      src={product.image}
+                      fill
+                      alt={product.title}
+                      className={styles.recentImage}
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className={styles.recentInfo}>
+                    <div className={styles.recentTitle}>{product.title}</div>
+                    <div className={styles.recentPrice}>{product.priceFormatted}</div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
+        </main>
 
-        <div className={styles.sidebar}>
-          <div className={styles.panel}>
-            <h3 className={styles.panelTitle}>Введите промокод</h3>
-            <div className={styles.promoForm}>
-              <input
-                type="text"
-                value={promo}
-                onChange={(event) => setPromo(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    applyPromo();
-                  }
-                }}
-                placeholder="Промокод"
-                className={styles.promoInput}
-              />
-              <button
-                type="button"
-                onClick={applyPromo}
-                className={styles.promoButton}
-                aria-label="Применить промокод"
-              >
-                <Check className={styles.promoIcon} />
-              </button>
-            </div>
-            {promoMessage && (
-              <p className={appliedPromo ? styles.promoSuccess : styles.promoError}>
-                {promoMessage}
-              </p>
-            )}
-          </div>
-
-          <div className={styles.panel}>
+        <aside className={styles.summary}>
+          <div className={styles.summaryPanel}>
             <div className={styles.summaryRow}>
-              <span>{itemCountLabel}</span>
+              <span>{quantity === 1 ? 'Товар (1)' : `Товары (${quantity})`}</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
             {appliedPromo && (
@@ -297,22 +349,11 @@ export default function CartClient({initialItem, products}: Props) {
               </div>
             )}
             <div className={styles.summaryTotal}>
-              <span className={styles.summaryLabel}>Итого:</span>
-              <span className={styles.summaryPrice}>{formatPrice(total)}</span>
+              <span>Итого:</span>
+              <strong>{formatPrice(total)}</strong>
             </div>
 
-            <div className={styles.paymentBlock}>
-              <div className={styles.paymentTitle}>Оплата</div>
-              <div className={styles.paymentIcons}>
-                {PAYMENT_METHODS.map(({Icon, label}) => (
-                  <div key={label} className={styles.paymentBadge} title={label}>
-                    <Icon className={styles.paymentIcon} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {line ? (
+            {lines.length > 0 ? (
               <Link href={checkoutHref} className={styles.checkoutLink}>
                 Оформить заказ
               </Link>
@@ -321,8 +362,12 @@ export default function CartClient({initialItem, products}: Props) {
                 Оформить заказ
               </button>
             )}
+
+            <button type="button" className={styles.shareButton}>
+              Поделиться <Share2 className={styles.shareIcon} />
+            </button>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   );

@@ -85,7 +85,6 @@ export async function POST(request: Request) {
       phone: data.phone.trim(),
       city: data.city.trim(),
       postal_address: data.postal_address.trim(),
-      cdek_address: data.cdek_address?.trim() || undefined,
       comment: data.comment?.trim() || undefined,
       payment_method: data.payment_method.trim(),
       delivery_method: data.delivery_method.trim(),
