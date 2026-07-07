@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {BarChart3, Heart} from 'lucide-react';
@@ -11,7 +10,6 @@ const CART_STORAGE_KEY = 'ducati-cart';
 
 export default function ProductCard({
   id,
-  image,
   title,
   desc,
   priceFormatted,
@@ -22,7 +20,6 @@ export default function ProductCard({
   Product,
   | 'id'
   | 'sku'
-  | 'image'
   | 'title'
   | 'desc'
   | 'priceFormatted'
@@ -31,7 +28,6 @@ export default function ProductCard({
 >) {
   const router = useRouter();
   const href = getProductHref({id, sku, title});
-  const preorderLabel = discountBadge || 'Предзаказ';
 
   function addToCart() {
     let cart: Array<{product_id: string; quantity: number}> = [];
@@ -56,26 +52,18 @@ export default function ProductCard({
 
   return (
     <article className={styles.card}>
-      <span className={styles.preorderBadge}>{preorderLabel}</span>
+      {discountBadge && <span className={styles.preorderBadge}>{discountBadge}</span>}
 
       <Link href={href} className={styles.mainLink} aria-label={title}>
         <div className={styles.imageBox}>
-          <Image
-            src={image}
-            alt={title}
-            fill
-            className={styles.image}
-            referrerPolicy="no-referrer"
-          />
+          <div className={styles.placeholder} aria-hidden="true">
+            <span>DUCATI</span>
+          </div>
         </div>
 
         <div className={styles.content}>
           <h3 className={styles.title}>{title}</h3>
-          {desc ? (
-            <p className={styles.description}>{desc}</p>
-          ) : (
-            <p className={styles.description}>Предзаказ. Цена указана до двери 📦 после всех расходов и...</p>
-          )}
+          <p className={styles.description}>{desc || 'Цена указана до двери после всех расходов.'}</p>
 
           <div className={styles.priceBlock}>
             {oldPrice && <span className={styles.oldPrice}>{oldPrice}</span>}

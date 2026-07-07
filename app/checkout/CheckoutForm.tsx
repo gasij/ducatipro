@@ -1,7 +1,6 @@
 'use client';
 
 import {useEffect, useRef, useState} from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {Loader2} from 'lucide-react';
 import type {CreateOrderInputItem} from '@/lib/orders/types';
@@ -22,7 +21,7 @@ type Props = {
 };
 
 function formatPrice(amount: number) {
-  return `${amount.toLocaleString('ru-RU')} ₽`;
+  return `${amount.toLocaleString('ru-RU')} €`;
 }
 
 export default function CheckoutForm({items, checkoutItems, subtotal}: Props) {
@@ -330,13 +329,7 @@ export default function CheckoutForm({items, checkoutItems, subtotal}: Props) {
             {checkoutItems.map(({product, quantity}) => (
               <div key={product.id} className={styles.summaryProduct}>
                 <div className={styles.summaryImageBox}>
-                  <Image
-                    src={product.image}
-                    fill
-                    alt={product.title}
-                    className={styles.summaryImage}
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className={styles.productPlaceholder}>DUCATI</div>
                 </div>
                 <div className={styles.summaryProductTitle}>{product.title}</div>
                 <div className={styles.summaryProductPrice}>

@@ -30,8 +30,8 @@
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding-right: max(2rem, var(--safe-page-padding));
-  padding-left: max(2rem, var(--safe-page-padding));
+  padding-right: var(--safe-page-padding);
+  padding-left: var(--safe-page-padding);
 }
 
 .sectionHeader {
@@ -107,7 +107,7 @@ a.sectionTitle:hover {
 }
 
 .productGrid > * {
-  flex: 0 0 min(78vw, 15.75rem);
+  flex: 0 0 min(100%, 17rem);
   scroll-snap-align: start;
 }
 

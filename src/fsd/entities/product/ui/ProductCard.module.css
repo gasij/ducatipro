@@ -61,6 +61,26 @@
   mix-blend-mode: multiply;
 }
 
+.placeholder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eeeeee;
+  border-radius: 4px;
+  background:
+    linear-gradient(135deg, rgb(246 246 247) 0%, rgb(255 255 255) 52%, rgb(239 239 241) 100%);
+  color: #b8b8bc;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.placeholder span {
+  display: block;
+}
+
 .content {
   display: flex;
   min-width: 0;
@@ -132,18 +152,19 @@
 .actions {
   display: flex;
   gap: 0.5rem;
-  max-height: 0;
-  overflow: hidden;
+  height: 2.7rem;
+  flex: 0 0 2.7rem;
+  margin-top: 0.65rem;
   opacity: 0;
   transform: translateY(0.35rem);
-  transition: max-height 160ms ease, opacity 160ms ease, transform 160ms ease, margin-top 160ms ease;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
 }
 
 .card:hover .actions,
 .card:focus-within .actions {
-  max-height: 3.5rem;
-  margin-top: 0.65rem;
   opacity: 1;
+  pointer-events: auto;
   transform: translateY(0);
 }
 
@@ -183,6 +204,7 @@
 
 @media (max-width: 767px) {
   .card {
+    width: 100%;
     height: auto;
     min-height: 24.5rem;
     padding: 1rem;
@@ -214,9 +236,42 @@
   }
 
   .actions {
-    max-height: none;
+    height: 2.7rem;
+    flex-basis: 2.7rem;
     margin-top: 0.65rem;
     opacity: 1;
+    pointer-events: auto;
     transform: none;
+  }
+
+  .cartButton {
+    padding: 0 0.55rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .iconButton {
+    width: 2.45rem;
+    flex-basis: 2.45rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    padding: 0.85rem;
+  }
+
+  .cartButton {
+    font-size: 0.78rem;
+  }
+
+  .iconButton {
+    width: 2.25rem;
+    flex-basis: 2.25rem;
+  }
+
+  .actionIcon {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 }

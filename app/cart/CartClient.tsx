@@ -1,7 +1,6 @@
 'use client';
 
 import {useEffect, useMemo, useState} from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductHref, type Product} from '@/src/fsd/entities/product';
@@ -26,7 +25,7 @@ const PROMO_CODES: Record<string, number> = {
 };
 
 function formatPrice(amount: number) {
-  return `${amount.toLocaleString('ru-RU')} ₽`;
+  return `${amount.toLocaleString('ru-RU')} €`;
 }
 
 function getOldPrice(product: Product) {
@@ -193,13 +192,7 @@ export default function CartClient({initialItem, products}: Props) {
             {outletItems.map((product) => (
               <Link key={product.id} href={getProductHref(product)} className={styles.outletCard}>
                 <div className={styles.outletImageBox}>
-                  <Image
-                    src={product.image}
-                    fill
-                    alt={product.title}
-                    className={styles.outletImage}
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className={styles.productPlaceholder}>DUCATI</div>
                 </div>
                 <div className={styles.outletInfo}>
                   <div className={styles.outletName}>{product.title}</div>
@@ -220,13 +213,7 @@ export default function CartClient({initialItem, products}: Props) {
                 {lines.map((line) => (
                   <div key={line.product.id} className={styles.cartItem}>
                     <Link href={getProductHref(line.product)} className={styles.itemImageLink}>
-                      <Image
-                        src={line.product.image}
-                        fill
-                        alt={line.product.title}
-                        className={styles.itemImage}
-                        referrerPolicy="no-referrer"
-                      />
+                      <div className={styles.productPlaceholder}>DUCATI</div>
                     </Link>
 
                     <Link href={getProductHref(line.product)} className={styles.itemTitle}>
@@ -318,13 +305,7 @@ export default function CartClient({initialItem, products}: Props) {
               {recentItems.map((product) => (
                 <Link key={product.id} href={getProductHref(product)} className={styles.recentCard}>
                   <div className={styles.recentImageBox}>
-                    <Image
-                      src={product.image}
-                      fill
-                      alt={product.title}
-                      className={styles.recentImage}
-                      referrerPolicy="no-referrer"
-                    />
+                    <div className={styles.productPlaceholder}>DUCATI</div>
                   </div>
                   <div className={styles.recentInfo}>
                     <div className={styles.recentTitle}>{product.title}</div>
