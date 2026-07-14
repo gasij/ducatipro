@@ -5,6 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import styles from './Footer.module.css';
 
+const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
+const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
+
 export default function Footer() {
   return (
     <footer className={styles.footer}>
@@ -14,12 +17,12 @@ export default function Footer() {
             <h4 className={styles.columnTitle}>Содержание</h4>
             <ul className={styles.linkList}>
               <li>
-                <Link href="/catalog" className={styles.footerLink}>
+                <Link href={CATALOG_URL} className={styles.footerLink}>
                   Каталог
                 </Link>
               </li>
               <li>
-                <Link href="/outlet" className={styles.footerLink}>
+                <Link href={OUTLET_URL} className={styles.footerLink}>
                   Аутлет в Милане
                 </Link>
               </li>

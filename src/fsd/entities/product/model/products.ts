@@ -1,3 +1,10 @@
+import {
+  convertPriceToRub,
+  formatPriceInRub,
+  formatPriceStringInRub,
+  parsePriceAmount,
+} from '@/src/fsd/shared/lib/money';
+
 export type Product = {
   id: string;
   sku?: string;
@@ -34,10 +41,6 @@ export type ProductsPageResult = {
 
 const DEFAULT_PRODUCTS_COLLECTION = 'products';
 const DEFAULT_PAGE_SIZE = 10;
-
-function formatPrice(amount: number) {
-  return `${amount.toLocaleString('ru-RU')} €`;
-}
 
 function getString(item: DirectusProduct, fields: string[]): string | undefined {
   for (const field of fields) {
@@ -246,7 +249,8 @@ function normalizeLocation(value?: string) {
 }
 
 function normalizeProduct(item: DirectusProduct, index: number): Product {
-  const price = getNumber(item, ['price', 'amount', 'total']) || 0;
+  const rawPrice = getNumber(item, ['price', 'amount', 'total']) || 0;
+  const price = convertPriceToRub(rawPrice);
   const oldPrice = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
   const sku = getString(item, ['sku', 'article', 'vendor_code']);
   const slug = getString(item, ['slug']);
@@ -268,8 +272,8 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
     title: getString(item, ['title', 'name', 'product_name']) || 'Товар Ducati',
     desc: getString(item, ['desc', 'short_description', 'subtitle']),
     price,
-    priceFormatted: getString(item, ['priceFormatted', 'price_formatted']) || formatPrice(price),
-    oldPrice,
+    priceFormatted: formatPriceInRub(price, 'RUB'),
+    oldPrice: oldPrice ? formatPriceStringInRub(oldPrice) : undefined,
     badgeText:
       getString(item, ['badgeText', 'badge_text', 'badge']) ||
       (isOutlet
@@ -543,6 +547,17 @@ export const fallbackProducts: Product[] = [
 
 export const products = fallbackProducts;
 
+function normalizeDisplayPrices(product: Product): Product {
+  const oldPriceAmount = product.oldPrice ? parsePriceAmount(product.oldPrice) : undefined;
+
+  return {
+    ...product,
+    price: convertPriceToRub(product.price, 'RUB'),
+    priceFormatted: formatPriceInRub(product.price, 'RUB'),
+    oldPrice: oldPriceAmount === undefined ? undefined : formatPriceInRub(oldPriceAmount, 'RUB'),
+  };
+}
+
 export async function getProductsPage(page = 1, pageSize = DEFAULT_PAGE_SIZE): Promise<ProductsPageResult> {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
@@ -565,7 +580,7 @@ export async function getProductsPage(page = 1, pageSize = DEFAULT_PAGE_SIZE): P
   }
 
   const start = (safePage - 1) * safePageSize;
-  const items = fallbackProducts.slice(start, start + safePageSize);
+  const items = fallbackProducts.slice(start, start + safePageSize).map(normalizeDisplayPrices);
   const total = fallbackProducts.length;
 
   return {

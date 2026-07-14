@@ -10,11 +10,9 @@ import styles from './HomePage.module.css';
 
 type Props = {
   newArrivals: Product[];
-  discounted: Product[];
-  milanOutlet: Product[];
 };
 
-export default function HomePage({newArrivals, discounted, milanOutlet}: Props) {
+export default function HomePage({newArrivals}: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -112,8 +110,6 @@ export default function HomePage({newArrivals, discounted, milanOutlet}: Props) 
       </section>
 
       <ProductSection title="Новинки в продаже" items={newArrivals} />
-      <ProductSection title="Товары со скидкой в наличии в России" items={discounted} />
-      <ProductSection title="Наш аутлет в Милане" items={milanOutlet} linkHref="/outlet" />
 
       <section className={`${styles.container} ${styles.promoBlock}`}>
         <div className={styles.promoHeader}>

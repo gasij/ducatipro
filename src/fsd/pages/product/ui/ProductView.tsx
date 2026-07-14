@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {ChevronRight, Heart, ShieldCheck, Star, Truck} from 'lucide-react';
 import {getProductArticle, type Product} from '@/src/fsd/entities/product';
-import {gsap, registerGsap} from '@/src/fsd/shared/lib';
+import {CART_STORAGE_KEY, gsap, notifyCartUpdated, registerGsap, type StoredCartItem} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
 
 const CATEGORY_LABELS: Record<Product['category'], string> = {
@@ -64,12 +64,11 @@ export default function ProductView({product}: {product: Product}) {
   const article = getProductArticle(product);
 
   function addToCart() {
-    const storageKey = 'ducati-cart';
-    const rawCart = window.localStorage.getItem(storageKey);
-    let cart: Array<{product_id: string; quantity: number}> = [];
+    const rawCart = window.localStorage.getItem(CART_STORAGE_KEY);
+    let cart: StoredCartItem[] = [];
 
     try {
-      cart = rawCart ? (JSON.parse(rawCart) as Array<{product_id: string; quantity: number}>) : [];
+      cart = rawCart ? (JSON.parse(rawCart) as StoredCartItem[]) : [];
     } catch {
       cart = [];
     }
@@ -81,7 +80,8 @@ export default function ProductView({product}: {product: Product}) {
       cart.push({product_id: product.id, quantity});
     }
 
-    window.localStorage.setItem(storageKey, JSON.stringify(cart));
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    notifyCartUpdated();
     router.push('/cart');
   }
 

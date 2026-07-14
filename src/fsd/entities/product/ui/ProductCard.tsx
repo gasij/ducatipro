@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {BarChart3, Heart} from 'lucide-react';
+import {CART_STORAGE_KEY, notifyCartUpdated, type StoredCartItem} from '@/src/fsd/shared/lib';
 import {getProductHref, type Product} from '../model/products';
 import styles from './ProductCard.module.css';
-
-const CART_STORAGE_KEY = 'ducati-cart';
 
 export default function ProductCard({
   id,
@@ -30,11 +29,11 @@ export default function ProductCard({
   const href = getProductHref({id, sku, title});
 
   function addToCart() {
-    let cart: Array<{product_id: string; quantity: number}> = [];
+    let cart: StoredCartItem[] = [];
 
     try {
       const rawCart = window.localStorage.getItem(CART_STORAGE_KEY);
-      cart = rawCart ? (JSON.parse(rawCart) as Array<{product_id: string; quantity: number}>) : [];
+      cart = rawCart ? (JSON.parse(rawCart) as StoredCartItem[]) : [];
     } catch {
       cart = [];
     }
@@ -47,6 +46,7 @@ export default function ProductCard({
     }
 
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    notifyCartUpdated();
     router.push('/cart');
   }
 

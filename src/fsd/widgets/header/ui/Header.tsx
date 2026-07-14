@@ -4,16 +4,19 @@ import {type FormEvent, useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {Heart, Menu, ShoppingCart, X} from 'lucide-react';
-import {gsap, registerGsap} from '@/src/fsd/shared/lib';
+import {Heart, Menu, Plus, ShoppingCart, X} from 'lucide-react';
+import {CART_UPDATED_EVENT, getStoredCartQuantity, gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './Header.module.css';
 
 const TICKER_TEXT =
   'Весь экип (шлема, куртки, штаны, перчи, боты, защиты и все что угодно), а также повседневка в полном ассортименте в любом европейском магазине за нашу символическую комиссию 10%';
 
+const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
+const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
+
 const NAV_LINKS = [
-  {href: '/catalog', label: 'Каталог'},
-  {href: '/outlet', label: 'Аутлет в Милане'},
+  {href: CATALOG_URL, label: 'Каталог'},
+  {href: OUTLET_URL, label: 'Аутлет в Милане'},
   {href: '/unsorted', label: 'Товары без сортировки'},
   {href: '/cart', label: 'Корзина'},
   {href: '/favorites', label: 'Избранное'},
@@ -24,18 +27,43 @@ export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchArticles, setSearchArticles] = useState(['']);
+  const [cartQuantity, setCartQuantity] = useState(0);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const query = searchQuery.trim();
+    const articles = searchArticles.map((article) => article.trim()).filter(Boolean);
 
-    if (!query) {
+    if (articles.length === 0) {
       return;
     }
 
-    router.push(`/product/${encodeURIComponent(query)}`);
+    if (articles.length === 1) {
+      router.push(`/product/${encodeURIComponent(articles[0])}`);
+      return;
+    }
+
+    const params = new URLSearchParams();
+    articles.forEach((article) => params.append('article', article));
+    router.push(`/search?${params.toString()}`);
   };
+
+  function updateSearchArticle(index: number, value: string) {
+    setSearchArticles((current) =>
+      current.map((article, articleIndex) => (articleIndex === index ? value : article)),
+    );
+  }
+
+  function addSearchArticle() {
+    setSearchArticles((current) => [...current, '']);
+  }
+
+  function removeSearchArticle(index: number) {
+    setSearchArticles((current) => {
+      const next = current.filter((_, articleIndex) => articleIndex !== index);
+      return next.length > 0 ? next : [''];
+    });
+  }
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
@@ -43,6 +71,21 @@ export default function Header() {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    function syncCartQuantity() {
+      setCartQuantity(getStoredCartQuantity());
+    }
+
+    syncCartQuantity();
+    window.addEventListener(CART_UPDATED_EVENT, syncCartQuantity);
+    window.addEventListener('storage', syncCartQuantity);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, syncCartQuantity);
+      window.removeEventListener('storage', syncCartQuantity);
+    };
+  }, []);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -152,30 +195,79 @@ export default function Header() {
             <Link href="/cart" className={styles.cartLink}>
               <div className={styles.iconWithBadge}>
                 <ShoppingCart className={styles.icon} />
-                <span className={styles.badge}>0</span>
+                <span className={styles.badge}>{cartQuantity}</span>
               </div>
-              <span className={styles.cartTotal}>Пусто</span>
+              <span className={styles.cartTotal}>
+                {cartQuantity > 0 ? `${cartQuantity} шт.` : 'Пусто'}
+              </span>
             </Link>
           </div>
         </div>
 
         <form className={styles.search} onSubmit={handleSearch}>
-          <input
-            type="search"
-            placeholder="Поиск по артикулу"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className={styles.searchInput}
-          />
-          <button type="submit" className={styles.searchButton} aria-label="Поиск">
-            <Image
-              src="/search-button.png"
-              alt=""
-              width={56}
-              height={48}
-              className={styles.searchImage}
-            />
-          </button>
+          <div className={styles.searchFields}>
+            <div className={styles.searchField}>
+              <input
+                type="search"
+                placeholder="Поиск по артикулу"
+                value={searchArticles[0]}
+                onChange={(event) => updateSearchArticle(0, event.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
+            {searchArticles.length > 1 && (
+              <div className={styles.searchDropdown}>
+                {searchArticles.slice(1).map((article, offset) => {
+                  const index = offset + 1;
+
+                  return (
+                    <div key={index} className={styles.searchField}>
+                      <input
+                        type="search"
+                        placeholder={`Артикул ${index + 1}`}
+                        value={article}
+                        onChange={(event) => updateSearchArticle(index, event.target.value)}
+                        className={styles.searchInput}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSearchArticle(index)}
+                        className={styles.removeSearchButton}
+                        aria-label="Удалить артикул"
+                      >
+                        <X className={styles.searchActionIcon} />
+                      </button>
+                    </div>
+                  );
+                })}
+                <div className={styles.dropdownFooter}>
+                  <button
+                    type="button"
+                    onClick={addSearchArticle}
+                    className={styles.dropdownAddButton}
+                  >
+                    <Plus className={styles.searchActionIcon} />
+                    Еще товар
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className={styles.searchActions}>
+            <button type="button" onClick={addSearchArticle} className={styles.addSearchButton}>
+              <Plus className={styles.searchActionIcon} />
+              Еще товар
+            </button>
+            <button type="submit" className={styles.searchButton} aria-label="Поиск">
+              <Image
+                src="/search-button.png"
+                alt=""
+                width={56}
+                height={48}
+                className={styles.searchImage}
+              />
+            </button>
+          </div>
         </form>
       </div>
 

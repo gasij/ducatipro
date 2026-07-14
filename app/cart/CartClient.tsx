@@ -1,9 +1,10 @@
 'use client';
 
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductHref, type Product} from '@/src/fsd/entities/product';
+import {CART_STORAGE_KEY, formatPriceInRub, notifyCartUpdated} from '@/src/fsd/shared/lib';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
 
@@ -15,32 +16,28 @@ type CartLine = {
 type Props = {
   initialItem: Product;
   products: Product[];
+  sharedItems: Array<{product_id: string; quantity: number}>;
 };
-
-const CART_STORAGE_KEY = 'ducati-cart';
 
 const PROMO_CODES: Record<string, number> = {
   DUCATI10: 10,
   COFFEE: 5,
 };
 
-function formatPrice(amount: number) {
-  return `${amount.toLocaleString('ru-RU')} €`;
-}
-
 function getOldPrice(product: Product) {
   if (product.oldPrice) {
     return product.oldPrice;
   }
 
-  return formatPrice(Math.round(product.price * 1.28));
+  return formatPriceInRub(Math.round(product.price * 1.28), 'RUB');
 }
 
-export default function CartClient({initialItem, products}: Props) {
+export default function CartClient({initialItem, products, sharedItems}: Props) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
   const [promoMessage, setPromoMessage] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
 
   const quantity = lines.reduce((sum, line) => sum + line.quantity, 0);
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
@@ -67,8 +64,34 @@ export default function CartClient({initialItem, products}: Props) {
       )}`
     : '/checkout';
 
+  const resolveCartLines = useCallback(
+    (items: Array<{product_id: string; quantity: number}>) =>
+      items
+        .map((item) => {
+          const product = products.find((candidate) => candidate.id === item.product_id);
+
+          if (!product || item.quantity < 1) {
+            return null;
+          }
+
+          return {
+            product,
+            quantity: Math.min(Math.max(Math.floor(item.quantity), 1), 99),
+          };
+        })
+        .filter((item): item is CartLine => Boolean(item)),
+    [products],
+  );
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      if (sharedItems.length > 0) {
+        const nextLines = resolveCartLines(sharedItems);
+        setLines(nextLines);
+        persistLines(nextLines);
+        return;
+      }
+
       const rawCart = window.localStorage.getItem(CART_STORAGE_KEY);
       if (!rawCart) {
         return;
@@ -76,33 +99,23 @@ export default function CartClient({initialItem, products}: Props) {
 
       try {
         const cart = JSON.parse(rawCart) as Array<{product_id: string; quantity: number}>;
-        const nextLines = cart
-          .map((item) => {
-            const product = products.find((candidate) => candidate.id === item.product_id);
-
-            if (!product || item.quantity < 1) {
-              return null;
-            }
-
-            return {
-              product,
-              quantity: Math.min(Math.max(Math.floor(item.quantity), 1), 99),
-            };
-          })
-          .filter((item): item is CartLine => Boolean(item));
+        const nextLines = resolveCartLines(cart);
 
         setLines(nextLines);
+        notifyCartUpdated();
       } catch {
         window.localStorage.removeItem(CART_STORAGE_KEY);
+        notifyCartUpdated();
       }
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [products]);
+  }, [products, resolveCartLines, sharedItems]);
 
   function persistLines(nextLines: CartLine[]) {
     if (nextLines.length === 0) {
       window.localStorage.removeItem(CART_STORAGE_KEY);
+      notifyCartUpdated();
       return;
     }
 
@@ -115,6 +128,7 @@ export default function CartClient({initialItem, products}: Props) {
         })),
       ),
     );
+    notifyCartUpdated();
   }
 
   function increase(productId: string) {
@@ -183,6 +197,31 @@ export default function CartClient({initialItem, products}: Props) {
     setPromoMessage(`Промокод ${code} применен`);
   }
 
+  async function shareCart() {
+    if (lines.length === 0) {
+      setShareMessage('Добавьте товар, чтобы поделиться корзиной');
+      return;
+    }
+
+    const url = new URL('/cart', window.location.origin);
+    url.searchParams.set(
+      'items',
+      JSON.stringify(
+        lines.map((line) => ({
+          product_id: line.product.id,
+          quantity: line.quantity,
+        })),
+      ),
+    );
+
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      setShareMessage('Ссылка на корзину скопирована');
+    } catch {
+      setShareMessage(url.toString());
+    }
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
@@ -249,7 +288,7 @@ export default function CartClient({initialItem, products}: Props) {
                     </div>
 
                     <div className={styles.lineTotal}>
-                      {formatPrice(line.product.price * line.quantity)}
+                      {formatPriceInRub(line.product.price * line.quantity, 'RUB')}
                     </div>
 
                     <button
@@ -321,17 +360,17 @@ export default function CartClient({initialItem, products}: Props) {
           <div className={styles.summaryPanel}>
             <div className={styles.summaryRow}>
               <span>{quantity === 1 ? 'Товар (1)' : `Товары (${quantity})`}</span>
-              <span>{formatPrice(subtotal)}</span>
+              <span>{formatPriceInRub(subtotal, 'RUB')}</span>
             </div>
             {appliedPromo && (
               <div className={styles.summaryRow}>
                 <span>Скидка {appliedPromo.discount}%</span>
-                <span>-{formatPrice(discountAmount)}</span>
+                <span>-{formatPriceInRub(discountAmount, 'RUB')}</span>
               </div>
             )}
             <div className={styles.summaryTotal}>
               <span>Итого:</span>
-              <strong>{formatPrice(total)}</strong>
+              <strong>{formatPriceInRub(total, 'RUB')}</strong>
             </div>
 
             {lines.length > 0 ? (
@@ -344,9 +383,10 @@ export default function CartClient({initialItem, products}: Props) {
               </button>
             )}
 
-            <button type="button" className={styles.shareButton}>
+            <button type="button" onClick={shareCart} className={styles.shareButton}>
               Поделиться <Share2 className={styles.shareIcon} />
             </button>
+            {shareMessage && <p className={styles.shareMessage}>{shareMessage}</p>}
           </div>
         </aside>
       </div>

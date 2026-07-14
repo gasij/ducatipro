@@ -73,11 +73,9 @@ export default async function CheckoutPage({
     product_id: item.product.id,
     quantity: item.quantity,
   }));
-  const total = checkoutItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-
   return (
     <div className={styles.page}>
-      <CheckoutForm items={items} checkoutItems={checkoutItems} subtotal={total} />
+      <CheckoutForm items={items} checkoutItems={checkoutItems} />
     </div>
   );
 }
