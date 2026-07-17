@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ducati Parser</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Ducati DB Parser</p>
+          <h1>Импорт товаров из таблиц</h1>
+        </div>
+        <div class="status" id="status">Готов</div>
+      </section>
+
+      <section class="workspace">
+        <form class="panel controls" id="parseForm">
+          <label class="file-control">
+            <span>Файл товаров</span>
+            <input name="products" type="file" accept=".xlsx,.csv,.tsv,.json" required />
+          </label>
+
+          <label class="file-control">
+            <span>Совместимость</span>
+            <input name="compatibility" type="file" accept=".xlsx,.csv,.tsv,.json" />
+          </label>
+
+          <div class="grid">
+            <label>
+              Поле артикула
+              <input name="identityField" value="sku" />
+            </label>
+            <label>
+              Поле моделей
+              <input name="modelsField" value="models" />
+            </label>
+            <label>
+              Лимит
+              <input name="limit" inputmode="numeric" placeholder="0" />
+            </label>
+            <label>
+              Формат моделей
+              <select name="modelsFormat">
+                <option value="string">Строка</option>
+                <option value="array">Массив</option>
+              </select>
+            </label>
+          </div>
+
+          <button class="primary" type="submit">Разобрать таблицу</button>
+        </form>
+
+        <section class="panel summary">
+          <div class="metric">
+            <span>Строк товаров</span>
+            <strong id="metricRows">0</strong>
+          </div>
+          <div class="metric">
+            <span>Готово к импорту</span>
+            <strong id="metricPrepared">0</strong>
+          </div>
+          <div class="metric">
+            <span>С моделями</span>
+            <strong id="metricModels">0</strong>
+          </div>
+          <div class="actions">
+            <a class="secondary disabled" id="jsonLink" href="#">JSON</a>
+            <a class="secondary disabled" id="csvLink" href="#">CSV</a>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel import-panel">
+        <div class="section-heading">
+          <h2>Directus</h2>
+          <p>Отправка запускается только после предпросмотра.</p>
+        </div>
+        <form id="importForm" class="import-grid">
+          <label>
+            URL
+            <input name="url" placeholder="https://directus.example.com" />
+          </label>
+          <label>
+            Token
+            <input name="token" type="password" autocomplete="off" />
+          </label>
+          <label>
+            Коллекция
+            <input name="collection" value="products" />
+          </label>
+          <label>
+            Режим
+            <select name="mode">
+              <option value="upsert">Создать или обновить</option>
+              <option value="existing">Только обновить существующие</option>
+              <option value="create">Только создать</option>
+            </select>
+          </label>
+          <button class="primary danger" type="submit" disabled id="importButton">Импортировать</button>
+        </form>
+        <pre class="log" id="importLog"></pre>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="section-heading">
+          <h2>Предпросмотр</h2>
+          <p id="previewHint">Здесь появятся первые 100 подготовленных товаров.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
