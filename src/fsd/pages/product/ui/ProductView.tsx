@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {ChevronRight, Heart, ShieldCheck, Star, Truck} from 'lucide-react';
+import {Bike, ChevronRight, Heart, ShieldCheck, Star, Truck} from 'lucide-react';
 import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {CART_STORAGE_KEY, gsap, notifyCartUpdated, registerGsap, type StoredCartItem} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
@@ -20,6 +20,7 @@ export default function ProductView({product}: {product: Product}) {
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
+  const compatibleModels = product.models || [];
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -97,23 +98,6 @@ export default function ProductView({product}: {product: Product}) {
 
       <div className={styles.summary}>
         <div className={styles.gallery}>
-          <div className={styles.thumbnails}>
-            {[0, 1, 2, 3].map((i) => (
-              <button
-                key={i}
-                type="button"
-                className={`${styles.thumbnail} ${i === 0 ? styles.thumbnailActive : ''}`}
-              >
-                <Image
-                  src={`https://picsum.photos/seed/${product.id}thumb${i}/100/100`}
-                  fill
-                  alt="thumb"
-                  className={styles.thumbnailImage}
-                  referrerPolicy="no-referrer"
-                />
-              </button>
-            ))}
-          </div>
           <div className={styles.mainImageBox}>
             <Image
               src={product.image}
@@ -221,7 +205,34 @@ export default function ProductView({product}: {product: Product}) {
         <div className={styles.detailsInner}>
           <div className={`${styles.contentBlock} ${styles.descriptionBlock}`}>
             <h3 className={styles.blockTitle}>Описание</h3>
+            <div className={styles.compatibilityBox}>
+              <div className={styles.compatibilityHeader}>
+                <span className={styles.compatibilityIconWrap}>
+                  <Bike className={styles.compatibilityIcon} />
+                </span>
+                <div>
+                  <h4 className={styles.compatibilityTitle}>Совместимость</h4>
+                  <p className={styles.compatibilitySubtitle}>
+                    {compatibleModels.length > 0
+                      ? `Подходит для ${compatibleModels.length} ${compatibleModels.length === 1 ? 'модели' : 'моделей'} Ducati`
+                      : 'Совместимость с моделями не указана'}
+                  </p>
+                </div>
+              </div>
+
+              {compatibleModels.length > 0 && (
+                <div className={styles.compatibilityList}>
+                  {compatibleModels.map((model) => (
+                    <span key={model} className={styles.compatibilityChip}>
+                      {model}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className={styles.textContent}>
+              <p>{product.title}</p>
+              <p>Артикул: {article}</p>
               {product.desc && <p>{product.desc}</p>}
               {product.description ? (
                 <p>{product.description}</p>

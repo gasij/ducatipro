@@ -4,7 +4,7 @@ import {type FormEvent, useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {Heart, Menu, Plus, ShoppingCart, X} from 'lucide-react';
+import {Menu, Plus, Search, ShoppingCart, X} from 'lucide-react';
 import {CART_UPDATED_EVENT, getStoredCartQuantity, gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './Header.module.css';
 
@@ -19,7 +19,6 @@ const NAV_LINKS = [
   {href: OUTLET_URL, label: 'Аутлет в Милане'},
   {href: '/unsorted', label: 'Товары без сортировки'},
   {href: '/cart', label: 'Корзина'},
-  {href: '/favorites', label: 'Избранное'},
 ];
 
 export default function Header() {
@@ -27,6 +26,7 @@ export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchArticles, setSearchArticles] = useState(['']);
   const [cartQuantity, setCartQuantity] = useState(0);
 
@@ -40,12 +40,14 @@ export default function Header() {
 
     if (articles.length === 1) {
       router.push(`/product/${encodeURIComponent(articles[0])}`);
+      setSearchOpen(false);
       return;
     }
 
     const params = new URLSearchParams();
     articles.forEach((article) => params.append('article', article));
     router.push(`/search?${params.toString()}`);
+    setSearchOpen(false);
   };
 
   function updateSearchArticle(index: number, value: string) {
@@ -180,17 +182,22 @@ export default function Header() {
           <div className={styles.actions}>
             <button
               type="button"
+              onClick={() => setSearchOpen((current) => !current)}
+              className={styles.mobileSearchButton}
+              aria-label={searchOpen ? 'Закрыть поиск' : 'Открыть поиск'}
+              aria-expanded={searchOpen}
+            >
+              {searchOpen ? <X className={styles.menuIcon} /> : <Search className={styles.menuIcon} />}
+            </button>
+
+            <button
+              type="button"
               onClick={() => setMenuOpen(true)}
               className={styles.mobileMenuButton}
               aria-label="Открыть меню"
             >
               <Menu className={styles.menuIcon} />
             </button>
-
-            <Link href="/favorites" className={styles.iconLink}>
-              <Heart className={styles.icon} />
-              <span className={styles.badge}>0</span>
-            </Link>
 
             <Link href="/cart" className={styles.cartLink}>
               <div className={styles.iconWithBadge}>
@@ -204,7 +211,7 @@ export default function Header() {
           </div>
         </div>
 
-        <form className={styles.search} onSubmit={handleSearch}>
+        <form className={`${styles.search} ${searchOpen ? styles.searchOpen : ''}`} onSubmit={handleSearch}>
           <div className={styles.searchFields}>
             <div className={styles.searchField}>
               <input
@@ -256,7 +263,7 @@ export default function Header() {
           <div className={styles.searchActions}>
             <button type="button" onClick={addSearchArticle} className={styles.addSearchButton}>
               <Plus className={styles.searchActionIcon} />
-              Еще товар
+              <span className={styles.searchActionLabel}>Еще товар</span>
             </button>
             <button type="submit" className={styles.searchButton} aria-label="Поиск">
               <Image

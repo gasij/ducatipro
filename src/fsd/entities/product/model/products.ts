@@ -40,7 +40,9 @@ export type ProductsPageResult = {
 };
 
 const DEFAULT_PRODUCTS_COLLECTION = 'products';
+const DEFAULT_PRODUCT_MOTORCYCLES_COLLECTION = 'motorcycles_products';
 const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PRODUCT_IMAGE = '/product-placeholder.svg';
 
 function getString(item: DirectusProduct, fields: string[]): string | undefined {
   for (const field of fields) {
@@ -90,31 +92,74 @@ function getBoolean(item: DirectusProduct, fields: string[]) {
   return undefined;
 }
 
+function getMotorcycleLabel(item: DirectusProduct) {
+  const name = getString(item, ['name', 'title', 'model']);
+  const year = getString(item, ['year']);
+
+  if (!name) {
+    return undefined;
+  }
+
+  if (year && !name.includes(year)) {
+    return `${name} ${year}`;
+  }
+
+  return name;
+}
+
 function getStringArray(item: DirectusProduct, fields: string[]) {
+  const extractEntry = (entry: unknown) => {
+    if (typeof entry === 'string') {
+      return entry;
+    }
+
+    if (entry && typeof entry === 'object') {
+      const entryRecord = entry as DirectusProduct;
+      return (
+        getMotorcycleLabel(entryRecord) ||
+        getMotorcycleLabel(entryRecord.motorcycles_id as DirectusProduct) ||
+        getMotorcycleLabel(entryRecord.motorcycle_id as DirectusProduct) ||
+        getMotorcycleLabel(entryRecord.motorcycles as DirectusProduct) ||
+        getMotorcycleLabel(entryRecord.motorcycle as DirectusProduct)
+      );
+    }
+
+    return undefined;
+  };
+
   for (const field of fields) {
     const value = item[field];
+
     if (Array.isArray(value)) {
-      return value
-        .map((entry) => {
-          if (typeof entry === 'string') {
-            return entry;
-          }
-          if (entry && typeof entry === 'object') {
-            const entryRecord = entry as DirectusProduct;
-            return (
-              getString(entryRecord, ['name', 'title', 'model']) ||
-              getString(entryRecord.motorcycles_id as DirectusProduct, ['name', 'title', 'model'])
-            );
-          }
-          return undefined;
-        })
+      const entries = value
+        .map(extractEntry)
         .filter((entry): entry is string => Boolean(entry));
+      return [...new Set(entries)];
     }
+
+    if (value && typeof value === 'object') {
+      const relation = value as DirectusProduct;
+      const nestedData = relation.data;
+
+      if (Array.isArray(nestedData)) {
+        const entries = nestedData
+          .map(extractEntry)
+          .filter((entry): entry is string => Boolean(entry));
+        return [...new Set(entries)];
+      }
+
+      const entry = extractEntry(value);
+      if (entry) {
+        return [entry];
+      }
+    }
+
     if (typeof value === 'string' && value.trim()) {
-      return value
+      const entries = value
         .split(',')
         .map((entry) => entry.trim())
         .filter(Boolean);
+      return [...new Set(entries)];
     }
   }
 
@@ -262,7 +307,7 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
     getAssetUrl(item.image) ||
     getAssetUrl(item.main_image) ||
     getAssetUrl(item.photo) ||
-    `https://picsum.photos/seed/directus-${index}/800/800`;
+    DEFAULT_PRODUCT_IMAGE;
 
   return {
     id: getString(item, ['id', 'slug', 'article', 'sku']) || String(index + 1),
@@ -299,10 +344,122 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
       'ducati_models',
       'motorcycles',
       'compatible_products',
+      'motorcycles_products',
+      'compatibility',
+      'compatible_motorcycles',
     ]),
     description: getString(item, ['description', 'full_description']),
     specs: getSpecs(item),
   };
+}
+
+function getDirectusHeaders() {
+  return process.env.DIRECTUS_TOKEN
+    ? {
+        Authorization: `Bearer ${process.env.DIRECTUS_TOKEN}`,
+      }
+    : undefined;
+}
+
+async function fetchDirectusJson<T>(url: URL) {
+  const res = await fetch(url, {
+    headers: getDirectusHeaders(),
+    next: {revalidate: 60},
+  });
+
+  if (!res.ok) {
+    return null;
+  }
+
+  return (await res.json()) as T;
+}
+
+function getRelationProductId(value: unknown) {
+  if (typeof value === 'string' || typeof value === 'number') {
+    return String(value);
+  }
+
+  if (value && typeof value === 'object') {
+    return getString(value as DirectusProduct, ['id']);
+  }
+
+  return undefined;
+}
+
+function addCompatibilityModels(product: Product, models: string[]) {
+  if (models.length === 0) {
+    return product;
+  }
+
+  return {
+    ...product,
+    models: [...new Set([...(product.models || []), ...models])],
+  };
+}
+
+async function fetchProductCompatibilityFromJunction(directusUrl: string, productIds: string[]) {
+  const collection = process.env.DIRECTUS_PRODUCT_MOTORCYCLES_COLLECTION || DEFAULT_PRODUCT_MOTORCYCLES_COLLECTION;
+  const uniqueProductIds = [...new Set(productIds.filter(Boolean))];
+  const compatibilityByProductId = new Map<string, string[]>();
+
+  if (uniqueProductIds.length === 0) {
+    return compatibilityByProductId;
+  }
+
+  const relationShapes = [
+    {
+      productField: 'products_id',
+      fields: 'products_id,motorcycles_id.*,motorcycle_id.*',
+    },
+    {
+      productField: 'product_id',
+      fields: 'product_id,motorcycles_id.*,motorcycle_id.*',
+    },
+  ];
+
+  for (const shape of relationShapes) {
+    let loadedAnyRelation = false;
+
+    for (let index = 0; index < uniqueProductIds.length; index += 100) {
+      const ids = uniqueProductIds.slice(index, index + 100);
+      const url = new URL(`/items/${collection}`, directusUrl);
+      url.searchParams.set('fields', shape.fields);
+      url.searchParams.set(`filter[${shape.productField}][_in]`, ids.join(','));
+      url.searchParams.set('limit', '-1');
+
+      const payload = await fetchDirectusJson<{data?: DirectusProduct[]}>(url);
+      if (!Array.isArray(payload?.data)) {
+        break;
+      }
+
+      for (const relation of payload.data) {
+        const productId = getRelationProductId(relation[shape.productField]);
+        const motorcycle =
+          getMotorcycleLabel(relation.motorcycles_id as DirectusProduct) ||
+          getMotorcycleLabel(relation.motorcycle_id as DirectusProduct);
+
+        if (!productId || !motorcycle) {
+          continue;
+        }
+
+        loadedAnyRelation = true;
+        compatibilityByProductId.set(productId, [
+          ...(compatibilityByProductId.get(productId) || []),
+          motorcycle,
+        ]);
+      }
+    }
+
+    if (loadedAnyRelation) {
+      break;
+    }
+  }
+
+  for (const [productId, models] of compatibilityByProductId.entries()) {
+    compatibilityByProductId.set(productId, [...new Set(models)]);
+  }
+
+  return compatibilityByProductId;
 }
 
 async function getProductsFromDirectusPage(page: number, pageSize: number) {
@@ -315,35 +472,52 @@ async function getProductsFromDirectusPage(page: number, pageSize: number) {
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
+  const fields = [
+    '*',
+    'primary_category.*',
+    'categories.*',
+    'compatible_products.*',
+    'compatible_products.motorcycles_id.*',
+    'compatible_products.motorcycle_id.*',
+    'motorcycles.*',
+    'motorcycles.motorcycles_id.*',
+    'motorcycles.motorcycle_id.*',
+    'motorcycles_products.*',
+    'motorcycles_products.motorcycles_id.*',
+    'motorcycles_products.motorcycle_id.*',
+    'compatible_motorcycles.*',
+    'compatible_motorcycles.motorcycles_id.*',
+    'compatible_motorcycles.motorcycle_id.*',
+  ].join(',');
 
-  const url = new URL(`/items/${collection}`, directusUrl);
-  url.searchParams.set('fields', '*,primary_category.*,categories.*,compatible_products.*,compatible_products.motorcycles_id.*');
-  url.searchParams.set('limit', String(safePageSize));
-  url.searchParams.set('offset', String((safePage - 1) * safePageSize));
-  url.searchParams.set('meta', 'filter_count');
+  const fetchPage = async (fieldsParam: string) => {
+    const url = new URL(`/items/${collection}`, directusUrl);
+    url.searchParams.set('fields', fieldsParam);
+    url.searchParams.set('limit', String(safePageSize));
+    url.searchParams.set('offset', String((safePage - 1) * safePageSize));
+    url.searchParams.set('meta', 'filter_count');
 
-  const res = await fetch(url, {
-    headers: process.env.DIRECTUS_TOKEN
-      ? {
-          Authorization: `Bearer ${process.env.DIRECTUS_TOKEN}`,
-        }
-      : undefined,
-    next: {revalidate: 60},
-  });
+    return fetchDirectusJson<{data?: DirectusProduct[]; meta?: {filter_count?: number}}>(url);
+  };
 
-  if (!res.ok) {
+  const payload = (await fetchPage(fields)) || (await fetchPage('*,primary_category.*,categories.*'));
+  if (!payload) {
     return null;
   }
 
-  const payload = (await res.json()) as {data?: DirectusProduct[]; meta?: {filter_count?: number}};
   if (!Array.isArray(payload.data)) {
     return null;
   }
 
   const total = typeof payload.meta?.filter_count === 'number' ? payload.meta.filter_count : payload.data.length;
+  const items = payload.data.map(normalizeProduct);
+  const compatibilityByProductId = await fetchProductCompatibilityFromJunction(
+    directusUrl,
+    items.map((item) => item.id),
+  );
 
   return {
-    items: payload.data.map(normalizeProduct),
+    items: items.map((item) => addCompatibilityModels(item, compatibilityByProductId.get(item.id) || [])),
     total,
   };
 }
@@ -351,7 +525,7 @@ async function getProductsFromDirectusPage(page: number, pageSize: number) {
 export const fallbackProducts: Product[] = [
   {
     id: '1',
-    image: 'https://picsum.photos/seed/mainprod/800/800',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: 'ZDU129S00SSRE5 ZARD RACING STEEL EXHAUST SLIP-ON E5 (DVL 1260)',
     price: 220477,
     priceFormatted: '220 477 €',
@@ -368,7 +542,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '2',
-    image: 'https://picsum.photos/seed/sil1/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: 'ZDU005SI0TTR ZARD PAIR OF COMPENSED TITANIUM SILENCERS',
     price: 231435,
     priceFormatted: '231 435 €',
@@ -377,7 +551,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '3',
-    image: 'https://picsum.photos/seed/sil2/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '71160PK ARROW PAIR OF TITANIUM SILENCERS W/ LINK',
     price: 139532,
     priceFormatted: '139 532 €',
@@ -386,7 +560,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '4',
-    image: 'https://picsum.photos/seed/sil3/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '71162PK ARROW PAIR OF TITANIUM SILENCERS W/ LINK',
     price: 205808,
     priceFormatted: '205 808 €',
@@ -395,7 +569,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '5',
-    image: 'https://picsum.photos/seed/sil4/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: 'ZDU129S00SSRE5-B ZARD RACING BLACK STEEL EXHAUST',
     price: 246546,
     priceFormatted: '246 546 €',
@@ -404,7 +578,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '6',
-    image: 'https://picsum.photos/seed/seat/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '96880382AB DUCATI COMFORT LOWERED SEAT (M 1200, M 821)',
     price: 27756,
     priceFormatted: '27 756 €',
@@ -418,7 +592,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '7',
-    image: 'https://picsum.photos/seed/guard/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: 'AE68151 AELLA FRAME PROTECTION (P V4 SP2)',
     price: 19176,
     priceFormatted: '19 176 €',
@@ -432,7 +606,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '8',
-    image: 'https://picsum.photos/seed/chain/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: 'DID525VX 130L DRIVE CHAIN',
     desc: 'Цепь с замком 130 звеньев',
     price: 7290,
@@ -446,7 +620,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '9',
-    image: 'https://picsum.photos/seed/cover/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '97381111AA ALUMINIUM CLUTCH COVER',
     desc: 'DIAVEL 1260 /S',
     price: 15177,
@@ -460,7 +634,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '10',
-    image: 'https://picsum.photos/seed/out1/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '97181011AB DUCATI MONSTER GP COVER SET (BLK) (M 937)',
     price: 42350,
     priceFormatted: '42 350 €',
@@ -474,7 +648,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '11',
-    image: 'https://picsum.photos/seed/out2/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: 'D17009400ITC TERMIGNONI TITANIUM/STEEL COMP. EXHAUST',
     price: 317682,
     priceFormatted: '317 682 €',
@@ -486,7 +660,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '12',
-    image: 'https://picsum.photos/seed/out3/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '96481563A TERMIGNONI PAIR OF TITANIUM SILENCERS (HM 950)',
     price: 164275,
     priceFormatted: '164 275 €',
@@ -500,7 +674,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '13',
-    image: 'https://picsum.photos/seed/out4/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '96482052AA TERMIGNONI TITANIUM RACING EXHAUST (DSRT X)',
     price: 248755,
     priceFormatted: '248 755 €',
@@ -512,7 +686,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '14',
-    image: 'https://picsum.photos/seed/misc1/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '4601A711A DUCATI OIL FILTER KIT',
     price: 4890,
     priceFormatted: '4 890 €',
@@ -523,7 +697,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '15',
-    image: 'https://picsum.photos/seed/misc2/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '42610491A DUCATI BRAKE PAD SET FRONT',
     price: 11200,
     priceFormatted: '11 200 €',
@@ -534,7 +708,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: '16',
-    image: 'https://picsum.photos/seed/misc3/300/300',
+    image: DEFAULT_PRODUCT_IMAGE,
     title: '520M0591 DUCATI REAR SPROCKET 42T',
     price: 8750,
     priceFormatted: '8 750 €',

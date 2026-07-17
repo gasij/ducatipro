@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {BarChart3, Heart} from 'lucide-react';
@@ -14,11 +15,13 @@ export default function ProductCard({
   priceFormatted,
   oldPrice,
   discountBadge,
+  image,
   sku,
 }: Pick<
   Product,
   | 'id'
   | 'sku'
+  | 'image'
   | 'title'
   | 'desc'
   | 'priceFormatted'
@@ -56,9 +59,14 @@ export default function ProductCard({
 
       <Link href={href} className={styles.mainLink} aria-label={title}>
         <div className={styles.imageBox}>
-          <div className={styles.placeholder} aria-hidden="true">
-            <span>DUCATI</span>
-          </div>
+          <Image
+            src={image}
+            fill
+            alt={title}
+            className={styles.image}
+            sizes="(max-width: 767px) 100vw, 280px"
+            referrerPolicy="no-referrer"
+          />
         </div>
 
         <div className={styles.content}>
