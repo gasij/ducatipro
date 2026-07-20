@@ -156,6 +156,13 @@ label {
   font-weight: 700;
 }
 
+small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
 .primary,
 .secondary {
   min-height: 42px;

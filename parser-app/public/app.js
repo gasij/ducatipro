@@ -5,6 +5,10 @@ const importButton = document.querySelector('#importButton');
 const importLog = document.querySelector('#importLog');
 const jsonLink = document.querySelector('#jsonLink');
 const csvLink = document.querySelector('#csvLink');
+const productsInput = parseForm.querySelector('input[name="products"]');
+const compatibilityInput = parseForm.querySelector('input[name="compatibility"]');
+const productsFilesHint = document.querySelector('#productsFilesHint');
+const compatibilityFilesHint = document.querySelector('#compatibilityFilesHint');
 let currentRunId = '';
 
 function setStatus(text, tone = '') {
@@ -59,9 +63,31 @@ function enableDownloads(runId) {
   csvLink.classList.remove('disabled');
 }
 
+function formatFileSelection(input, emptyText) {
+  const files = [...input.files].map((file) => file.name);
+  if (files.length === 0) {
+    return emptyText;
+  }
+  if (files.length <= 3) {
+    return files.join(', ');
+  }
+  return `${files.slice(0, 3).join(', ')} + еще ${files.length - 3}`;
+}
+
+function updateFileHints() {
+  productsFilesHint.textContent = formatFileSelection(productsInput, 'Можно выбрать сразу несколько D2-таблиц.');
+  compatibilityFilesHint.textContent = formatFileSelection(
+    compatibilityInput,
+    'Можно выбрать сразу несколько D1-таблиц.',
+  );
+}
+
+productsInput.addEventListener('change', updateFileHints);
+compatibilityInput.addEventListener('change', updateFileHints);
+
 parseForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  setStatus('Разбираю файл...', 'busy');
+  setStatus('Разбираю файлы...', 'busy');
   importLog.textContent = '';
 
   try {

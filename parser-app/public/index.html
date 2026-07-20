@@ -19,13 +19,15 @@
       <section class="workspace">
         <form class="panel controls" id="parseForm">
           <label class="file-control">
-            <span>Файл товаров</span>
-            <input name="products" type="file" accept=".xlsx,.csv,.tsv,.json" required />
+            <span>Файлы товаров</span>
+            <input name="products" type="file" accept=".xlsx,.csv,.tsv,.json" multiple required />
+            <small id="productsFilesHint">Можно выбрать сразу несколько D2-таблиц.</small>
           </label>
 
           <label class="file-control">
-            <span>Совместимость</span>
-            <input name="compatibility" type="file" accept=".xlsx,.csv,.tsv,.json" />
+            <span>Файлы совместимости</span>
+            <input name="compatibility" type="file" accept=".xlsx,.csv,.tsv,.json" multiple />
+            <small id="compatibilityFilesHint">Можно выбрать сразу несколько D1-таблиц.</small>
           </label>
 
           <div class="grid">

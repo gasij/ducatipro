@@ -5,6 +5,7 @@ const productAliases = {
   description: ['description', 'full_description', 'full description', 'описание', 'полное описание'],
   price: ['price', 'amount', 'price rub', 'price eur', 'цена', 'стоимость'],
   old_price: ['old_price', 'old price', 'oldPrice', 'старая цена', 'цена до скидки'],
+  weight: ['weight', 'wht', 'gross_weight', 'gross weight', 'net_weight', 'net weight', 'вес', 'масса'],
   category: ['category', 'type', 'раздел', 'категория'],
   image: ['image', 'main_image', 'photo', 'image_url', 'image url', 'фото', 'картинка', 'ссылка на фото'],
   discount_badge: ['discount_badge', 'discount', 'badge', 'скидка', 'бейдж'],
@@ -173,6 +174,7 @@ function buildProductPayload(row, compatibilityMap, options) {
   const title = getCell(row, productAliases.title) || `Ducati OEM ${sku}`;
   const price = parseNumber(getCell(row, productAliases.price));
   const oldPrice = parseNumber(getCell(row, productAliases.old_price));
+  const weight = parseNumber(getCell(row, productAliases.weight));
   const category = normalizeCategory(getCell(row, productAliases.category));
   const stockLocation = normalizeLocation(getCell(row, productAliases.stock_location));
   const productModels = getRowModels(row);
@@ -195,6 +197,7 @@ function buildProductPayload(row, compatibilityMap, options) {
 
   if (price !== undefined) payload.price = price;
   if (oldPrice !== undefined) payload.old_price = oldPrice;
+  if (weight !== undefined) payload.weight = weight;
   if (desc) payload.desc = desc;
   if (description) payload.description = description;
   if (category) payload.category = category;
@@ -226,11 +229,18 @@ function mergeProductPayloads(payloads, options) {
       : splitList(payload[options.modelsField]);
     const models = [...new Set([...currentModels, ...nextModels])];
 
-    merged.set(identity, {
+    const mergedPayload = {
       ...current,
       ...Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined && value !== '')),
-      [options.modelsField]: options.modelsFormat === 'array' ? models : models.join(', '),
-    });
+    };
+
+    if (models.length > 0) {
+      mergedPayload[options.modelsField] = options.modelsFormat === 'array' ? models : models.join(', ');
+    } else {
+      delete mergedPayload[options.modelsField];
+    }
+
+    merged.set(identity, mergedPayload);
   }
 
   return [...merged.values()];

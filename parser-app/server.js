@@ -72,16 +72,31 @@ function parseMultipart(buffer, contentType) {
     }
 
     if (filename) {
-      files[name] = {
+      if (!files[name]) {
+        files[name] = [];
+      }
+      files[name].push({
         filename,
         buffer: Buffer.from(rawContent, 'latin1'),
-      };
+      });
     } else {
       fields[name] = Buffer.from(rawContent, 'latin1').toString('utf8');
     }
   }
 
   return {fields, files};
+}
+
+function getUploadFiles(files, name) {
+  const value = files[name];
+  if (!value) {
+    return [];
+  }
+  return Array.isArray(value) ? value : [value];
+}
+
+function readTablesFromUploads(files) {
+  return files.flatMap((file) => readTableFromUpload(file));
 }
 
 function toCsv(rows) {
@@ -112,8 +127,10 @@ function createRun(parseResult, sourceNames) {
 async function handleParse(req, res) {
   const body = await collectRequest(req);
   const {fields, files} = parseMultipart(body, req.headers['content-type'] || '');
-  const productRows = readTableFromUpload(files.products);
-  const compatibilityRows = readTableFromUpload(files.compatibility);
+  const productFiles = getUploadFiles(files, 'products');
+  const compatibilityFiles = getUploadFiles(files, 'compatibility');
+  const productRows = readTablesFromUploads(productFiles);
+  const compatibilityRows = readTablesFromUploads(compatibilityFiles);
   const result = parseProducts(productRows, compatibilityRows, {
     identityField: fields.identityField,
     modelsField: fields.modelsField,
@@ -121,8 +138,8 @@ async function handleParse(req, res) {
     limit: fields.limit,
   });
   const run = createRun(result, {
-    products: files.products?.filename || '',
-    compatibility: files.compatibility?.filename || '',
+    products: productFiles.map((file) => file.filename).filter(Boolean),
+    compatibility: compatibilityFiles.map((file) => file.filename).filter(Boolean),
   });
 
   sendJson(res, 200, {
@@ -133,8 +150,8 @@ async function handleParse(req, res) {
       prepared: run.payloads.length,
       totalPrepared: run.totalPayloads,
       withModels: run.payloadsWithModels,
-      productsFile: run.sourceNames.products,
-      compatibilityFile: run.sourceNames.compatibility,
+      productsFiles: run.sourceNames.products,
+      compatibilityFiles: run.sourceNames.compatibility,
     },
     preview: run.payloads.slice(0, 100),
   });
