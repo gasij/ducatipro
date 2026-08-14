@@ -6,6 +6,7 @@ export {
   readStoredCart,
 } from './cart';
 export type {StoredCartItem} from './cart';
+export {calculateDeliveryPriceEur} from './delivery';
 export {gsap, registerGsap, ScrollTrigger} from './gsap';
 export {
   convertPriceToRub,

@@ -5,14 +5,19 @@ import Link from 'next/link';
 import {Loader2} from 'lucide-react';
 import type {CreateOrderInputItem} from '@/lib/orders/types';
 import type {Product} from '@/src/fsd/entities/product';
-import {CART_STORAGE_KEY, convertPriceToRub, formatPriceInRub, notifyCartUpdated} from '@/src/fsd/shared/lib';
+import {
+  CART_STORAGE_KEY,
+  calculateDeliveryPriceEur,
+  convertPriceToRub,
+  formatPriceInRub,
+  notifyCartUpdated,
+} from '@/src/fsd/shared/lib';
 import styles from './checkout-page.module.css';
 
 const COUNTRY = 'Российская Федерация';
 const DELIVERY_METHOD = 'EMS / СДЭК';
 const ORDER_PROCESSING_FEE_EUR = 15;
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
-const EMS_DELIVERY_PRICE = 'по калькулятору';
 const EXPECTED_DELIVERY_DATE = '29 июня - 13 июля';
 
 type Props = {
@@ -37,6 +42,11 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
     (sum, item) => sum + item.product.price * item.quantity,
     0,
   );
+  const totalWeightKg = checkoutItems.reduce(
+    (sum, item) => sum + (item.product.weight || 0) * item.quantity,
+    0,
+  );
+  const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
   const processingFeeRub = convertPriceToRub(ORDER_PROCESSING_FEE_EUR, 'EUR');
   const totalWithProcessingFee = subtotal + processingFeeRub;
 
@@ -54,7 +64,7 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
       telegramUsername ? `Telegram: ${telegramUsername}` : '',
       pvzAddress ? `Адрес ПВЗ СДЭК: ${pvzAddress}` : '',
       `Фикс. сбор за обработку заказа: ${ORDER_PROCESSING_FEE}`,
-      `Доставка EMS: ${EMS_DELIVERY_PRICE}`,
+      `Доставка EMS: €${deliveryPriceEur} (вес: ${totalWeightKg} кг)`,
       `Итоговая цена без доставки EMS: ${formatPriceInRub(totalWithProcessingFee, 'RUB')}`,
       `Ожидаемая дата доставки: ${EXPECTED_DELIVERY_DATE}`,
     ]
@@ -264,7 +274,7 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
           <div className={styles.deliveryInfo}>
             <p>Метод доставки: {DELIVERY_METHOD}</p>
             <p>Фикс. сбор за обработку заказа: {ORDER_PROCESSING_FEE}</p>
-            <p>Доставка EMS: {EMS_DELIVERY_PRICE}</p>
+            <p>Доставка EMS: €{deliveryPriceEur}</p>
             <p>Ожидаемая дата доставки: {EXPECTED_DELIVERY_DATE}</p>
             <div className={styles.totalRows}>
               <div className={styles.totalRow}>

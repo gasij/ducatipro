@@ -14,6 +14,7 @@ export type Product = {
   desc?: string;
   price: number;
   priceFormatted: string;
+  weight?: number;
   oldPrice?: string;
   badgeText?: string;
   badgeColor?: 'green' | 'gray';
@@ -318,6 +319,7 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
     desc: getString(item, ['desc', 'short_description', 'subtitle']),
     price,
     priceFormatted: formatPriceInRub(price, 'RUB'),
+    weight: getNumber(item, ['weight']),
     oldPrice: oldPrice ? formatPriceStringInRub(oldPrice) : undefined,
     badgeText:
       getString(item, ['badgeText', 'badge_text', 'badge']) ||
