@@ -9,18 +9,23 @@ function getConfiguredPriceCurrency(): PriceCurrency {
     : DEFAULT_PRICE_CURRENCY;
 }
 
-function getEuroToRubRate() {
+/** Static fallback rate, used only when the live CBR rate wasn't fetched/threaded through. */
+function getStaticFallbackRate() {
   const rawRate = process.env.NEXT_PUBLIC_EUR_TO_RUB_RATE;
   const rate = rawRate ? Number(rawRate) : DEFAULT_EUR_TO_RUB_RATE;
 
   return Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_EUR_TO_RUB_RATE;
 }
 
-export function convertPriceToRub(amount: number, currency = getConfiguredPriceCurrency()) {
+export function convertPriceToRub(
+  amount: number,
+  currency = getConfiguredPriceCurrency(),
+  rate = getStaticFallbackRate(),
+) {
   const safeAmount = Number.isFinite(amount) ? amount : 0;
 
   if (currency === 'EUR') {
-    return Math.round(safeAmount * getEuroToRubRate());
+    return Math.round(safeAmount * rate);
   }
 
   return Math.round(safeAmount);
@@ -55,4 +60,26 @@ export function formatPriceStringInRub(value: string) {
   const currency: PriceCurrency = /€|\beur\b/i.test(value) ? 'EUR' : 'RUB';
 
   return formatPriceInRub(amount, currency);
+}
+
+export function formatEurPrice(amount: number) {
+  const safeAmount = Number.isFinite(amount) ? Math.round(amount) : 0;
+
+  return `€${new Intl.NumberFormat('ru-RU').format(safeAmount)}`;
+}
+
+export function formatPriceStringInEur(value: string) {
+  const amount = parsePriceAmount(value);
+
+  return amount === undefined ? value : formatEurPrice(amount);
+}
+
+export function formatRubHint(amountEur: number, rate = getStaticFallbackRate()) {
+  return formatRubPrice(convertPriceToRub(amountEur, 'EUR', rate));
+}
+
+export function convertRubToEur(amountRub: number, rate = getStaticFallbackRate()) {
+  const safeAmount = Number.isFinite(amountRub) ? amountRub : 0;
+
+  return safeAmount / rate;
 }

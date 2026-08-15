@@ -4,10 +4,12 @@ import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {Bike, ChevronRight, Heart, ShieldCheck, Star, Truck} from 'lucide-react';
-import {getProductArticle, type Product} from '@/src/fsd/entities/product';
+import {Bike, ChevronRight, Heart, Star} from 'lucide-react';
+import type {Product} from '@/src/fsd/entities/product';
 import {CART_STORAGE_KEY, gsap, notifyCartUpdated, registerGsap, type StoredCartItem} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
+
+const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
 
 const CATEGORY_LABELS: Record<Product['category'], string> = {
   new: 'Новинка',
@@ -20,6 +22,7 @@ export default function ProductView({product}: {product: Product}) {
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
+  const [imageSrc, setImageSrc] = useState(product.image);
   const compatibleModels = product.models || [];
 
   useEffect(() => {
@@ -62,7 +65,14 @@ export default function ProductView({product}: {product: Product}) {
     return () => ctx.revert();
   }, [product.id]);
 
-  const article = getProductArticle(product);
+  useEffect(() => {
+    setImageSrc(product.image);
+  }, [product.image]);
+
+  const titleWithArticle =
+    product.sku && !product.title.toUpperCase().startsWith(product.sku.toUpperCase())
+      ? `${product.sku} ${product.title}`
+      : product.title;
 
   function addToCart() {
     const rawCart = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -100,12 +110,13 @@ export default function ProductView({product}: {product: Product}) {
         <div className={styles.gallery}>
           <div className={styles.mainImageBox}>
             <Image
-              src={product.image}
+              src={imageSrc}
               fill
               alt={product.title}
               className={styles.mainImage}
               priority
               referrerPolicy="no-referrer"
+              onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}
             />
           </div>
         </div>
@@ -113,10 +124,9 @@ export default function ProductView({product}: {product: Product}) {
         <div className={styles.info}>
           <div className={styles.kickerRow}>
             <span className={styles.categoryPill}>{CATEGORY_LABELS[product.category]}</span>
-            <span className={styles.article}>Артикул: {article}</span>
           </div>
 
-          <h1 className={styles.title}>{product.title}</h1>
+          <h1 className={styles.title}>{titleWithArticle}</h1>
 
           <div className={styles.ratingRow}>
             <div className={styles.rating}>
@@ -138,6 +148,9 @@ export default function ProductView({product}: {product: Product}) {
               <div className={styles.priceGroup}>
                 {product.oldPrice && <span className={styles.oldPrice}>{product.oldPrice}</span>}
                 <div className={styles.price}>{product.priceFormatted}</div>
+                {product.priceRubFormatted && (
+                  <span className={styles.priceRub}>{product.priceRubFormatted}</span>
+                )}
                 <span className={styles.priceNote}>Итоговая цена для заказа</span>
               </div>
               {product.discountBadge && (
@@ -169,33 +182,13 @@ export default function ProductView({product}: {product: Product}) {
               </button>
             </div>
 
-            <div className={styles.deliveryCard}>
-              <div className={styles.deliveryIconWrap}>
-                <Truck className={styles.deliveryIcon} />
-              </div>
-              <div>
-                <h2 className={styles.deliveryTitle}>Доставка до двери</h2>
-                <p className={styles.deliveryText}>
-                  Менеджер уточнит сроки и финальные условия после оформления заказа.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.quickFacts}>
-            <div className={styles.fact}>
-              <Truck className={styles.factIcon} />
-              <div>
-                <span className={styles.factLabel}>Доставка</span>
-                <strong>До двери</strong>
-              </div>
-            </div>
-            <div className={styles.fact}>
-              <ShieldCheck className={styles.factIcon} />
-              <div>
-                <span className={styles.factLabel}>Проверка</span>
-                <strong>Менеджером</strong>
-              </div>
+            <div className={styles.summaryDescriptionCard}>
+              <h2 className={styles.summaryDescriptionTitle}>Описание</h2>
+              <p className={styles.summaryDescriptionText}>
+                {product.desc ||
+                  product.description ||
+                  'Оригинальная запчасть для мотоциклов Ducati. Подробности уточняйте у менеджера в Telegram: @ducatiparts'}
+              </p>
             </div>
           </div>
         </div>
@@ -204,14 +197,13 @@ export default function ProductView({product}: {product: Product}) {
       <div className={styles.details}>
         <div className={styles.detailsInner}>
           <div className={`${styles.contentBlock} ${styles.descriptionBlock}`}>
-            <h3 className={styles.blockTitle}>Описание</h3>
+            <h3 className={styles.blockTitle}>Совместимость</h3>
             <div className={styles.compatibilityBox}>
               <div className={styles.compatibilityHeader}>
                 <span className={styles.compatibilityIconWrap}>
                   <Bike className={styles.compatibilityIcon} />
                 </span>
                 <div>
-                  <h4 className={styles.compatibilityTitle}>Совместимость</h4>
                   <p className={styles.compatibilitySubtitle}>
                     {compatibleModels.length > 0
                       ? `Подходит для ${compatibleModels.length} ${compatibleModels.length === 1 ? 'модели' : 'моделей'} Ducati`
@@ -228,19 +220,6 @@ export default function ProductView({product}: {product: Product}) {
                     </span>
                   ))}
                 </div>
-              )}
-            </div>
-            <div className={styles.textContent}>
-              <p>{product.title}</p>
-              <p>Артикул: {article}</p>
-              {product.desc && <p>{product.desc}</p>}
-              {product.description ? (
-                <p>{product.description}</p>
-              ) : (
-                <p>
-                  Оригинальная запчасть для мотоциклов Ducati. Подробности уточняйте у менеджера в
-                  Telegram: @ducatiparts
-                </p>
               )}
             </div>
           </div>

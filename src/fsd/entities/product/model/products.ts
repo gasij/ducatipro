@@ -1,7 +1,9 @@
+import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib/exchangeRate';
 import {
-  convertPriceToRub,
-  formatPriceInRub,
-  formatPriceStringInRub,
+  convertRubToEur,
+  formatEurPrice,
+  formatPriceStringInEur,
+  formatRubHint,
   parsePriceAmount,
 } from '@/src/fsd/shared/lib/money';
 
@@ -12,8 +14,10 @@ export type Product = {
   image: string;
   title: string;
   desc?: string;
+  /** Amount in EUR — the currency prices are stored in in Directus. */
   price: number;
   priceFormatted: string;
+  priceRubFormatted?: string;
   weight?: number;
   oldPrice?: string;
   badgeText?: string;
@@ -43,7 +47,7 @@ export type ProductsPageResult = {
 const DEFAULT_PRODUCTS_COLLECTION = 'products';
 const DEFAULT_PRODUCT_MOTORCYCLES_COLLECTION = 'motorcycles_products';
 const DEFAULT_PAGE_SIZE = 10;
-const DEFAULT_PRODUCT_IMAGE = '/product-placeholder.svg';
+const DEFAULT_PRODUCT_IMAGE = '/ducati-logo.png';
 
 function getString(item: DirectusProduct, fields: string[]): string | undefined {
   for (const field of fields) {
@@ -294,10 +298,9 @@ function normalizeLocation(value?: string) {
   return undefined;
 }
 
-function normalizeProduct(item: DirectusProduct, index: number): Product {
-  const rawPrice = getNumber(item, ['price', 'amount', 'total']) || 0;
-  const price = convertPriceToRub(rawPrice);
-  const oldPrice = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
+function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: number): Product {
+  const price = getNumber(item, ['price', 'amount', 'total']) || 0;
+  const oldPriceRaw = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
   const sku = getString(item, ['sku', 'article', 'vendor_code']);
   const slug = getString(item, ['slug']);
   const stockLocation = normalizeLocation(getString(item, ['stock_location']));
@@ -318,9 +321,10 @@ function normalizeProduct(item: DirectusProduct, index: number): Product {
     title: getString(item, ['title', 'name', 'product_name']) || 'Товар Ducati',
     desc: getString(item, ['desc', 'short_description', 'subtitle']),
     price,
-    priceFormatted: formatPriceInRub(price, 'RUB'),
+    priceFormatted: formatEurPrice(price),
+    priceRubFormatted: formatRubHint(price, eurToRubRate),
     weight: getNumber(item, ['weight']),
-    oldPrice: oldPrice ? formatPriceStringInRub(oldPrice) : undefined,
+    oldPrice: oldPriceRaw ? formatPriceStringInEur(oldPriceRaw) : undefined,
     badgeText:
       getString(item, ['badgeText', 'badge_text', 'badge']) ||
       (isOutlet
@@ -464,7 +468,7 @@ async function fetchProductCompatibilityFromJunction(directusUrl: string, produc
   return compatibilityByProductId;
 }
 
-async function getProductsFromDirectusPage(page: number, pageSize: number) {
+async function getProductsFromDirectusPage(page: number, pageSize: number, eurToRubRate: number) {
   const directusUrl = process.env.DIRECTUS_URL;
   const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
 
@@ -512,7 +516,7 @@ async function getProductsFromDirectusPage(page: number, pageSize: number) {
   }
 
   const total = typeof payload.meta?.filter_count === 'number' ? payload.meta.filter_count : payload.data.length;
-  const items = payload.data.map(normalizeProduct);
+  const items = payload.data.map((item, index) => normalizeProduct(item, index, eurToRubRate));
   const compatibilityByProductId = await fetchProductCompatibilityFromJunction(
     directusUrl,
     items.map((item) => item.id),
@@ -723,23 +727,30 @@ export const fallbackProducts: Product[] = [
 
 export const products = fallbackProducts;
 
-function normalizeDisplayPrices(product: Product): Product {
-  const oldPriceAmount = product.oldPrice ? parsePriceAmount(product.oldPrice) : undefined;
+function normalizeDisplayPrices(product: Product, eurToRubRate: number): Product {
+  // Demo fallback prices below are hardcoded in RUB; convert to the EUR-primary display model.
+  const oldPriceAmountRub = product.oldPrice ? parsePriceAmount(product.oldPrice) : undefined;
+  const price = convertRubToEur(product.price, eurToRubRate);
 
   return {
     ...product,
-    price: convertPriceToRub(product.price, 'RUB'),
-    priceFormatted: formatPriceInRub(product.price, 'RUB'),
-    oldPrice: oldPriceAmount === undefined ? undefined : formatPriceInRub(oldPriceAmount, 'RUB'),
+    price,
+    priceFormatted: formatEurPrice(price),
+    priceRubFormatted: formatRubHint(price, eurToRubRate),
+    oldPrice:
+      oldPriceAmountRub === undefined
+        ? undefined
+        : formatEurPrice(convertRubToEur(oldPriceAmountRub, eurToRubRate)),
   };
 }
 
 export async function getProductsPage(page = 1, pageSize = DEFAULT_PAGE_SIZE): Promise<ProductsPageResult> {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
+  const eurToRubRate = await getCurrentEurToRubRate();
 
   try {
-    const directusPage = await getProductsFromDirectusPage(safePage, safePageSize);
+    const directusPage = await getProductsFromDirectusPage(safePage, safePageSize, eurToRubRate);
 
     if (directusPage && directusPage.items.length > 0) {
       const totalPages = Math.max(1, Math.ceil(directusPage.total / safePageSize));
@@ -756,7 +767,9 @@ export async function getProductsPage(page = 1, pageSize = DEFAULT_PAGE_SIZE): P
   }
 
   const start = (safePage - 1) * safePageSize;
-  const items = fallbackProducts.slice(start, start + safePageSize).map(normalizeDisplayPrices);
+  const items = fallbackProducts
+    .slice(start, start + safePageSize)
+    .map((product) => normalizeDisplayPrices(product, eurToRubRate));
   const total = fallbackProducts.length;
 
   return {

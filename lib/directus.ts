@@ -1,6 +1,8 @@
 import {createDirectus, createItem, readItem, rest, staticToken, updateItem} from '@directus/sdk';
 import type {CreateOrderPayload, DirectusOrder, OrderItem} from './orders/types';
 import {getProduct, getProductArticle} from '@/src/fsd/entities/product';
+import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib/exchangeRate';
+import {convertPriceToRub} from '@/src/fsd/shared/lib/money';
 
 type Schema = {
   order: DirectusOrder[];
@@ -45,6 +47,7 @@ function calcTotal(items: OrderItem[]) {
 }
 
 async function buildOrderItems(items: CreateOrderPayload['items']): Promise<OrderItem[]> {
+  const eurToRubRate = await getCurrentEurToRubRate();
   const snapshots = await Promise.all(
     items.map(async (item) => {
       const product = await getProduct(item.product_id);
@@ -57,7 +60,7 @@ async function buildOrderItems(items: CreateOrderPayload['items']): Promise<Orde
         product_id: product.id,
         product_title: product.title,
         product_sku: getProductArticle(product),
-        price: product.price,
+        price: convertPriceToRub(product.price, 'EUR', eurToRubRate),
         quantity: item.quantity,
       };
     }),

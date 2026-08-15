@@ -1,4 +1,5 @@
 import {getProducts} from '@/src/fsd/entities/product';
+import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib';
 import CheckoutForm from './CheckoutForm';
 import styles from './checkout-page.module.css';
 
@@ -49,7 +50,7 @@ export default async function CheckoutPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const products = await getProducts();
+  const [products, eurToRubRate] = await Promise.all([getProducts(), getCurrentEurToRubRate()]);
   const cartItems = parseCartItems(params?.items);
   const resolvedItems = cartItems
     .map((item) => {
@@ -75,7 +76,7 @@ export default async function CheckoutPage({
   }));
   return (
     <div className={styles.page}>
-      <CheckoutForm items={items} checkoutItems={checkoutItems} />
+      <CheckoutForm items={items} checkoutItems={checkoutItems} eurToRubRate={eurToRubRate} />
     </div>
   );
 }

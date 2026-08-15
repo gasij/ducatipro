@@ -331,6 +331,21 @@
   white-space: nowrap;
 }
 
+.totalValue {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  text-align: right;
+}
+
+.totalValueRub {
+  color: #9a9a9d;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .grandTotal {
   margin-top: 0.25rem;
   color: #111111;

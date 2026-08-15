@@ -272,8 +272,12 @@
 }
 
 .searchInput:focus {
-    border-color: rgb(255 255 255 / 40%);
+    border-color: var(--color-accent);
     background: rgb(255 255 255 / 14%);
+}
+
+.searchInput:focus-visible {
+    outline: none;
 }
 
 .searchActions {

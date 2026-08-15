@@ -8,8 +8,8 @@ import type {Product} from '@/src/fsd/entities/product';
 import {
   CART_STORAGE_KEY,
   calculateDeliveryPriceEur,
-  convertPriceToRub,
-  formatPriceInRub,
+  formatEurPrice,
+  formatRubHint,
   notifyCartUpdated,
 } from '@/src/fsd/shared/lib';
 import styles from './checkout-page.module.css';
@@ -23,9 +23,10 @@ const EXPECTED_DELIVERY_DATE = '29 июня - 13 июля';
 type Props = {
   items: CreateOrderInputItem[];
   checkoutItems: Array<{product: Product; quantity: number}>;
+  eurToRubRate: number;
 };
 
-export default function CheckoutForm({items, checkoutItems}: Props) {
+export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -47,8 +48,7 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
     0,
   );
   const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
-  const processingFeeRub = convertPriceToRub(ORDER_PROCESSING_FEE_EUR, 'EUR');
-  const totalWithProcessingFee = subtotal + processingFeeRub;
+  const totalWithProcessingFee = subtotal + ORDER_PROCESSING_FEE_EUR;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -65,7 +65,7 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
       pvzAddress ? `Адрес ПВЗ СДЭК: ${pvzAddress}` : '',
       `Фикс. сбор за обработку заказа: ${ORDER_PROCESSING_FEE}`,
       `Доставка EMS: €${deliveryPriceEur} (вес: ${totalWeightKg} кг)`,
-      `Итоговая цена без доставки EMS: ${formatPriceInRub(totalWithProcessingFee, 'RUB')}`,
+      `Итоговая цена без доставки EMS: ${formatEurPrice(totalWithProcessingFee)} (${formatRubHint(totalWithProcessingFee, eurToRubRate)})`,
       `Ожидаемая дата доставки: ${EXPECTED_DELIVERY_DATE}`,
     ]
       .filter(Boolean)
@@ -267,7 +267,12 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
       <aside className={styles.summary}>
         <div className={styles.summaryItems}>
           {checkoutItems.map(({product, quantity}) => (
-            <OrderProduct key={product.id} product={product} quantity={quantity} />
+            <OrderProduct
+              key={product.id}
+              product={product}
+              quantity={quantity}
+              eurToRubRate={eurToRubRate}
+            />
           ))}
         </div>
 
@@ -279,15 +284,28 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
             <div className={styles.totalRows}>
               <div className={styles.totalRow}>
                 <span>Сумма товаров:</span>
-                <strong>{formatPriceInRub(subtotal, 'RUB')}</strong>
+                <div className={styles.totalValue}>
+                  <strong>{formatEurPrice(subtotal)}</strong>
+                  <span className={styles.totalValueRub}>{formatRubHint(subtotal, eurToRubRate)}</span>
+                </div>
               </div>
               <div className={styles.totalRow}>
                 <span>Сбор за обработку:</span>
-                <strong>{formatPriceInRub(processingFeeRub, 'RUB')}</strong>
+                <div className={styles.totalValue}>
+                  <strong>{formatEurPrice(ORDER_PROCESSING_FEE_EUR)}</strong>
+                  <span className={styles.totalValueRub}>
+                    {formatRubHint(ORDER_PROCESSING_FEE_EUR, eurToRubRate)}
+                  </span>
+                </div>
               </div>
               <div className={`${styles.totalRow} ${styles.grandTotal}`}>
                 <span>Итого без доставки EMS:</span>
-                <strong>{formatPriceInRub(totalWithProcessingFee, 'RUB')}</strong>
+                <div className={styles.totalValue}>
+                  <strong>{formatEurPrice(totalWithProcessingFee)}</strong>
+                  <span className={styles.totalValueRub}>
+                    {formatRubHint(totalWithProcessingFee, eurToRubRate)}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -306,7 +324,15 @@ export default function CheckoutForm({items, checkoutItems}: Props) {
   );
 }
 
-function OrderProduct({product, quantity}: {product: Product; quantity: number}) {
+function OrderProduct({
+  product,
+  quantity,
+  eurToRubRate,
+}: {
+  product: Product;
+  quantity: number;
+  eurToRubRate: number;
+}) {
   return (
     <div className={styles.summaryProduct}>
       <div className={styles.summaryImageBox}>
@@ -314,7 +340,12 @@ function OrderProduct({product, quantity}: {product: Product; quantity: number})
       </div>
       <div className={styles.summaryProductTitle}>{product.title}</div>
       <div className={styles.summaryProductPrice}>
-        {quantity} x <strong>{formatPriceInRub(product.price * quantity, 'RUB')}</strong>
+        <div>
+          {quantity} x <strong>{formatEurPrice(product.price * quantity)}</strong>
+        </div>
+        <div className={styles.totalValueRub}>
+          {formatRubHint(product.price * quantity, eurToRubRate)}
+        </div>
       </div>
     </div>
   );

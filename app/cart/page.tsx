@@ -1,4 +1,5 @@
 import {getProducts} from '@/src/fsd/entities/product';
+import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib';
 import CartClient from './CartClient';
 
 type CartItemParam = {
@@ -48,7 +49,7 @@ export default async function CartPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const products = await getProducts();
+  const [products, eurToRubRate] = await Promise.all([getProducts(), getCurrentEurToRubRate()]);
   const cartItem = products.find((product) => product.id === '1') ?? products[0];
   const sharedItems = parseCartItems(params?.items);
 
@@ -56,5 +57,12 @@ export default async function CartPage({
     return null;
   }
 
-  return <CartClient initialItem={cartItem} products={products} sharedItems={sharedItems} />;
+  return (
+    <CartClient
+      initialItem={cartItem}
+      products={products}
+      sharedItems={sharedItems}
+      eurToRubRate={eurToRubRate}
+    />
+  );
 }

@@ -7,11 +7,16 @@ export {
 } from './cart';
 export type {StoredCartItem} from './cart';
 export {calculateDeliveryPriceEur} from './delivery';
+export {getCurrentEurToRubRate} from './exchangeRate';
 export {gsap, registerGsap, ScrollTrigger} from './gsap';
 export {
   convertPriceToRub,
+  convertRubToEur,
+  formatEurPrice,
   formatPriceInRub,
+  formatPriceStringInEur,
   formatPriceStringInRub,
+  formatRubHint,
   formatRubPrice,
   parsePriceAmount,
 } from './money';

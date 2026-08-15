@@ -4,7 +4,7 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductHref, type Product} from '@/src/fsd/entities/product';
-import {CART_STORAGE_KEY, formatPriceInRub, notifyCartUpdated} from '@/src/fsd/shared/lib';
+import {CART_STORAGE_KEY, formatEurPrice, formatRubHint, notifyCartUpdated} from '@/src/fsd/shared/lib';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
 
@@ -17,6 +17,7 @@ type Props = {
   initialItem: Product;
   products: Product[];
   sharedItems: Array<{product_id: string; quantity: number}>;
+  eurToRubRate: number;
 };
 
 const PROMO_CODES: Record<string, number> = {
@@ -29,10 +30,10 @@ function getOldPrice(product: Product) {
     return product.oldPrice;
   }
 
-  return formatPriceInRub(Math.round(product.price * 1.28), 'RUB');
+  return formatEurPrice(product.price * 1.28);
 }
 
-export default function CartClient({initialItem, products, sharedItems}: Props) {
+export default function CartClient({initialItem, products, sharedItems, eurToRubRate}: Props) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
@@ -236,6 +237,9 @@ export default function CartClient({initialItem, products, sharedItems}: Props) 
                 <div className={styles.outletInfo}>
                   <div className={styles.outletName}>{product.title}</div>
                   <div className={styles.outletPrice}>{product.priceFormatted}</div>
+                  {product.priceRubFormatted && (
+                    <div className={styles.priceRubHint}>{product.priceRubFormatted}</div>
+                  )}
                   <div className={styles.outletOldPrice}>{getOldPrice(product)}</div>
                 </div>
               </Link>
@@ -259,7 +263,12 @@ export default function CartClient({initialItem, products, sharedItems}: Props) 
                       {line.product.title}
                     </Link>
 
-                    <div className={styles.unitPrice}>{line.product.priceFormatted}/шт</div>
+                    <div className={styles.unitPrice}>
+                      <span>{line.product.priceFormatted}/шт</span>
+                      {line.product.priceRubFormatted && (
+                        <span className={styles.priceRubHint}>{line.product.priceRubFormatted}</span>
+                      )}
+                    </div>
 
                     <div className={styles.quantity}>
                       <button
@@ -288,7 +297,10 @@ export default function CartClient({initialItem, products, sharedItems}: Props) 
                     </div>
 
                     <div className={styles.lineTotal}>
-                      {formatPriceInRub(line.product.price * line.quantity, 'RUB')}
+                      <span>{formatEurPrice(line.product.price * line.quantity)}</span>
+                      <span className={styles.priceRubHint}>
+                        {formatRubHint(line.product.price * line.quantity, eurToRubRate)}
+                      </span>
                     </div>
 
                     <button
@@ -349,6 +361,9 @@ export default function CartClient({initialItem, products, sharedItems}: Props) 
                   <div className={styles.recentInfo}>
                     <div className={styles.recentTitle}>{product.title}</div>
                     <div className={styles.recentPrice}>{product.priceFormatted}</div>
+                    {product.priceRubFormatted && (
+                      <div className={styles.priceRubHint}>{product.priceRubFormatted}</div>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -360,17 +375,26 @@ export default function CartClient({initialItem, products, sharedItems}: Props) 
           <div className={styles.summaryPanel}>
             <div className={styles.summaryRow}>
               <span>{quantity === 1 ? 'Товар (1)' : `Товары (${quantity})`}</span>
-              <span>{formatPriceInRub(subtotal, 'RUB')}</span>
+              <div className={styles.summaryValue}>
+                <span>{formatEurPrice(subtotal)}</span>
+                <div className={styles.priceRubHint}>{formatRubHint(subtotal, eurToRubRate)}</div>
+              </div>
             </div>
             {appliedPromo && (
               <div className={styles.summaryRow}>
                 <span>Скидка {appliedPromo.discount}%</span>
-                <span>-{formatPriceInRub(discountAmount, 'RUB')}</span>
+                <div className={styles.summaryValue}>
+                  <span>-{formatEurPrice(discountAmount)}</span>
+                  <div className={styles.priceRubHint}>-{formatRubHint(discountAmount, eurToRubRate)}</div>
+                </div>
               </div>
             )}
             <div className={styles.summaryTotal}>
               <span>Итого:</span>
-              <strong>{formatPriceInRub(total, 'RUB')}</strong>
+              <div className={styles.summaryValue}>
+                <strong>{formatEurPrice(total)}</strong>
+                <div className={styles.priceRubHint}>{formatRubHint(total, eurToRubRate)}</div>
+              </div>
             </div>
 
             {lines.length > 0 ? (
