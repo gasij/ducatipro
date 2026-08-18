@@ -354,6 +354,7 @@
     position: sticky;
     top: 5rem;
     margin-top: 3.55rem;
+    min-width: 0;
 }
 
 .summaryPanel {
@@ -441,6 +442,71 @@
     font-size: 0.8125rem;
     line-height: 1.35;
     overflow-wrap: anywhere;
+}
+
+.shareLinkRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.shareLinkText {
+    overflow: hidden;
+    min-width: 0;
+    flex: 1;
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.copyButtonWrap {
+    position: relative;
+    flex-shrink: 0;
+    display: inline-flex;
+}
+
+.copyButton {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eeeeee;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #4b4b4f;
+}
+
+.copyIcon {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.copyTooltip {
+    position: absolute;
+    bottom: calc(100% + 0.4rem);
+    right: 0;
+    white-space: nowrap;
+    border-radius: 4px;
+    background: #333333;
+    color: #ffffff;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 220ms ease, visibility 220ms ease;
+    pointer-events: none;
+}
+
+.copyTooltipVisible {
+    opacity: 1;
+    visibility: visible;
 }
 
 @media (max-width: 1279px) {
