@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Loader2} from 'lucide-react';
@@ -21,6 +21,18 @@ const DELIVERY_METHOD = 'EMS / СДЭК';
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
 const EXPECTED_DELIVERY_DATE = '29 июня - 13 июля';
+// Must match `.summary { top: 11.5rem }` in checkout-page.module.css.
+const SUMMARY_TOP_OFFSET_PX = 184;
+const SUMMARY_BOTTOM_BUFFER_PX = 24;
+// Absolute floor so the box never collapses to nothing on very short
+// viewports — it just becomes a small internally-scrollable box. Deliberately
+// small: anything larger risks pushing the box's top edge back up under the
+// header on short viewports (see SUMMARY_TOP_OFFSET_PX / SUMMARY_BOTTOM_BUFFER_PX).
+const SUMMARY_MIN_HEIGHT_PX = 40;
+// Below this browser width the layout switches to a single column (see the
+// `max-width: 1100px` media query in checkout-page.module.css), where the
+// sidebar is intentionally not sticky at all — skip the JS override there.
+const DESKTOP_LAYOUT_MIN_WIDTH_PX = 1100;
 
 type Props = {
   items: CreateOrderInputItem[];
@@ -51,6 +63,67 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
   );
   const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
   const totalWithProcessingFee = subtotal + ORDER_PROCESSING_FEE_EUR;
+
+  const formColumnRef = useRef<HTMLDivElement>(null);
+  const checkoutBottomDocRef = useRef(0);
+  const [summaryMaxHeight, setSummaryMaxHeight] = useState<number>();
+
+  useEffect(() => {
+    const formEl = formColumnRef.current;
+    if (!formEl) return;
+
+    let ticking = false;
+
+    // The sticky `.summary` sidebar is confined to the height of the grid
+    // row it shares with `.formColumn` (the taller column). Near the bottom
+    // of the page it gets clamped to the bottom of that row instead of
+    // holding its `top` offset, which can push its top edge back up
+    // underneath the sticky header. Capping the sidebar's own height to
+    // whatever room is left below the header down to the bottom of that row
+    // (recomputed as the user scrolls) keeps it fully visible — shrinking
+    // into an internal scroll only once the page's end is actually close —
+    // instead of it hiding behind the header.
+    function applyMaxHeight() {
+      ticking = false;
+
+      if (window.innerWidth < DESKTOP_LAYOUT_MIN_WIDTH_PX) {
+        setSummaryMaxHeight(undefined);
+        return;
+      }
+
+      const available =
+        checkoutBottomDocRef.current -
+        window.scrollY -
+        SUMMARY_TOP_OFFSET_PX -
+        SUMMARY_BOTTOM_BUFFER_PX;
+      setSummaryMaxHeight(Math.max(available, SUMMARY_MIN_HEIGHT_PX));
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(applyMaxHeight);
+    }
+
+    function remeasure() {
+      if (!formEl) return;
+      checkoutBottomDocRef.current = formEl.getBoundingClientRect().bottom + window.scrollY;
+      applyMaxHeight();
+    }
+
+    remeasure();
+    window.addEventListener('scroll', onScroll, {passive: true});
+    window.addEventListener('resize', remeasure);
+    const resizeObserver = new ResizeObserver(remeasure);
+    resizeObserver.observe(formEl);
+    resizeObserver.observe(document.body);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', remeasure);
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -130,7 +203,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
 
   return (
     <form className={styles.checkout} onSubmit={handleSubmit}>
-      <div className={styles.formColumn}>
+      <div className={styles.formColumn} ref={formColumnRef}>
         <section className={styles.recipientBlock}>
           <h1 className={styles.sectionTitle}>Получатель и адрес доставки</h1>
           <div className={styles.fieldGrid}>
@@ -266,7 +339,10 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
         </button>
       </div>
 
-      <aside className={styles.summary}>
+      <aside
+        className={styles.summary}
+        style={summaryMaxHeight !== undefined ? {maxHeight: summaryMaxHeight} : undefined}
+      >
         <div className={styles.summaryItems}>
           {checkoutItems.map(({product, quantity}) => (
             <OrderProduct

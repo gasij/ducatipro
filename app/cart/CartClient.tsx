@@ -1,9 +1,9 @@
 'use client';
 
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
+import {Copy, Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductHref, type Product} from '@/src/fsd/entities/product';
 import {
   calculateDeliveryPriceEur,
@@ -71,6 +71,17 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
   const [promoMessage, setPromoMessage] = useState('');
   const [shareMessage, setShareMessage] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
+  const [copyTooltipVisible, setCopyTooltipVisible] = useState(false);
+  const copyTooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTooltipTimeoutRef.current) {
+        clearTimeout(copyTooltipTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const quantity = lines.reduce((sum, line) => sum + line.quantity, 0);
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
@@ -221,11 +232,62 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
     setPromoMessage(`Промокод ${code} применен`);
   }
 
+  async function copyTextToClipboard(text: string): Promise<boolean> {
+    if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+      }
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '0';
+      textarea.style.left = '0';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return successful;
+    } catch {
+      return false;
+    }
+  }
+
+  async function copyShareLink(url: string) {
+    const copied = await copyTextToClipboard(url);
+
+    if (copyTooltipTimeoutRef.current) {
+      clearTimeout(copyTooltipTimeoutRef.current);
+    }
+
+    if (!copied) {
+      setCopyTooltipVisible(false);
+      setShareMessage('Не удалось скопировать ссылку, скопируйте её вручную');
+      return;
+    }
+
+    setShareMessage('');
+    setCopyTooltipVisible(true);
+    copyTooltipTimeoutRef.current = setTimeout(() => {
+      setCopyTooltipVisible(false);
+    }, 3000);
+  }
+
   async function shareCart() {
     if (lines.length === 0) {
       setShareMessage('Добавьте товар, чтобы поделиться корзиной');
       return;
     }
+
+    setShareMessage('');
 
     const url = new URL('/cart', window.location.origin);
     url.searchParams.set(
@@ -237,13 +299,10 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
         })),
       ),
     );
+    const urlString = url.toString();
 
-    try {
-      await navigator.clipboard.writeText(url.toString());
-      setShareMessage('Ссылка на корзину скопирована');
-    } catch {
-      setShareMessage(url.toString());
-    }
+    setShareUrl(urlString);
+    await copyShareLink(urlString);
   }
 
   return (
@@ -440,6 +499,31 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
             <button type="button" onClick={shareCart} className={styles.shareButton}>
               Поделиться <Share2 className={styles.shareIcon} />
             </button>
+
+            {shareUrl && (
+              <div className={styles.shareLinkRow}>
+                <span className={styles.shareLinkText} title={shareUrl}>
+                  {shareUrl}
+                </span>
+                <div className={styles.copyButtonWrap}>
+                  <button
+                    type="button"
+                    onClick={() => copyShareLink(shareUrl)}
+                    className={styles.copyButton}
+                    aria-label="Скопировать ссылку"
+                  >
+                    <Copy className={styles.copyIcon} />
+                  </button>
+                  <span
+                    className={`${styles.copyTooltip} ${copyTooltipVisible ? styles.copyTooltipVisible : ''}`}
+                    role="status"
+                  >
+                    Ссылка скопирована
+                  </span>
+                </div>
+              </div>
+            )}
+
             {shareMessage && <p className={styles.shareMessage}>{shareMessage}</p>}
           </div>
         </aside>
