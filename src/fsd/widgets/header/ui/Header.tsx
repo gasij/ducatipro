@@ -32,6 +32,7 @@ export default function Header() {
   const [searchArticles, setSearchArticles] = useState(['']);
   const [searchDropdownCollapsed, setSearchDropdownCollapsed] = useState(false);
   const [cartQuantity, setCartQuantity] = useState(0);
+  const searchDropdownOpen = searchArticles.length > 1 && !searchDropdownCollapsed;
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -245,43 +246,40 @@ export default function Header() {
                 className={styles.searchInput}
               />
             </div>
-            {searchArticles.length > 1 && !searchDropdownCollapsed && (
-              <div className={styles.searchDropdown}>
-                {searchArticles.slice(1).map((article, offset) => {
-                  const index = offset + 1;
+            <div
+              className={`${styles.searchDropdown} ${searchDropdownOpen ? styles.searchDropdownOpen : ''}`}
+              aria-hidden={!searchDropdownOpen}
+            >
+              {searchArticles.slice(1).map((article, offset) => {
+                const index = offset + 1;
 
-                  return (
-                    <div key={index} className={styles.searchField}>
-                      <input
-                        type="search"
-                        placeholder={`Артикул ${index + 1}`}
-                        value={article}
-                        onChange={(event) => updateSearchArticle(index, event.target.value)}
-                        className={styles.searchInput}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeSearchArticle(index)}
-                        className={styles.removeSearchButton}
-                        aria-label="Удалить артикул"
-                      >
-                        <X className={styles.searchActionIcon} />
-                      </button>
-                    </div>
-                  );
-                })}
-                <div className={styles.dropdownFooter}>
-                  <button
-                    type="button"
-                    onClick={addSearchArticle}
-                    className={styles.dropdownAddButton}
-                  >
-                    <Plus className={styles.searchActionIcon} />
-                    Еще товар
-                  </button>
-                </div>
+                return (
+                  <div key={index} className={styles.searchField}>
+                    <input
+                      type="search"
+                      placeholder={`Артикул ${index + 1}`}
+                      value={article}
+                      onChange={(event) => updateSearchArticle(index, event.target.value)}
+                      className={styles.searchInput}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSearchArticle(index)}
+                      className={styles.removeSearchButton}
+                      aria-label="Удалить артикул"
+                    >
+                      <X className={styles.searchActionIcon} />
+                    </button>
+                  </div>
+                );
+              })}
+              <div className={styles.dropdownFooter}>
+                <button type="button" onClick={addSearchArticle} className={styles.dropdownAddButton}>
+                  <Plus className={styles.searchActionIcon} />
+                  Еще товар
+                </button>
               </div>
-            )}
+            </div>
           </div>
           <div className={styles.searchActions}>
             <button type="button" onClick={addSearchArticle} className={styles.addSearchButton}>
