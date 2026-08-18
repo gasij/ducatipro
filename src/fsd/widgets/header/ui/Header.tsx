@@ -15,9 +15,9 @@ const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
 const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
 
 const NAV_LINKS = [
-  {href: CATALOG_URL, label: 'Каталог'},
+  {href: CATALOG_URL, label: 'Каталог афтемаркета'},
   {href: OUTLET_URL, label: 'Аутлет в Милане'},
-  {href: '/unsorted', label: 'Товары без сортировки'},
+  {href: '/unsorted', label: 'Расходники в наличии'},
   {href: '/cart', label: 'Корзина'},
 ];
 

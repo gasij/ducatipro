@@ -347,6 +347,83 @@
     line-height: 1.55;
 }
 
+.deliveryCard {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.875rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1rem;
+}
+
+.deliveryIconWrap {
+    display: flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #f9fafb;
+    color: var(--color-accent);
+}
+
+.deliveryIcon {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.deliveryTitle {
+    margin: 0 0 0.25rem;
+    color: var(--color-text);
+    font-size: 0.875rem;
+    font-weight: 900;
+}
+
+.deliveryText {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+}
+
+.quickFacts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.fact {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: #fcfcfc;
+    padding: 0.875rem;
+}
+
+.factIcon {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--color-accent);
+}
+
+.factLabel {
+    display: block;
+    margin-bottom: 0.125rem;
+    color: var(--color-muted);
+    font-size: 0.6875rem;
+    line-height: 1.1;
+}
+
+.fact strong {
+    display: block;
+    color: var(--color-text);
+    font-size: 0.8125rem;
+    line-height: 1.25;
+}
+
 .details {
     margin-top: clamp(2rem, 6vw, 5rem);
 }
@@ -581,6 +658,9 @@
         padding: 2.5rem 3rem;
     }
     .specGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .quickFacts {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

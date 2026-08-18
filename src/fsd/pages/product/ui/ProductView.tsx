@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {Bike, ChevronRight, Heart, Star} from 'lucide-react';
+import {Bike, ChevronRight, Heart, ShieldCheck, Star, Truck} from 'lucide-react';
 import type {Product} from '@/src/fsd/entities/product';
 import {CART_STORAGE_KEY, gsap, notifyCartUpdated, registerGsap, type StoredCartItem} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
@@ -17,6 +17,35 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
   outlet: 'Аутлет в Милане',
   unsorted: 'Без сортировки',
 };
+
+const MONTHS_GENITIVE = [
+  'января',
+  'февраля',
+  'марта',
+  'апреля',
+  'мая',
+  'июня',
+  'июля',
+  'августа',
+  'сентября',
+  'октября',
+  'ноября',
+  'декабря',
+];
+
+function formatDeliveryDate(date: Date): string {
+  return `${date.getDate()} ${MONTHS_GENITIVE[date.getMonth()]}`;
+}
+
+function getExpectedDeliveryRangeText(): string {
+  const now = new Date();
+  const from = new Date(now);
+  from.setDate(from.getDate() + 28);
+  const to = new Date(now);
+  to.setDate(to.getDate() + 42);
+
+  return `Ожидаемая дата доставки: ${formatDeliveryDate(from)} - ${formatDeliveryDate(to)}`;
+}
 
 export default function ProductView({product}: {product: Product}) {
   const router = useRouter();
@@ -182,6 +211,16 @@ export default function ProductView({product}: {product: Product}) {
               </button>
             </div>
 
+            <div className={styles.deliveryCard}>
+              <div className={styles.deliveryIconWrap}>
+                <Truck className={styles.deliveryIcon} />
+              </div>
+              <div>
+                <h2 className={styles.deliveryTitle}>Доставка до двери</h2>
+                <p className={styles.deliveryText}>{getExpectedDeliveryRangeText()}</p>
+              </div>
+            </div>
+
             <div className={styles.summaryDescriptionCard}>
               <h2 className={styles.summaryDescriptionTitle}>Описание</h2>
               <p className={styles.summaryDescriptionText}>
@@ -189,6 +228,23 @@ export default function ProductView({product}: {product: Product}) {
                   product.description ||
                   'Оригинальная запчасть для мотоциклов Ducati. Подробности уточняйте у менеджера в Telegram: @ducatiparts'}
               </p>
+            </div>
+          </div>
+
+          <div className={styles.quickFacts}>
+            <div className={styles.fact}>
+              <Truck className={styles.factIcon} />
+              <div>
+                <span className={styles.factLabel}>Доставка</span>
+                <strong>До двери</strong>
+              </div>
+            </div>
+            <div className={styles.fact}>
+              <ShieldCheck className={styles.factIcon} />
+              <div>
+                <span className={styles.factLabel}>Проверка</span>
+                <strong>Менеджером</strong>
+              </div>
             </div>
           </div>
         </div>
