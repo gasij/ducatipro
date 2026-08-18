@@ -1,6 +1,7 @@
 'use client';
 
 import {useState} from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {Loader2} from 'lucide-react';
 import type {CreateOrderInputItem} from '@/lib/orders/types';
@@ -11,13 +12,14 @@ import {
   formatEurPrice,
   formatRubHint,
   notifyCartUpdated,
+  ORDER_PROCESSING_FEE_EUR,
 } from '@/src/fsd/shared/lib';
 import styles from './checkout-page.module.css';
 
 const COUNTRY = 'Российская Федерация';
 const DELIVERY_METHOD = 'EMS / СДЭК';
-const ORDER_PROCESSING_FEE_EUR = 15;
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
+const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
 const EXPECTED_DELIVERY_DATE = '29 июня - 13 июля';
 
 type Props = {
@@ -333,10 +335,24 @@ function OrderProduct({
   quantity: number;
   eurToRubRate: number;
 }) {
+  const [imageSrc, setImageSrc] = useState(product.image);
+
   return (
     <div className={styles.summaryProduct}>
       <div className={styles.summaryImageBox}>
-        <div className={styles.productPlaceholder}>DUCATI</div>
+        <Image
+          src={imageSrc}
+          fill
+          alt={product.title}
+          className={
+            imageSrc === FALLBACK_PRODUCT_IMAGE
+              ? `${styles.summaryImage} ${styles.summaryImageFallback}`
+              : styles.summaryImage
+          }
+          sizes="64px"
+          referrerPolicy="no-referrer"
+          onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}
+        />
       </div>
       <div className={styles.summaryProductTitle}>{product.title}</div>
       <div className={styles.summaryProductPrice}>

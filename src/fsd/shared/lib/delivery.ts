@@ -1,3 +1,5 @@
+export const ORDER_PROCESSING_FEE_EUR = 15;
+
 type DeliveryTier = {maxWeightKg: number; priceEur: number};
 
 const DELIVERY_TIERS: DeliveryTier[] = [

@@ -37,7 +37,7 @@ export default function ProductCard({
   const href = getProductHref({id, sku, title});
   const [imageSrc, setImageSrc] = useState(image);
   const titleWithArticle =
-    sku && !title.toUpperCase().startsWith(sku.toUpperCase()) ? `${sku} ${title}` : title;
+    sku && !title.toUpperCase().includes(sku.toUpperCase()) ? `${sku} ${title}` : title;
 
   function addToCart() {
     let cart: StoredCartItem[] = [];
@@ -84,7 +84,7 @@ export default function ProductCard({
 
         <div className={styles.content}>
           <h3 className={styles.title}>{titleWithArticle}</h3>
-          <p className={styles.description}>{desc || 'Цена указана до двери после всех расходов.'}</p>
+          <p className={styles.description}>{desc}</p>
 
           <div className={styles.priceBlock}>
             {oldPrice && <span className={styles.oldPrice}>{oldPrice}</span>}

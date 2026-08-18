@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {Bike, ChevronRight, Heart, Star} from 'lucide-react';
-import type {Product} from '@/src/fsd/entities/product';
+import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {CART_STORAGE_KEY, gsap, notifyCartUpdated, registerGsap, type StoredCartItem} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
 
@@ -70,7 +70,7 @@ export default function ProductView({product}: {product: Product}) {
   }, [product.image]);
 
   const titleWithArticle =
-    product.sku && !product.title.toUpperCase().startsWith(product.sku.toUpperCase())
+    product.sku && !product.title.toUpperCase().includes(product.sku.toUpperCase())
       ? `${product.sku} ${product.title}`
       : product.title;
 
@@ -188,6 +188,22 @@ export default function ProductView({product}: {product: Product}) {
 
             <div className={styles.summaryDescriptionCard}>
               <h2 className={styles.summaryDescriptionTitle}>Описание</h2>
+              <dl className={styles.summaryDescriptionMeta}>
+                <div className={styles.summaryDescriptionMetaRow}>
+                  <dt>Название</dt>
+                  <dd>{product.title}</dd>
+                </div>
+                <div className={styles.summaryDescriptionMetaRow}>
+                  <dt>Артикул</dt>
+                  <dd>{getProductArticle(product)}</dd>
+                </div>
+                {product.brand && (
+                  <div className={styles.summaryDescriptionMetaRow}>
+                    <dt>Бренд</dt>
+                    <dd>{product.brand}</dd>
+                  </div>
+                )}
+              </dl>
               <p className={styles.summaryDescriptionText}>
                 {product.desc ||
                   product.description ||

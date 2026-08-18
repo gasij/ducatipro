@@ -8,16 +8,11 @@
 
 .layout {
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 360px;
     gap: 2.25rem;
     align-items: start;
 }
 
-.outlet {
-    min-width: 0;
-}
-
-.outletTitle,
 .title,
 .sectionTitle {
     margin: 0;
@@ -25,75 +20,6 @@
     font-size: 1.75rem;
     font-weight: 900;
     line-height: 1.2;
-}
-
-.outletTitle {
-    margin-bottom: 1.25rem;
-}
-
-.outletList {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.outletCard {
-    display: grid;
-    grid-template-columns: 72px minmax(0, 1fr);
-    gap: 1rem;
-    min-height: 128px;
-    border-radius: 4px;
-    background: #e3e9ff;
-    padding: 1.15rem 1rem;
-    color: #46464a;
-    text-decoration: none;
-}
-
-.outletImageBox {
-    position: relative;
-    width: 56px;
-    height: 44px;
-    margin-top: 0.25rem;
-    background: #ffffff;
-}
-
-.outletImage {
-    object-fit: contain;
-    padding: 0.25rem;
-    mix-blend-mode: multiply;
-}
-
-.outletInfo {
-    min-width: 0;
-}
-
-.outletName {
-    display: -webkit-box;
-    overflow: hidden;
-    margin-bottom: 0.85rem;
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.32;
-    text-transform: uppercase;
-    overflow-wrap: anywhere;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-}
-
-.outletPrice {
-    color: #333333;
-    font-size: 1rem;
-    font-weight: 900;
-    line-height: 1.1;
-}
-
-.outletOldPrice {
-    margin-top: 0.45rem;
-    color: #8b8b90;
-    font-size: 0.95rem;
-    font-weight: 500;
-    line-height: 1;
-    text-decoration: line-through;
 }
 
 .mainColumn {
@@ -290,47 +216,48 @@
 
 .recentGrid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2.4rem;
-    max-width: 620px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
 }
 
 .recentCard {
-    display: grid;
-    grid-template-columns: 96px minmax(0, 1fr);
-    gap: 1.1rem;
-    align-items: center;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    border: 1px solid #e9e9e9;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 0.9rem;
     color: #4b4b4f;
     text-decoration: none;
+    transition: border-color 160ms ease, box-shadow 180ms ease;
+}
+
+.recentCard:hover,
+.recentCard:focus-visible {
+    border-color: #3a3a3a;
+    box-shadow: inset 0 0 0 1px #3a3a3a;
 }
 
 .recentImageBox {
     position: relative;
-    width: 96px;
-    height: 58px;
+    width: 100%;
+    height: 150px;
+    margin-bottom: 0.85rem;
 }
 
 .recentImage {
     object-fit: contain;
+    padding: 0.3rem;
     mix-blend-mode: multiply;
-}
-
-.outletImage {
-    object-fit: contain;
-    padding: 0.15rem;
-    mix-blend-mode: multiply;
-}
-
-.outletImageFallback {
-    padding: 36%;
 }
 
 .itemImageFallback {
-    padding: 36%;
+    padding: 25%;
 }
 
 .recentImageFallback {
-    padding: 36%;
+    padding: 25%;
 }
 
 .recentTitle {
@@ -452,12 +379,7 @@
     }
 
     .layout {
-        grid-template-columns: minmax(0, 1fr) 360px;
         gap: 1.5rem;
-    }
-
-    .outlet {
-        display: none;
     }
 
     .cartItem {
@@ -514,10 +436,6 @@
 
     .recent {
         margin-top: 3rem;
-    }
-
-    .recentGrid {
-        grid-template-columns: 1fr;
     }
 }
 

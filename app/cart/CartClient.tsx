@@ -5,7 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductHref, type Product} from '@/src/fsd/entities/product';
-import {CART_STORAGE_KEY, formatEurPrice, formatRubHint, notifyCartUpdated} from '@/src/fsd/shared/lib';
+import {
+  calculateDeliveryPriceEur,
+  CART_STORAGE_KEY,
+  formatEurPrice,
+  formatRubHint,
+  notifyCartUpdated,
+  ORDER_PROCESSING_FEE_EUR,
+} from '@/src/fsd/shared/lib';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
 
@@ -23,6 +30,10 @@ function CartProductImage({
   sizes: string;
 }) {
   const [imageSrc, setImageSrc] = useState(product.image);
+
+  useEffect(() => {
+    setImageSrc(product.image);
+  }, [product.image]);
 
   return (
     <Image
@@ -54,14 +65,6 @@ const PROMO_CODES: Record<string, number> = {
   COFFEE: 5,
 };
 
-function getOldPrice(product: Product) {
-  if (product.oldPrice) {
-    return product.oldPrice;
-  }
-
-  return formatEurPrice(product.price * 1.28);
-}
-
 export default function CartClient({initialItem, products, sharedItems, eurToRubRate}: Props) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [promo, setPromo] = useState('');
@@ -72,17 +75,15 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
   const quantity = lines.reduce((sum, line) => sum + line.quantity, 0);
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const discountAmount = appliedPromo ? Math.round((subtotal * appliedPromo.discount) / 100) : 0;
-  const total = Math.max(subtotal - discountAmount, 0);
+  const totalWeightKg = lines.reduce((sum, line) => sum + (line.product.weight || 0) * line.quantity, 0);
+  const deliveryPriceEur = lines.length > 0 ? calculateDeliveryPriceEur(totalWeightKg) : 0;
+  const processingFeeEur = lines.length > 0 ? ORDER_PROCESSING_FEE_EUR : 0;
+  const total = Math.max(subtotal - discountAmount, 0) + processingFeeEur + deliveryPriceEur;
   const lineProductIds = useMemo(() => new Set(lines.map((line) => line.product.id)), [lines]);
   const recentItems = useMemo(
     () => products.filter((product) => !lineProductIds.has(product.id)).slice(0, 2),
     [products, lineProductIds],
   );
-  const outletItems = useMemo(
-    () => products.filter((product) => !lineProductIds.has(product.id)).slice(0, 5),
-    [products, lineProductIds],
-  );
-
   const checkoutHref = lines.length > 0
     ? `/checkout?items=${encodeURIComponent(
         JSON.stringify(
@@ -162,37 +163,30 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
   }
 
   function increase(productId: string) {
-    setLines((current) => {
-      const next = current.map((line) =>
-        line.product.id === productId ? {...line, quantity: Math.min(line.quantity + 1, 99)} : line,
-      );
-      persistLines(next);
-      return next;
-    });
+    const next = lines.map((line) =>
+      line.product.id === productId ? {...line, quantity: Math.min(line.quantity + 1, 99)} : line,
+    );
+    setLines(next);
+    persistLines(next);
   }
 
   function decrease(productId: string) {
-    setLines((current) => {
-      const next = current.map((line) =>
-        line.product.id === productId ? {...line, quantity: Math.max(line.quantity - 1, 1)} : line,
-      );
-      persistLines(next);
-      return next;
-    });
+    const next = lines.map((line) =>
+      line.product.id === productId ? {...line, quantity: Math.max(line.quantity - 1, 1)} : line,
+    );
+    setLines(next);
+    persistLines(next);
   }
 
   function removeItem(productId: string) {
-    setLines((current) => {
-      const next = current.filter((line) => line.product.id !== productId);
-      persistLines(next);
+    const next = lines.filter((line) => line.product.id !== productId);
+    setLines(next);
+    persistLines(next);
 
-      if (next.length === 0) {
-        setAppliedPromo(null);
-        setPromoMessage('');
-      }
-
-      return next;
-    });
+    if (next.length === 0) {
+      setAppliedPromo(null);
+      setPromoMessage('');
+    }
   }
 
   function restoreItem() {
@@ -255,32 +249,6 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
-        <aside className={styles.outlet}>
-          <h2 className={styles.outletTitle}>Аутлет в России</h2>
-          <div className={styles.outletList}>
-            {outletItems.map((product) => (
-              <Link key={product.id} href={getProductHref(product)} className={styles.outletCard}>
-                <div className={styles.outletImageBox}>
-                  <CartProductImage
-                    product={product}
-                    imageClassName={styles.outletImage}
-                    fallbackClassName={styles.outletImageFallback}
-                    sizes="56px"
-                  />
-                </div>
-                <div className={styles.outletInfo}>
-                  <div className={styles.outletName}>{product.title}</div>
-                  <div className={styles.outletPrice}>{product.priceFormatted}</div>
-                  {product.priceRubFormatted && (
-                    <div className={styles.priceRubHint}>{product.priceRubFormatted}</div>
-                  )}
-                  <div className={styles.outletOldPrice}>{getOldPrice(product)}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </aside>
-
         <main className={styles.mainColumn}>
           <h1 className={styles.title}>Корзина</h1>
 
@@ -432,6 +400,24 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
                   <div className={styles.priceRubHint}>-{formatRubHint(discountAmount, eurToRubRate)}</div>
                 </div>
               </div>
+            )}
+            {lines.length > 0 && (
+              <>
+                <div className={styles.summaryRow}>
+                  <span>Фикс. сбор за обработку заказа</span>
+                  <div className={styles.summaryValue}>
+                    <span>{formatEurPrice(processingFeeEur)}</span>
+                    <div className={styles.priceRubHint}>{formatRubHint(processingFeeEur, eurToRubRate)}</div>
+                  </div>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Доставка EMS</span>
+                  <div className={styles.summaryValue}>
+                    <span>{formatEurPrice(deliveryPriceEur)}</span>
+                    <div className={styles.priceRubHint}>{formatRubHint(deliveryPriceEur, eurToRubRate)}</div>
+                  </div>
+                </div>
+              </>
             )}
             <div className={styles.summaryTotal}>
               <span>Итого:</span>

@@ -14,6 +14,7 @@ export type Product = {
   image: string;
   title: string;
   desc?: string;
+  brand?: string;
   /** Amount in EUR — the currency prices are stored in in Directus. */
   price: number;
   priceFormatted: string;
@@ -171,6 +172,13 @@ function getStringArray(item: DirectusProduct, fields: string[]) {
   return undefined;
 }
 
+const DEFAULT_BRAND = 'Ducati';
+const BRAND_SPEC_LABELS = ['брэнд', 'бренд', 'brand', 'производитель', 'изготовитель', 'manufacturer'];
+
+function findSpecValue(specs: {label: string; value: string}[] | undefined, labels: string[]) {
+  return specs?.find((spec) => labels.includes(spec.label.trim().toLowerCase()))?.value;
+}
+
 function getSpecs(item: DirectusProduct) {
   const specs = item.specs || item.specifications || item.characteristics;
 
@@ -312,6 +320,11 @@ function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: nu
     getAssetUrl(item.main_image) ||
     getAssetUrl(item.photo) ||
     DEFAULT_PRODUCT_IMAGE;
+  const specs = getSpecs(item);
+  const brand =
+    getString(item, ['brand', 'manufacturer', 'vendor', 'brand_name']) ||
+    findSpecValue(specs, BRAND_SPEC_LABELS) ||
+    DEFAULT_BRAND;
 
   return {
     id: getString(item, ['id', 'slug', 'article', 'sku']) || String(index + 1),
@@ -320,6 +333,7 @@ function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: nu
     image,
     title: getString(item, ['title', 'name', 'product_name']) || 'Товар Ducati',
     desc: getString(item, ['desc', 'short_description', 'subtitle']),
+    brand,
     price,
     priceFormatted: formatEurPrice(price),
     priceRubFormatted: formatRubHint(price, eurToRubRate),
@@ -355,7 +369,7 @@ function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: nu
       'compatible_motorcycles',
     ]),
     description: getString(item, ['description', 'full_description']),
-    specs: getSpecs(item),
+    specs,
   };
 }
 
@@ -741,6 +755,7 @@ function normalizeDisplayPrices(product: Product, eurToRubRate: number): Product
       oldPriceAmountRub === undefined
         ? undefined
         : formatEurPrice(convertRubToEur(oldPriceAmountRub, eurToRubRate)),
+    brand: product.brand || findSpecValue(product.specs, BRAND_SPEC_LABELS) || DEFAULT_BRAND,
   };
 }
 

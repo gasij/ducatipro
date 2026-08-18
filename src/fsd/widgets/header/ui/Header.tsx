@@ -13,10 +13,12 @@ const TICKER_TEXT =
 
 const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
 const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
+const CONSUMABLES_URL = 'https://ducatiparts.pro/collection/consumables';
 
 const NAV_LINKS = [
   {href: CATALOG_URL, label: 'Каталог'},
   {href: OUTLET_URL, label: 'Аутлет в Милане'},
+  {href: CONSUMABLES_URL, label: 'Расходники в наличии'},
   {href: '/unsorted', label: 'Товары без сортировки'},
   {href: '/cart', label: 'Корзина'},
 ];
@@ -143,7 +145,7 @@ export default function Header() {
         <div className={styles.container}>
           <div className={styles.desktopTop}>
             <nav className={styles.topNav}>
-              {NAV_LINKS.slice(0, 3).map((link) => (
+              {NAV_LINKS.slice(0, 4).map((link) => (
                 <Link key={link.href} href={link.href} className={styles.topLink}>
                   {link.label}
                 </Link>
