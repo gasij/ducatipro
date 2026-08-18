@@ -226,6 +226,7 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
+        {/*
         <aside className={styles.outlet}>
           <h2 className={styles.outletTitle}>Аутлет в России</h2>
           <div className={styles.outletList}>
@@ -246,6 +247,7 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
             ))}
           </div>
         </aside>
+        */}
 
         <main className={styles.mainColumn}>
           <h1 className={styles.title}>Корзина</h1>

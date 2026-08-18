@@ -8,7 +8,7 @@
 
 .layout {
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 360px;
     gap: 2.25rem;
     align-items: start;
 }
@@ -452,10 +452,6 @@
     .layout {
         grid-template-columns: minmax(0, 1fr) 360px;
         gap: 1.5rem;
-    }
-
-    .outlet {
-        display: none;
     }
 
     .cartItem {
