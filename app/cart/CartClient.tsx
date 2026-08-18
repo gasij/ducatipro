@@ -209,15 +209,49 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
     setPromoMessage(`Промокод ${code} применен`);
   }
 
-  async function copyShareLink(url: string) {
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
+  async function copyTextToClipboard(text: string): Promise<boolean> {
+    if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+      }
     }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '0';
+      textarea.style.left = '0';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return successful;
+    } catch {
+      return false;
+    }
+  }
+
+  async function copyShareLink(url: string) {
+    const copied = await copyTextToClipboard(url);
 
     if (copyTooltipTimeoutRef.current) {
       clearTimeout(copyTooltipTimeoutRef.current);
     }
+
+    if (!copied) {
+      setCopyTooltipVisible(false);
+      setShareMessage('Не удалось скопировать ссылку, скопируйте её вручную');
+      return;
+    }
+
+    setShareMessage('');
     setCopyTooltipVisible(true);
     copyTooltipTimeoutRef.current = setTimeout(() => {
       setCopyTooltipVisible(false);
