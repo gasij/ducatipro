@@ -1,12 +1,41 @@
 'use client';
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductHref, type Product} from '@/src/fsd/entities/product';
 import {CART_STORAGE_KEY, formatEurPrice, formatRubHint, notifyCartUpdated} from '@/src/fsd/shared/lib';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
+
+const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
+
+function CartProductImage({
+  product,
+  imageClassName,
+  fallbackClassName,
+  sizes,
+}: {
+  product: Product;
+  imageClassName: string;
+  fallbackClassName: string;
+  sizes: string;
+}) {
+  const [imageSrc, setImageSrc] = useState(product.image);
+
+  return (
+    <Image
+      src={imageSrc}
+      fill
+      alt={product.title}
+      className={imageSrc === FALLBACK_PRODUCT_IMAGE ? `${imageClassName} ${fallbackClassName}` : imageClassName}
+      sizes={sizes}
+      referrerPolicy="no-referrer"
+      onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}
+    />
+  );
+}
 
 type CartLine = {
   product: Product;
@@ -232,7 +261,12 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
             {outletItems.map((product) => (
               <Link key={product.id} href={getProductHref(product)} className={styles.outletCard}>
                 <div className={styles.outletImageBox}>
-                  <div className={styles.productPlaceholder}>DUCATI</div>
+                  <CartProductImage
+                    product={product}
+                    imageClassName={styles.outletImage}
+                    fallbackClassName={styles.outletImageFallback}
+                    sizes="56px"
+                  />
                 </div>
                 <div className={styles.outletInfo}>
                   <div className={styles.outletName}>{product.title}</div>
@@ -256,7 +290,12 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
                 {lines.map((line) => (
                   <div key={line.product.id} className={styles.cartItem}>
                     <Link href={getProductHref(line.product)} className={styles.itemImageLink}>
-                      <div className={styles.productPlaceholder}>DUCATI</div>
+                      <CartProductImage
+                        product={line.product}
+                        imageClassName={styles.itemImage}
+                        fallbackClassName={styles.itemImageFallback}
+                        sizes="76px"
+                      />
                     </Link>
 
                     <Link href={getProductHref(line.product)} className={styles.itemTitle}>
@@ -356,7 +395,12 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
               {recentItems.map((product) => (
                 <Link key={product.id} href={getProductHref(product)} className={styles.recentCard}>
                   <div className={styles.recentImageBox}>
-                    <div className={styles.productPlaceholder}>DUCATI</div>
+                    <CartProductImage
+                      product={product}
+                      imageClassName={styles.recentImage}
+                      fallbackClassName={styles.recentImageFallback}
+                      sizes="96px"
+                    />
                   </div>
                   <div className={styles.recentInfo}>
                     <div className={styles.recentTitle}>{product.title}</div>

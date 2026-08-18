@@ -113,7 +113,11 @@ export default function ProductView({product}: {product: Product}) {
               src={imageSrc}
               fill
               alt={product.title}
-              className={styles.mainImage}
+              className={
+                imageSrc === FALLBACK_PRODUCT_IMAGE
+                  ? `${styles.mainImage} ${styles.fallbackMainImage}`
+                  : styles.mainImage
+              }
               priority
               referrerPolicy="no-referrer"
               onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}

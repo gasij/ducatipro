@@ -71,7 +71,11 @@ export default function ProductCard({
             src={imageSrc}
             fill
             alt={title}
-            className={styles.image}
+            className={
+              imageSrc === FALLBACK_PRODUCT_IMAGE
+                ? `${styles.image} ${styles.fallbackImage}`
+                : styles.image
+            }
             sizes="(max-width: 767px) 100vw, 280px"
             referrerPolicy="no-referrer"
             onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}

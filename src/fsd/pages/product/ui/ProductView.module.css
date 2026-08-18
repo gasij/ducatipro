@@ -100,6 +100,10 @@
     mix-blend-mode: multiply;
 }
 
+.fallbackMainImage {
+    padding: 36%;
+}
+
 .info {
     display: flex;
     width: 100%;
