@@ -3,7 +3,7 @@
 import {type FormEvent, useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 import {Menu, Plus, Search, ShoppingCart, X} from 'lucide-react';
 import {CART_UPDATED_EVENT, getStoredCartQuantity, gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './Header.module.css';
@@ -23,11 +23,14 @@ const NAV_LINKS = [
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
+  const isFirstPathnameRender = useRef(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchArticles, setSearchArticles] = useState(['']);
+  const [searchDropdownCollapsed, setSearchDropdownCollapsed] = useState(false);
   const [cartQuantity, setCartQuantity] = useState(0);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -41,6 +44,7 @@ export default function Header() {
     if (articles.length === 1) {
       router.push(`/product/${encodeURIComponent(articles[0])}`);
       setSearchOpen(false);
+      setSearchDropdownCollapsed(true);
       return;
     }
 
@@ -48,6 +52,7 @@ export default function Header() {
     articles.forEach((article) => params.append('article', article));
     router.push(`/search?${params.toString()}`);
     setSearchOpen(false);
+    setSearchDropdownCollapsed(true);
   };
 
   function updateSearchArticle(index: number, value: string) {
@@ -58,6 +63,7 @@ export default function Header() {
 
   function addSearchArticle() {
     setSearchArticles((current) => [...current, '']);
+    setSearchDropdownCollapsed(false);
   }
 
   function removeSearchArticle(index: number) {
@@ -73,6 +79,15 @@ export default function Header() {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (isFirstPathnameRender.current) {
+      isFirstPathnameRender.current = false;
+      return;
+    }
+
+    setSearchDropdownCollapsed(true);
+  }, [pathname]);
 
   useEffect(() => {
     function syncCartQuantity() {
@@ -182,7 +197,15 @@ export default function Header() {
           <div className={styles.actions}>
             <button
               type="button"
-              onClick={() => setSearchOpen((current) => !current)}
+              onClick={() =>
+                setSearchOpen((current) => {
+                  const next = !current;
+                  if (next) {
+                    setSearchDropdownCollapsed(false);
+                  }
+                  return next;
+                })
+              }
               className={styles.mobileSearchButton}
               aria-label={searchOpen ? 'Закрыть поиск' : 'Открыть поиск'}
               aria-expanded={searchOpen}
@@ -222,7 +245,7 @@ export default function Header() {
                 className={styles.searchInput}
               />
             </div>
-            {searchArticles.length > 1 && (
+            {searchArticles.length > 1 && !searchDropdownCollapsed && (
               <div className={styles.searchDropdown}>
                 {searchArticles.slice(1).map((article, offset) => {
                   const index = offset + 1;
