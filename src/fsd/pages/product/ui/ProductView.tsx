@@ -6,7 +6,15 @@ import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {Bike, ChevronRight, Heart, Star} from 'lucide-react';
 import {getProductArticle, type Product} from '@/src/fsd/entities/product';
-import {CART_STORAGE_KEY, gsap, notifyCartUpdated, registerGsap, type StoredCartItem} from '@/src/fsd/shared/lib';
+import {
+  CART_STORAGE_KEY,
+  gsap,
+  notifyCartUpdated,
+  pickSiteText,
+  registerGsap,
+  type SiteTextsMap,
+  type StoredCartItem,
+} from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
 
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
@@ -18,7 +26,13 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
   unsorted: 'Без сортировки',
 };
 
-export default function ProductView({product}: {product: Product}) {
+export default function ProductView({
+  product,
+  siteTexts = {},
+}: {
+  product: Product;
+  siteTexts?: SiteTextsMap;
+}) {
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
@@ -207,7 +221,11 @@ export default function ProductView({product}: {product: Product}) {
               <p className={styles.summaryDescriptionText}>
                 {product.desc ||
                   product.description ||
-                  'Оригинальная запчасть для мотоциклов Ducati. Подробности уточняйте у менеджера в Telegram: @ducatiparts'}
+                  pickSiteText(
+                    siteTexts,
+                    'product.description_fallback',
+                    'Оригинальная запчасть для мотоциклов Ducati. Подробности уточняйте у менеджера в Telegram: @ducatiparts',
+                  )}
               </p>
             </div>
           </div>

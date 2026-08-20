@@ -5,14 +5,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {ChevronLeft, ChevronRight, Check} from 'lucide-react';
 import {ProductCard, type Product} from '@/src/fsd/entities/product';
-import {gsap, registerGsap} from '@/src/fsd/shared/lib';
+import {gsap, pickSiteText, registerGsap, type SiteTextsMap} from '@/src/fsd/shared/lib';
 import styles from './HomePage.module.css';
 
 type Props = {
   newArrivals: Product[];
+  siteTexts?: SiteTextsMap;
 };
 
-export default function HomePage({newArrivals}: Props) {
+export default function HomePage({newArrivals, siteTexts = {}}: Props) {
+  const italyCoffeePromo = pickSiteText(
+    siteTexts,
+    'home.italy_coffee_promo',
+    'Итальянский #кофевкофр в посылку при заказе из Италии гарантирован',
+  );
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,7 +121,7 @@ export default function HomePage({newArrivals}: Props) {
         <div className={styles.promoHeader}>
           <div className={`${styles.sectionLine} ${styles.leftLine}`} />
           <h3 className={styles.promoText}>
-            Итальянский #кофевкофр в посылку при заказе из Италии гарантирован
+            {italyCoffeePromo}
           </h3>
           <div className={`${styles.sectionLine} ${styles.rightLine}`} />
         </div>

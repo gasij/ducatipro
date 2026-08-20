@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import {Montserrat} from 'next/font/google';
 import './globals.css';
+import {getSiteTexts} from '@/src/fsd/shared/lib';
 import {Footer} from '@/src/fsd/widgets/footer';
 import {Header} from '@/src/fsd/widgets/header';
 
@@ -16,15 +17,17 @@ export const metadata: Metadata = {
   description: 'Аутлет, запчасти, тюнинг для Ducati',
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  const siteTexts = await getSiteTexts();
+
   return (
     <html lang="ru">
       <body className={`${montserrat.variable} app-shell`} suppressHydrationWarning>
-        <Header />
+        <Header siteTexts={siteTexts} />
         <main className="app-main">
           {children}
         </main>
-        <Footer />
+        <Footer siteTexts={siteTexts} />
       </body>
     </html>
   );

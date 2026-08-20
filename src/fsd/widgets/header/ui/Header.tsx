@@ -5,25 +5,43 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
 import {Menu, Plus, Search, ShoppingCart, X} from 'lucide-react';
-import {CART_UPDATED_EVENT, getStoredCartQuantity, gsap, registerGsap} from '@/src/fsd/shared/lib';
+import {
+  CART_UPDATED_EVENT,
+  getStoredCartQuantity,
+  gsap,
+  pickSiteText,
+  pickSiteTextUrl,
+  registerGsap,
+  type SiteTextsMap,
+} from '@/src/fsd/shared/lib';
 import styles from './Header.module.css';
 
-const TICKER_TEXT =
+const TICKER_TEXT_FALLBACK =
   'Весь экип (шлема, куртки, штаны, перчи, боты, защиты и все что угодно), а также повседневка в полном ассортименте в любом европейском магазине за нашу символическую комиссию 10%';
 
 const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
 const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
 const CONSUMABLES_URL = 'https://ducatiparts.pro/collection/consumables';
 
-const NAV_LINKS = [
-  {href: CATALOG_URL, label: 'Каталог афтемаркета'},
-  {href: OUTLET_URL, label: 'Аутлет в Милане'},
-  {href: CONSUMABLES_URL, label: 'Расходники в наличии'},
-  {href: '/unsorted', label: 'Товары без сортировки'},
-  {href: '/cart', label: 'Корзина'},
-];
+export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
+  const tickerText = pickSiteText(siteTexts, 'header.ticker_text', TICKER_TEXT_FALLBACK);
+  const navLinks = [
+    {
+      href: pickSiteTextUrl(siteTexts, 'header.nav_catalog', CATALOG_URL),
+      label: pickSiteText(siteTexts, 'header.nav_catalog', 'Каталог афтемаркета'),
+    },
+    {
+      href: pickSiteTextUrl(siteTexts, 'header.nav_outlet', OUTLET_URL),
+      label: pickSiteText(siteTexts, 'header.nav_outlet', 'Аутлет в Милане'),
+    },
+    {href: CONSUMABLES_URL, label: 'Расходники в наличии'},
+    {
+      href: pickSiteTextUrl(siteTexts, 'header.nav_unsorted', '/unsorted'),
+      label: pickSiteText(siteTexts, 'header.nav_unsorted', 'Товары без сортировки'),
+    },
+    {href: '/cart', label: 'Корзина'},
+  ];
 
-export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
@@ -161,7 +179,7 @@ export default function Header() {
         <div className={styles.container}>
           <div className={styles.desktopTop}>
             <nav className={styles.topNav}>
-              {NAV_LINKS.slice(0, 4).map((link) => (
+              {navLinks.slice(0, 4).map((link) => (
                 <Link key={link.href} href={link.href} className={styles.topLink}>
                   {link.label}
                 </Link>
@@ -306,12 +324,12 @@ export default function Header() {
           <div className={styles.tickerTrack}>
             <div className={styles.tickerContent}>
               <Link href="/catalog" className={styles.tickerLink}>
-                {TICKER_TEXT}
+                {tickerText}
               </Link>
               <span className={styles.tickerSeparator}>-</span>
             </div>
             <div className={styles.tickerContent} aria-hidden>
-              <span>{TICKER_TEXT}</span>
+              <span>{tickerText}</span>
               <span className={styles.tickerSeparator}>-</span>
             </div>
           </div>
@@ -339,7 +357,7 @@ export default function Header() {
               </button>
             </div>
             <ul className={styles.mobileNav}>
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}

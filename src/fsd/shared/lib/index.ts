@@ -23,3 +23,5 @@ export {
 export type {PriceCurrency} from './money';
 export {cn} from './utils';
 export {useIsMobile} from './use-mobile';
+export {getSiteTexts, pickSiteText, pickSiteTextUrl} from './siteTexts';
+export type {SiteText, SiteTextsMap} from './siteTexts';

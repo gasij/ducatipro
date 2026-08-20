@@ -3,12 +3,13 @@
 import {ArrowUp} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {pickSiteText, pickSiteTextUrl, type SiteTextsMap} from '@/src/fsd/shared/lib';
 import styles from './Footer.module.css';
 
 const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
 const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
 
-export default function Footer() {
+export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
@@ -17,18 +18,27 @@ export default function Footer() {
             <h4 className={styles.columnTitle}>Содержание</h4>
             <ul className={styles.linkList}>
               <li>
-                <Link href={CATALOG_URL} className={styles.footerLink}>
-                  Каталог
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_catalog', CATALOG_URL)}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_catalog', 'Каталог')}
                 </Link>
               </li>
               <li>
-                <Link href={OUTLET_URL} className={styles.footerLink}>
-                  Аутлет в Милане
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_outlet', OUTLET_URL)}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_outlet', 'Аутлет в Милане')}
                 </Link>
               </li>
               <li>
-                <Link href="/unsorted" className={styles.footerLink}>
-                  Товары без сортировки
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_unsorted', '/unsorted')}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_unsorted', 'Товары без сортировки')}
                 </Link>
               </li>
             </ul>
@@ -37,23 +47,35 @@ export default function Footer() {
             <h4 className={styles.columnTitle}>Для покупателя</h4>
             <ul className={styles.linkList}>
               <li>
-                <Link href="/offer" className={styles.footerLink}>
-                  Оферта и политика конфиденциальности
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_offer', '/offer')}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_offer', 'Оферта и политика конфиденциальности')}
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className={styles.footerLink}>
-                  Условия обмена и возврата
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_returns', '/returns')}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_returns', 'Условия обмена и возврата')}
                 </Link>
               </li>
               <li>
-                <Link href="/delivery" className={styles.footerLink}>
-                  Оплата и доставка
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_delivery', '/delivery')}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_delivery', 'Оплата и доставка')}
                 </Link>
               </li>
               <li>
-                <Link href="/loyalty" className={styles.footerLink}>
-                  Программа лояльности
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_loyalty', '/loyalty')}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_loyalty', 'Программа лояльности')}
                 </Link>
               </li>
             </ul>
