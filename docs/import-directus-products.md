@@ -25,6 +25,7 @@ ABC123;Ducati test part;15200;new;Краткое описание;https://exampl
 - `Название`, `title`, `name`
 - `Цена`, `price`
 - `Старая цена`, `old_price`
+- `Вес`, `weight`, `WHT`
 - `Категория`, `category`: `new`, `discounted`, `outlet`, `unsorted`
 - `Описание`, `description`
 - `Краткое описание`, `desc`, `short_description`

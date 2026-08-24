@@ -148,6 +148,33 @@ input[type="file"] {
   align-items: end;
 }
 
+.moto-import-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.metric-row .metric {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+code {
+  background: #f0f2f5;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+}
+
 label {
   display: grid;
   gap: 7px;

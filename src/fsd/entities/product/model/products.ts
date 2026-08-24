@@ -482,7 +482,48 @@ async function fetchProductCompatibilityFromJunction(directusUrl: string, produc
   return compatibilityByProductId;
 }
 
-async function getProductsFromDirectusPage(page: number, pageSize: number, eurToRubRate: number) {
+function isUuidLike(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+async function getProductByIdentifier(identifier: string, eurToRubRate: number): Promise<Product | null> {
+  const directusUrl = process.env.DIRECTUS_URL;
+  const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
+
+  if (!directusUrl || !identifier) {
+    return null;
+  }
+
+  const orConditions: Array<Record<string, unknown>> = [
+    {sku: {_eq: identifier}},
+    {slug: {_eq: identifier}},
+  ];
+  if (isUuidLike(identifier)) {
+    orConditions.push({id: {_eq: identifier}});
+  }
+
+  const url = new URL(`/items/${collection}`, directusUrl);
+  url.searchParams.set('fields', '*,primary_category.*,categories.*');
+  url.searchParams.set('filter', JSON.stringify({_or: orConditions}));
+  url.searchParams.set('limit', '1');
+
+  const payload = await fetchDirectusJson<{data?: DirectusProduct[]}>(url);
+  const item = payload?.data?.[0];
+  if (!item) {
+    return null;
+  }
+
+  const product = normalizeProduct(item, 0, eurToRubRate);
+  const compatibilityByProductId = await fetchProductCompatibilityFromJunction(directusUrl, [product.id]);
+  return addCompatibilityModels(product, compatibilityByProductId.get(product.id) || []);
+}
+
+async function getProductsFromDirectusPage(
+  page: number,
+  pageSize: number,
+  eurToRubRate: number,
+  options: {skipCompatibility?: boolean} = {},
+) {
   const directusUrl = process.env.DIRECTUS_URL;
   const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
 
@@ -531,6 +572,11 @@ async function getProductsFromDirectusPage(page: number, pageSize: number, eurTo
 
   const total = typeof payload.meta?.filter_count === 'number' ? payload.meta.filter_count : payload.data.length;
   const items = payload.data.map((item, index) => normalizeProduct(item, index, eurToRubRate));
+
+  if (options.skipCompatibility) {
+    return {items, total};
+  }
+
   const compatibilityByProductId = await fetchProductCompatibilityFromJunction(
     directusUrl,
     items.map((item) => item.id),
@@ -759,13 +805,17 @@ function normalizeDisplayPrices(product: Product, eurToRubRate: number): Product
   };
 }
 
-export async function getProductsPage(page = 1, pageSize = DEFAULT_PAGE_SIZE): Promise<ProductsPageResult> {
+export async function getProductsPage(
+  page = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
+  options: {skipCompatibility?: boolean} = {},
+): Promise<ProductsPageResult> {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
   const eurToRubRate = await getCurrentEurToRubRate();
 
   try {
-    const directusPage = await getProductsFromDirectusPage(safePage, safePageSize, eurToRubRate);
+    const directusPage = await getProductsFromDirectusPage(safePage, safePageSize, eurToRubRate, options);
 
     if (directusPage && directusPage.items.length > 0) {
       const totalPages = Math.max(1, Math.ceil(directusPage.total / safePageSize));
@@ -797,11 +847,19 @@ export async function getProductsPage(page = 1, pageSize = DEFAULT_PAGE_SIZE): P
 }
 
 export async function getProducts(): Promise<Product[]> {
-  const result = await getProductsPage(1, 1000);
+  // Compatibility/model data isn't shown by any caller of this bulk list — skip it, it's expensive
+  // to join per item once a product is linked to many motorcycles.
+  const result = await getProductsPage(1, 1000, {skipCompatibility: true});
   return result.items;
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
+  const eurToRubRate = await getCurrentEurToRubRate();
+  const direct = await getProductByIdentifier(id, eurToRubRate).catch(() => null);
+  if (direct) {
+    return direct;
+  }
+
   const items = await getProducts();
   const normalizedId = normalizeLookupValue(id);
 

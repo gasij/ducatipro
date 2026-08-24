@@ -2,6 +2,7 @@
 
 import {useEffect, useMemo, useRef, useState} from 'react';
 import Link from 'next/link';
+import {usePathname} from 'next/navigation';
 import {ProductCard, type Product} from '@/src/fsd/entities/product';
 import {gsap, registerGsap} from '@/src/fsd/shared/lib';
 import styles from './CatalogLayout.module.css';
@@ -26,6 +27,7 @@ export default function CatalogLayout({
   pageSize,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   const [selectedModel, setSelectedModel] = useState('all');
   const modelOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -127,43 +129,22 @@ export default function CatalogLayout({
 
       {modelOptions.length > 0 && (
         <div className={styles.filters} aria-label="Фильтр по модели Ducati">
-          <div className={styles.filtersHeader}>
-            <span className={styles.filtersTitle}>Модель Ducati</span>
-            {selectedModel !== 'all' && (
-              <button
-                type="button"
-                onClick={() => setSelectedModel('all')}
-                className={styles.resetButton}
-              >
-                Сбросить
-              </button>
-            )}
-          </div>
-          <div className={styles.modelList}>
-            <button
-              type="button"
-              onClick={() => setSelectedModel('all')}
-              className={`${styles.modelButton} ${
-                selectedModel === 'all' ? styles.modelButtonActive : ''
-              }`}
-            >
-              Все модели
-              <span>{items.length}</span>
-            </button>
+          <label className={styles.filtersTitle} htmlFor="catalog-model-filter">
+            Модель Ducati
+          </label>
+          <select
+            id="catalog-model-filter"
+            className={styles.modelSelect}
+            value={selectedModel}
+            onChange={(event) => setSelectedModel(event.target.value)}
+          >
+            <option value="all">Все модели ({items.length})</option>
             {modelOptions.map(({model, count}) => (
-              <button
-                key={model}
-                type="button"
-                onClick={() => setSelectedModel(model)}
-                className={`${styles.modelButton} ${
-                  selectedModel === model ? styles.modelButtonActive : ''
-                }`}
-              >
-                {model}
-                <span>{count}</span>
-              </button>
+              <option key={model} value={model}>
+                {model} ({count})
+              </option>
             ))}
-          </div>
+          </select>
         </div>
       )}
 
@@ -187,7 +168,7 @@ export default function CatalogLayout({
           {totalPages > 1 && (
             <nav className={styles.pagination} aria-label="Пагинация каталога">
               <Link
-                href={currentPage > 1 ? `/catalog?page=${currentPage - 1}` : '/catalog'}
+                href={currentPage > 1 ? `${pathname}?page=${currentPage - 1}` : pathname}
                 className={`${styles.paginationLink} ${currentPage === 1 ? styles.paginationLinkDisabled : ''}`}
               >
                 Назад
@@ -202,7 +183,7 @@ export default function CatalogLayout({
                   );
                 }
 
-                const pageHref = page === 1 ? '/catalog' : `/catalog?page=${page}`;
+                const pageHref = page === 1 ? pathname : `${pathname}?page=${page}`;
                 const isActive = page === currentPage;
 
                 return (
@@ -217,7 +198,7 @@ export default function CatalogLayout({
               })}
 
               <Link
-                href={currentPage < totalPages ? `/catalog?page=${currentPage + 1}` : `/catalog?page=${totalPages}`}
+                href={currentPage < totalPages ? `${pathname}?page=${currentPage + 1}` : `${pathname}?page=${totalPages}`}
                 className={`${styles.paginationLink} ${currentPage === totalPages ? styles.paginationLinkDisabled : ''}`}
               >
                 Далее

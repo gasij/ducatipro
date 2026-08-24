@@ -26,19 +26,14 @@
 }
 
 .filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
     margin-bottom: 1.5rem;
     border: 1px solid var(--color-border);
     border-radius: 6px;
     background: #fcfcfc;
     padding: 1rem;
-}
-
-.filtersHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
 }
 
 .filtersTitle {
@@ -48,59 +43,23 @@
     text-transform: uppercase;
 }
 
-.modelList {
-    display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-    margin-right: -1rem;
-    margin-left: -1rem;
-    padding: 0 1rem 0.25rem;
-    scrollbar-width: none;
-}
-
-.modelList::-webkit-scrollbar {
-    display: none;
-}
-
-.modelButton {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 0.5rem;
+.modelSelect {
+    width: 100%;
     border: 1px solid var(--color-border-strong);
-    border-radius: 999px;
+    border-radius: 6px;
     background: #ffffff;
-    color: #374151;
+    color: #111827;
     padding: 0.625rem 0.875rem;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 700;
-    line-height: 1;
-    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+    line-height: 1.2;
+    transition: border-color 160ms ease;
 }
 
-.modelButton span {
-    display: inline-flex;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: #f3f4f6;
-    color: #6b7280;
-    font-size: 0.6875rem;
-}
-
-.modelButton:hover,
-.modelButtonActive {
+.modelSelect:hover,
+.modelSelect:focus {
     border-color: #111827;
-    background: #111827;
-    color: #ffffff;
-}
-
-.modelButton:hover span,
-.modelButtonActive span {
-    background: rgb(255 255 255 / 16%);
-    color: #ffffff;
+    outline: none;
 }
 
 .resetButton {
@@ -209,14 +168,15 @@
         font-size: 1.5rem;
     }
     .filters {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
         margin-bottom: 2rem;
         padding: 1.25rem;
     }
-    .modelList {
-        flex-wrap: wrap;
-        overflow: visible;
-        margin: 0;
-        padding: 0;
+    .modelSelect {
+        width: auto;
+        min-width: 16rem;
     }
     .grid {
         grid-template-columns: repeat(auto-fit, minmax(min(100%, 14.75rem), 1fr));

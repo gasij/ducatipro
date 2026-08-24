@@ -23,9 +23,9 @@ const nextConfig: NextConfig = {
         pathname: '/**', // This allows any path under the hostname
       },
       {
-        protocol: 'http',
-        hostname: '91.92.43.31',
-        port: '8055',
+        protocol: 'https',
+        hostname: 'admin.ducatiparts.ru',
+        port: '',
         pathname: '/assets/**',
       },
     ],

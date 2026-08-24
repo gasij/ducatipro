@@ -106,6 +106,59 @@
         <pre class="log" id="importLog"></pre>
       </section>
 
+      <section class="panel import-panel">
+        <div class="section-heading">
+          <h2>Мотоциклы и совместимость</h2>
+          <p>
+            Создаёт модели мотоциклов и связи с товарами (коллекции <code>motorcycles</code> и
+            <code>motorcycles_products</code>). Товар должен уже существовать в Directus — используй URL/token из
+            блока выше.
+          </p>
+        </div>
+        <form class="controls" id="motoParseForm">
+          <label class="file-control">
+            <span>Файлы совместимости</span>
+            <input name="compatibility" type="file" accept=".xlsx,.csv,.tsv,.json" multiple required />
+            <small id="motoFilesHint">OEM/MODEL/FAMILY/YEAR таблица (например, D1-1-1.xlsx).</small>
+          </label>
+          <div class="grid">
+            <label>
+              Коллекция товаров
+              <input name="productsCollection" value="products" />
+            </label>
+            <label>
+              Лимит
+              <input name="limit" inputmode="numeric" placeholder="0" />
+            </label>
+          </div>
+          <button class="primary" type="submit">Проверить модели</button>
+        </form>
+
+        <div class="metric-row">
+          <div class="metric">
+            <span>Новых/обновляемых моделей</span>
+            <strong id="motoMetricModels">0</strong>
+          </div>
+          <div class="metric">
+            <span>Связей товар-мотоцикл</span>
+            <strong id="motoMetricRelations">0</strong>
+          </div>
+        </div>
+
+        <form id="motoImportForm" class="moto-import-grid">
+          <label>
+            Коллекция мотоциклов
+            <input name="motorcyclesCollection" value="motorcycles" />
+          </label>
+          <label>
+            Коллекция связей
+            <input name="junctionCollection" value="motorcycles_products" />
+          </label>
+          <button class="primary danger" type="submit" disabled id="motoImportButton">Импортировать модели</button>
+        </form>
+        <pre class="log" id="motoImportLog"></pre>
+      </section>
+
       <section class="panel table-panel">
         <div class="section-heading">
           <h2>Предпросмотр</h2>

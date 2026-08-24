@@ -115,6 +115,117 @@ parseForm.addEventListener('submit', async (event) => {
   }
 });
 
+const motoParseForm = document.querySelector('#motoParseForm');
+const motoImportForm = document.querySelector('#motoImportForm');
+const motoImportButton = document.querySelector('#motoImportButton');
+const motoImportLog = document.querySelector('#motoImportLog');
+const motoFilesHint = document.querySelector('#motoFilesHint');
+const compatibilityMotoInput = motoParseForm.querySelector('input[name="compatibility"]');
+let currentMotoRunId = '';
+
+compatibilityMotoInput.addEventListener('change', () => {
+  motoFilesHint.textContent = formatFileSelection(
+    compatibilityMotoInput,
+    'OEM/MODEL/FAMILY/YEAR таблица (например, D1-1-1.xlsx).',
+  );
+});
+
+function getDirectusCreds() {
+  const data = Object.fromEntries(new FormData(importForm).entries());
+  return {url: data.url, token: data.token};
+}
+
+motoParseForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const {url, token} = getDirectusCreds();
+  if (!url || !token) {
+    motoImportLog.textContent = 'Сначала укажи URL и token в блоке Directus выше.';
+    return;
+  }
+
+  setStatus('Проверяю модели...', 'busy');
+  motoImportLog.textContent = '';
+
+  const formData = new FormData(motoParseForm);
+  formData.set('url', url);
+  formData.set('token', token);
+
+  try {
+    const response = await fetch('/api/motorcycles/parse', {method: 'POST', body: formData});
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || 'Ошибка проверки');
+    }
+
+    currentMotoRunId = payload.id;
+    setMetric('#motoMetricModels', payload.summary.motorcycles);
+    setMetric('#motoMetricRelations', payload.summary.relations);
+    motoImportLog.textContent = [
+      `Строк совместимости: ${payload.summary.compatibilityRows}`,
+      `Строк с существующим товаром: ${payload.summary.matchedProductRows}`,
+      `Моделей к созданию/обновлению: ${payload.summary.motorcycles} из ${payload.summary.totalMotorcycles}`,
+      `Связей товар-мотоцикл: ${payload.summary.relations} из ${payload.summary.totalRelations}`,
+    ].join('\n');
+    motoImportButton.disabled = payload.summary.motorcycles === 0;
+    setStatus('Готово', 'ok');
+  } catch (error) {
+    setStatus('Ошибка', 'error');
+    motoImportLog.textContent = error.message;
+  }
+});
+
+motoImportForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  if (!currentMotoRunId) {
+    motoImportLog.textContent = 'Сначала проверь файл совместимости.';
+    return;
+  }
+
+  const {url, token} = getDirectusCreds();
+  if (!url || !token) {
+    motoImportLog.textContent = 'Сначала укажи URL и token в блоке Directus выше.';
+    return;
+  }
+
+  const data = Object.fromEntries(new FormData(motoImportForm).entries());
+  data.runId = currentMotoRunId;
+  data.url = url;
+  data.token = token;
+
+  setStatus('Импортирую модели...', 'busy');
+  motoImportButton.disabled = true;
+
+  try {
+    const response = await fetch('/api/motorcycles/import', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || 'Ошибка импорта');
+    }
+
+    motoImportLog.textContent = [
+      `Motorcycles created: ${payload.stats.createdMotorcycles}`,
+      `Motorcycles updated: ${payload.stats.updatedMotorcycles}`,
+      `Relations created: ${payload.stats.createdRelations}`,
+      `Relations skipped: ${payload.stats.skippedRelations}`,
+      '',
+      ...payload.log.slice(0, 300),
+    ].join('\n');
+    setStatus('Импорт завершен', 'ok');
+  } catch (error) {
+    setStatus('Ошибка', 'error');
+    motoImportLog.textContent = error.message;
+  } finally {
+    motoImportButton.disabled = false;
+  }
+});
+
 importForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 

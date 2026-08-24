@@ -23,6 +23,7 @@
 | `description` или `full_description` | Text |
 | `price_formatted` | String |
 | `old_price` или `old_price_formatted` | String |
+| `weight` | Decimal |
 | `sku` | String |
 | `badge_text` | String |
 | `badge_color` | String: `green` или `gray` |

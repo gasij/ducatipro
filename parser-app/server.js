@@ -4,11 +4,13 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const {readTableFromUpload} = require('./lib/table-reader');
 const {parseProducts} = require('./lib/product-parser');
-const {upsertProducts} = require('./lib/directus');
+const {prepareMotorcycleImport} = require('./lib/motorcycles');
+const {fetchExistingMap, upsertProducts, upsertMotorcycles} = require('./lib/directus');
 
 const PORT = Number(process.env.PORT) || 4177;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const runs = new Map();
+const motorcycleRuns = new Map();
 
 function send(res, status, body, headers = {}) {
   res.writeHead(status, headers);
@@ -182,6 +184,73 @@ async function handleImport(req, res) {
   sendJson(res, 200, result);
 }
 
+async function handleMotorcyclesParse(req, res) {
+  const body = await collectRequest(req);
+  const {fields, files} = parseMultipart(body, req.headers['content-type'] || '');
+
+  if (!fields.url || !fields.token) {
+    sendJson(res, 400, {error: 'Нужны Directus URL и token.'});
+    return;
+  }
+
+  const compatibilityFiles = getUploadFiles(files, 'compatibility');
+  const compatibilityRows = readTablesFromUploads(compatibilityFiles);
+  const productsCollection = fields.productsCollection || 'products';
+
+  const config = {url: fields.url, token: fields.token};
+  const existingProducts = await fetchExistingMap(config, productsCollection, 'sku');
+  const result = prepareMotorcycleImport(compatibilityRows, new Set(existingProducts.keys()), {
+    limit: fields.limit,
+  });
+
+  const run = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    sourceNames: compatibilityFiles.map((file) => file.filename).filter(Boolean),
+    ...result,
+  };
+  motorcycleRuns.set(run.id, run);
+
+  sendJson(res, 200, {
+    id: run.id,
+    summary: {
+      compatibilityRows: compatibilityRows.length,
+      matchedProductRows: result.matchedProductRows,
+      motorcycles: result.motorcycles.length,
+      totalMotorcycles: result.totalMotorcycles,
+      relations: result.relations.length,
+      totalRelations: result.totalRelations,
+    },
+    preview: result.motorcycles.slice(0, 100),
+  });
+}
+
+async function handleMotorcyclesImport(req, res) {
+  const body = await collectRequest(req);
+  const settings = JSON.parse(body.toString('utf8') || '{}');
+  const run = motorcycleRuns.get(settings.runId);
+
+  if (!run) {
+    sendJson(res, 404, {error: 'Результат разбора не найден. Сначала загрузи и проверь файл совместимости.'});
+    return;
+  }
+
+  if (!settings.url || !settings.token) {
+    sendJson(res, 400, {error: 'Нужны Directus URL и token.'});
+    return;
+  }
+
+  const result = await upsertMotorcycles(run.motorcycles, run.relations, {
+    url: settings.url,
+    token: settings.token,
+    productsCollection: settings.productsCollection,
+    motorcyclesCollection: settings.motorcyclesCollection,
+    junctionCollection: settings.junctionCollection,
+  });
+
+  sendJson(res, 200, result);
+}
+
 function handleDownload(req, res, url) {
   const id = url.searchParams.get('id');
   const format = url.searchParams.get('format') || 'json';
@@ -236,6 +305,16 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && url.pathname === '/api/import') {
       await handleImport(req, res);
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/motorcycles/parse') {
+      await handleMotorcyclesParse(req, res);
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/motorcycles/import') {
+      await handleMotorcyclesImport(req, res);
       return;
     }
 
