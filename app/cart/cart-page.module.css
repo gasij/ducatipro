@@ -325,6 +325,26 @@
     white-space: nowrap;
 }
 
+.deliveryDisclaimer {
+    margin-bottom: 1.25rem;
+    color: #6b6b70;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.deliveryDisclaimer p {
+    margin: 0 0 0.5rem;
+}
+
+.deliveryDisclaimer p:last-child {
+    margin-bottom: 0;
+}
+
+.deliveryDisclaimerNote {
+    color: #9a9a9d;
+    font-size: 0.75rem;
+}
+
 .checkoutLink,
 .checkoutButtonDisabled,
 .shareButton {

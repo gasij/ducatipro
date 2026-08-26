@@ -10,9 +10,7 @@ import {
   CART_STORAGE_KEY,
   gsap,
   notifyCartUpdated,
-  pickSiteText,
   registerGsap,
-  type SiteTextsMap,
   type StoredCartItem,
 } from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
@@ -26,13 +24,7 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
   unsorted: 'Без сортировки',
 };
 
-export default function ProductView({
-  product,
-  siteTexts = {},
-}: {
-  product: Product;
-  siteTexts?: SiteTextsMap;
-}) {
+export default function ProductView({product}: {product: Product}) {
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
@@ -140,9 +132,11 @@ export default function ProductView({
         </div>
 
         <div className={styles.info}>
-          <div className={styles.kickerRow}>
-            <span className={styles.categoryPill}>{CATEGORY_LABELS[product.category]}</span>
-          </div>
+          {product.category !== 'unsorted' && (
+            <div className={styles.kickerRow}>
+              <span className={styles.categoryPill}>{CATEGORY_LABELS[product.category]}</span>
+            </div>
+          )}
 
           <h1 className={styles.title}>{titleWithArticle}</h1>
 
@@ -225,15 +219,11 @@ export default function ProductView({
                   </div>
                 )}
               </dl>
-              <p className={styles.summaryDescriptionText}>
-                {product.desc ||
-                  product.description ||
-                  pickSiteText(
-                    siteTexts,
-                    'product.description_fallback',
-                    'Оригинальная запчасть для мотоциклов Ducati. Подробности уточняйте у менеджера в Telegram: @ducatiparts',
-                  )}
-              </p>
+              {(product.desc || product.description) && (
+                <p className={styles.summaryDescriptionText}>
+                  {product.desc || product.description}
+                </p>
+              )}
             </div>
           </div>
         </div>

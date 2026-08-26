@@ -486,6 +486,17 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
               </div>
             </div>
 
+            <div className={styles.deliveryDisclaimer}>
+              <p>Прямая доставка EMS в почтовое отделение.</p>
+              <p>Общий срок доставки около 4 недель с момента оплаты.</p>
+              <p className={styles.deliveryDisclaimerNote}>
+                * Некоторые товары (их уже не менее половины) могут быть запрещены санкциями к
+                отправке в РФ. В этом случае мы используем доставку через «третьи страны» в п.в.
+                СДЭК в вашем городе. Возможные дополнительные расходы и сроки обсудим отдельно при
+                согласовании доставки и оплаты.
+              </p>
+            </div>
+
             {lines.length > 0 ? (
               <Link href={checkoutHref} className={styles.checkoutLink}>
                 Оформить заказ
