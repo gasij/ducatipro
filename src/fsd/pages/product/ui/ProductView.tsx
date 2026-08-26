@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {Bike, ChevronRight, Heart, Star} from 'lucide-react';
+import {Bike, ChevronRight, Heart, Star, Truck} from 'lucide-react';
 import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {
   CART_STORAGE_KEY,
@@ -200,6 +200,11 @@ export default function ProductView({
                 В корзину {quantity} шт
                 <span className={styles.cartHint}>Перейти</span>
               </button>
+            </div>
+
+            <div className={styles.deliveryNotice}>
+              <Truck className={styles.deliveryIcon} />
+              <span>Доставка: 4-6 недель</span>
             </div>
 
             <div className={styles.summaryDescriptionCard}>

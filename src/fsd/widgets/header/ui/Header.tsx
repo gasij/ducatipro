@@ -36,8 +36,8 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
     },
     {href: CONSUMABLES_URL, label: 'Расходники в наличии'},
     {
-      href: pickSiteTextUrl(siteTexts, 'header.nav_unsorted', '/unsorted'),
-      label: pickSiteText(siteTexts, 'header.nav_unsorted', 'Товары без сортировки'),
+      href: pickSiteTextUrl(siteTexts, 'header.nav_unsorted', '/catalog-oem'),
+      label: pickSiteText(siteTexts, 'header.nav_unsorted', 'Каталог OEM'),
     },
     {href: '/cart', label: 'Корзина'},
   ];

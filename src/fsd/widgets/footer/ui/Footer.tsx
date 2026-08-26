@@ -35,10 +35,10 @@ export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
               </li>
               <li>
                 <Link
-                  href={pickSiteTextUrl(siteTexts, 'footer.link_unsorted', '/unsorted')}
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_unsorted', '/catalog-oem')}
                   className={styles.footerLink}
                 >
-                  {pickSiteText(siteTexts, 'footer.link_unsorted', 'Товары без сортировки')}
+                  {pickSiteText(siteTexts, 'footer.link_unsorted', 'Каталог OEM')}
                 </Link>
               </li>
             </ul>

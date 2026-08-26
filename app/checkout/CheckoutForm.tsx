@@ -18,6 +18,7 @@ import styles from './checkout-page.module.css';
 
 const COUNTRY = 'Российская Федерация';
 const DELIVERY_METHOD = 'EMS / СДЭК';
+const PAYMENT_METHOD = 'Универсальный платеж';
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
 const EXPECTED_DELIVERY_DATE = '29 июня - 13 июля';
@@ -60,6 +61,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
   );
   const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
   const totalWithProcessingFee = subtotal + ORDER_PROCESSING_FEE_EUR;
+  const grandTotal = totalWithProcessingFee + deliveryPriceEur;
 
   const checkoutRootRef = useRef<HTMLFormElement>(null);
   const summaryInnerRef = useRef<HTMLDivElement>(null);
@@ -163,7 +165,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
           city,
           postal_address: postalAddress,
           comment: [comment, extraComment].filter(Boolean).join('\n\n'),
-          payment_method: 'Универсальный платеж',
+          payment_method: PAYMENT_METHOD,
           delivery_method: DELIVERY_METHOD,
           agreed_to_terms: agreed,
           items,
@@ -187,17 +189,81 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
   }
 
   if (success) {
+    const orderDate = new Date().toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
     return (
       <div className={styles.success}>
-        <div className={styles.successIcon}>✓</div>
-        <h2 className={styles.successTitle}>Заказ принят</h2>
+        <h1 className={styles.successTitle}>Спасибо за ваш заказ на ducatiparts.ru</h1>
+        <h2 className={styles.successSubtitle}>Информация о заказе</h2>
+
+        <div className={styles.successInfoGrid}>
+          <div className={styles.successInfoColumn}>
+            <p>Номер заказа: {success.orderId}</p>
+            <p>Дата оформления: {orderDate}</p>
+            <p>Способ оплаты: {PAYMENT_METHOD}</p>
+            <p>Способ доставки: {DELIVERY_METHOD}</p>
+            <p>Статус заказа: В обработке</p>
+          </div>
+          <div className={styles.successInfoColumn}>
+            <p>Получатель:</p>
+            <p>{name}</p>
+            <p>{postalAddress}</p>
+            <p>{city}</p>
+            <p>{COUNTRY}</p>
+            <p>{phone}</p>
+          </div>
+        </div>
+
+        <p className={styles.successText}>Ваш заказ будет принят в обработку только после оплаты.</p>
         <p className={styles.successText}>
-          ID заказа: <strong>{success.orderId}</strong>
+          В ближайшее время мы свяжемся с вами для обсуждения дальнейших действий.
         </p>
-        <p className={styles.successHint}>
-          Мы проверим наличие и свяжемся с вами. После подтверждения администратором на{' '}
-          <strong>{email}</strong> придёт письмо с составом заказа.
+
+        <table className={styles.successTable}>
+          <thead>
+            <tr>
+              <th>Детализация заказа</th>
+              <th>Кол-во</th>
+              <th>Цена</th>
+              <th>Итого</th>
+            </tr>
+          </thead>
+          <tbody>
+            {checkoutItems.map(({product, quantity}) => (
+              <tr key={product.id}>
+                <td>{product.title}</td>
+                <td>{quantity}</td>
+                <td>{formatEurPrice(product.price)}</td>
+                <td>{formatEurPrice(product.price * quantity)}</td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan={3}>Express Mail Service (EMS):</td>
+              <td>{formatEurPrice(deliveryPriceEur)}</td>
+            </tr>
+            <tr>
+              <td colSpan={3}>Фикс. сбор за обработку заказа:</td>
+              <td>{formatEurPrice(ORDER_PROCESSING_FEE_EUR)}</td>
+            </tr>
+            <tr className={styles.successTableTotalRow}>
+              <td colSpan={3}>Итого:</td>
+              <td>{formatEurPrice(grandTotal)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p className={styles.successFooter}>
+          Благодарим вас за интерес к товарам в нашем интернет-магазине! Мы обязательно уведомим вас
+          об изменении статуса вашего заказа.
+          <br />
+          Если у вас возникли вопросы, пишите нам в сообщении к заказу в кабинете или на{' '}
+          orders@ducatiparts.ru
         </p>
+
         <Link href="/catalog-oem" className={styles.successLink}>
           Вернуться в каталог
         </Link>
@@ -292,7 +358,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
           <h2 className={styles.sectionTitle}>Варианты оплаты</h2>
           <div className={styles.paymentChoice}>
             <span className={styles.radioCircle} />
-            <span className={styles.paymentName}>Универсальный платеж</span>
+            <span className={styles.paymentName}>{PAYMENT_METHOD}</span>
             <span className={styles.paymentIcons} aria-hidden="true">
               <span className={styles.bankIcon}>$</span>
               <span className={styles.tIcon}>T</span>
