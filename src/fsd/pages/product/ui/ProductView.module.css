@@ -226,10 +226,17 @@
     text-decoration: line-through;
 }
 
+.priceRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.6em;
+}
+
 .price {
     color: var(--color-text);
     font-size: clamp(1.75rem, 8vw, 2.25rem);
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1;
     letter-spacing: 0;
 }

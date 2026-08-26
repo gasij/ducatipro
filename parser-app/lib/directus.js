@@ -206,22 +206,24 @@ async function upsertMotorcycles(motorcycles, relations, settings) {
     toCreate.push({motorcycles_id: motorcycleId, products_id: productId});
   }
 
-  const batchSize = 300;
+  const batchSize = 150;
+  const batchDelayMs = 400;
   const batches = [];
   for (let index = 0; index < toCreate.length; index += batchSize) {
     batches.push(toCreate.slice(index, index + batchSize));
   }
 
-  await runWithConcurrency(batches, 4, async (batch) => {
+  await runWithConcurrency(batches, 2, async (batch) => {
     try {
       await directusRequest(config, `/items/${junctionCollection}`, {
         method: 'POST',
         body: JSON.stringify(batch),
       });
       stats.createdRelations += batch.length;
+      await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
     } catch (error) {
       log.push(`batch of ${batch.length} relations failed, retrying one by one: ${error instanceof Error ? error.message : error}`);
-      await runWithConcurrency(batch, 4, async (item) => {
+      await runWithConcurrency(batch, 2, async (item) => {
         try {
           await directusRequest(config, `/items/${junctionCollection}`, {
             method: 'POST',

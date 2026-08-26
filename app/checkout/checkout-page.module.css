@@ -244,27 +244,28 @@
   animation: spin 1s linear infinite;
 }
 
+/* `.summary` itself is a plain (non-sticky) grid cell stretched to the full
+   height of the row it shares with `.formColumn` — i.e. a "track" the order
+   summary can travel inside. `.summaryInner` (see CheckoutForm.tsx) is what
+   actually moves: its `top` is a plain pixel offset computed on scroll that
+   keeps it pinned near the viewport top like `position: sticky` would, but
+   — unlike native sticky, which is clamped to *this* row and would let the
+   box's top creep up under the sticky header once the row runs out — the
+   offset is clamped against where the page's `<footer>` actually starts, so
+   the box keeps tracking the scroll all the way down and simply rests
+   against the footer instead of overlapping it or disappearing early. */
 .summary {
-  align-self: start;
+  position: relative;
+  align-self: stretch;
   border-left: 1px solid #f0f0f0;
   padding: 1.25rem 0 0 2.4rem;
-  position: sticky;
-  /* Header is itself position:sticky with z-index:50 and sits on top of the
-     page, so this offset must clear the header's height (~174px), otherwise
-     the top of this block (the product cards) renders underneath the header
-     and appears to "disappear" while scrolling. */
-  top: 11.5rem;
-  /* Position:sticky is clamped inside its containing block (the grid row that
-     spans .formColumn/.summary). Near the very bottom of the page the sticky
-     item is released from `top` and pinned to the bottom of that row instead,
-     which can push its top edge back up underneath the sticky header. Capping
-     the block's own height (independent of the viewport) and letting it
-     scroll internally keeps its top edge from ever retreating past `top`. */
-  /* Fallback cap for before JS measurement kicks in (see CheckoutForm.tsx,
-     which sets a precise inline max-height accounting for the actual page
-     layout). Generous on purpose so it rarely visibly clips pre-hydration. */
-  max-height: calc(100vh - 11.5rem - 2rem);
-  overflow-y: auto;
+}
+
+.summaryInner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
 }
 
 .summaryItems {
@@ -318,7 +319,7 @@
 .summaryProductPrice strong {
   color: #111111;
   font-size: 1.18rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .deliveryInfo {
@@ -352,7 +353,7 @@
 
 .totalRow strong {
   color: #111111;
-  font-weight: 900;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -374,7 +375,7 @@
 .grandTotal {
   margin-top: 0.25rem;
   color: #111111;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .grandTotal strong {
@@ -464,10 +465,10 @@
     border-left: 0;
     border-top: 1px solid #f0f0f0;
     padding: 2rem 0 0;
+  }
+
+  .summaryInner {
     position: static;
-    top: auto;
-    max-height: none;
-    overflow-y: visible;
   }
 
   .summaryItems {

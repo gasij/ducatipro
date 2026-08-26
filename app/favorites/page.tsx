@@ -9,7 +9,7 @@ export default function FavoritesPage() {
       <h1 className={styles.title}>Избранное</h1>
       <p className={styles.description}>Вы ещё не добавили товары в избранное</p>
       <Link
-        href="/catalog"
+        href="/catalog-oem"
         className={styles.action}
       >
         Перейти в каталог

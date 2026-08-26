@@ -21,14 +21,11 @@ const DELIVERY_METHOD = 'EMS / СДЭК';
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
 const EXPECTED_DELIVERY_DATE = '29 июня - 13 июля';
-// Must match `.summary { top: 11.5rem }` in checkout-page.module.css.
+// The pixel offset `.summaryInner` tries to stick to, mimicking what
+// `position: sticky; top: 11.5rem` would do — must clear the sticky header's
+// height (~174px) so the sidebar's top never renders underneath it.
 const SUMMARY_TOP_OFFSET_PX = 184;
 const SUMMARY_BOTTOM_BUFFER_PX = 24;
-// Absolute floor so the box never collapses to nothing on very short
-// viewports — it just becomes a small internally-scrollable box. Deliberately
-// small: anything larger risks pushing the box's top edge back up under the
-// header on short viewports (see SUMMARY_TOP_OFFSET_PX / SUMMARY_BOTTOM_BUFFER_PX).
-const SUMMARY_MIN_HEIGHT_PX = 40;
 // Below this browser width the layout switches to a single column (see the
 // `max-width: 1100px` media query in checkout-page.module.css), where the
 // sidebar is intentionally not sticky at all — skip the JS override there.
@@ -64,51 +61,58 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
   const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
   const totalWithProcessingFee = subtotal + ORDER_PROCESSING_FEE_EUR;
 
-  const formColumnRef = useRef<HTMLDivElement>(null);
-  const checkoutBottomDocRef = useRef(0);
-  const [summaryMaxHeight, setSummaryMaxHeight] = useState<number>();
+  const checkoutRootRef = useRef<HTMLFormElement>(null);
+  const summaryInnerRef = useRef<HTMLDivElement>(null);
+  const rowTopDocRef = useRef(0);
+  const footerTopDocRef = useRef(Infinity);
+  const [summaryInnerTop, setSummaryInnerTop] = useState(0);
 
   useEffect(() => {
-    const formEl = formColumnRef.current;
+    const formEl = checkoutRootRef.current;
     if (!formEl) return;
 
     let ticking = false;
 
-    // The sticky `.summary` sidebar is confined to the height of the grid
-    // row it shares with `.formColumn` (the taller column). Near the bottom
-    // of the page it gets clamped to the bottom of that row instead of
-    // holding its `top` offset, which can push its top edge back up
-    // underneath the sticky header. Capping the sidebar's own height to
-    // whatever room is left below the header down to the bottom of that row
-    // (recomputed as the user scrolls) keeps it fully visible — shrinking
-    // into an internal scroll only once the page's end is actually close —
-    // instead of it hiding behind the header.
-    function applyMaxHeight() {
+    // `.summaryInner`'s pixel `top` is recomputed by hand on every
+    // scroll/resize to mimic `position: sticky; top: 11.5rem` — but clamped
+    // between the row's own natural top (so it never renders above where it
+    // starts) and a "resting" position that keeps its bottom edge clear of
+    // the page's <footer>. Native CSS sticky can't do the footer part on its
+    // own: it's confined to the grid row it shares with `.formColumn`, so
+    // once that (usually much shorter) row ends, native sticky either lets
+    // the box's top creep up under the header or — if height-clamped —
+    // shrinks the box to a sliver long before the footer is anywhere close.
+    function applyPosition() {
       ticking = false;
 
       if (window.innerWidth < DESKTOP_LAYOUT_MIN_WIDTH_PX) {
-        setSummaryMaxHeight(undefined);
         return;
       }
 
-      const available =
-        checkoutBottomDocRef.current -
-        window.scrollY -
-        SUMMARY_TOP_OFFSET_PX -
-        SUMMARY_BOTTOM_BUFFER_PX;
-      setSummaryMaxHeight(Math.max(available, SUMMARY_MIN_HEIGHT_PX));
+      const naturalHeight = summaryInnerRef.current?.scrollHeight ?? 0;
+      const idealTopDoc = window.scrollY + SUMMARY_TOP_OFFSET_PX;
+      const restTopDoc = footerTopDocRef.current - SUMMARY_BOTTOM_BUFFER_PX - naturalHeight;
+      const clampedTopDoc = Math.min(
+        Math.max(idealTopDoc, rowTopDocRef.current),
+        Math.max(restTopDoc, rowTopDocRef.current),
+      );
+      setSummaryInnerTop(clampedTopDoc - rowTopDocRef.current);
     }
 
     function onScroll() {
       if (ticking) return;
       ticking = true;
-      window.requestAnimationFrame(applyMaxHeight);
+      window.requestAnimationFrame(applyPosition);
     }
 
     function remeasure() {
       if (!formEl) return;
-      checkoutBottomDocRef.current = formEl.getBoundingClientRect().bottom + window.scrollY;
-      applyMaxHeight();
+      rowTopDocRef.current = formEl.getBoundingClientRect().top + window.scrollY;
+      const footerEl = document.querySelector('footer');
+      footerTopDocRef.current = footerEl
+        ? footerEl.getBoundingClientRect().top + window.scrollY
+        : Infinity;
+      applyPosition();
     }
 
     remeasure();
@@ -194,7 +198,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
           Мы проверим наличие и свяжемся с вами. После подтверждения администратором на{' '}
           <strong>{email}</strong> придёт письмо с составом заказа.
         </p>
-        <Link href="/catalog" className={styles.successLink}>
+        <Link href="/catalog-oem" className={styles.successLink}>
           Вернуться в каталог
         </Link>
       </div>
@@ -202,8 +206,8 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
   }
 
   return (
-    <form className={styles.checkout} onSubmit={handleSubmit}>
-      <div className={styles.formColumn} ref={formColumnRef}>
+    <form className={styles.checkout} onSubmit={handleSubmit} ref={checkoutRootRef}>
+      <div className={styles.formColumn}>
         <section className={styles.recipientBlock}>
           <h1 className={styles.sectionTitle}>Получатель и адрес доставки</h1>
           <div className={styles.fieldGrid}>
@@ -339,20 +343,18 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
         </button>
       </div>
 
-      <aside
-        className={styles.summary}
-        style={summaryMaxHeight !== undefined ? {maxHeight: summaryMaxHeight} : undefined}
-      >
-        <div className={styles.summaryItems}>
-          {checkoutItems.map(({product, quantity}) => (
-            <OrderProduct
-              key={product.id}
-              product={product}
-              quantity={quantity}
-              eurToRubRate={eurToRubRate}
-            />
-          ))}
-        </div>
+      <aside className={styles.summary}>
+        <div ref={summaryInnerRef} className={styles.summaryInner} style={{top: summaryInnerTop}}>
+          <div className={styles.summaryItems}>
+            {checkoutItems.map(({product, quantity}) => (
+              <OrderProduct
+                key={product.id}
+                product={product}
+                quantity={quantity}
+                eurToRubRate={eurToRubRate}
+              />
+            ))}
+          </div>
 
           <div className={styles.deliveryInfo}>
             <p>Метод доставки: {DELIVERY_METHOD}</p>
@@ -397,6 +399,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
               заявки
             </p>
           </div>
+        </div>
       </aside>
     </form>
   );

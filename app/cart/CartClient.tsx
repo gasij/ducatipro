@@ -321,7 +321,7 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
                         product={line.product}
                         imageClassName={styles.itemImage}
                         fallbackClassName={styles.itemImageFallback}
-                        sizes="76px"
+                        sizes="48px"
                       />
                     </Link>
 

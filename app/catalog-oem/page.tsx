@@ -16,7 +16,7 @@ export default async function CatalogPage({
 
   return (
     <CatalogLayout
-      title="Каталог"
+      title="Каталог OEM"
       description="Все запчасти, тюнинг и аксессуары для мотоциклов Ducati"
       items={items}
       currentPage={currentPage}

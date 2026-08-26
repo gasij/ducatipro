@@ -115,7 +115,7 @@ export default function ProductView({
       <div className={styles.breadcrumbs}>
         <Link href="/">Главная</Link>
         <ChevronRight className={styles.breadcrumbIcon} />
-        <Link href="/catalog">Каталог</Link>
+        <Link href="/catalog-oem">Каталог OEM</Link>
         <ChevronRight className={styles.breadcrumbIcon} />
         <span className={styles.breadcrumbCurrent}>{product.title}</span>
       </div>
@@ -165,10 +165,12 @@ export default function ProductView({
             <div className={styles.purchaseHeader}>
               <div className={styles.priceGroup}>
                 {product.oldPrice && <span className={styles.oldPrice}>{product.oldPrice}</span>}
-                <div className={styles.price}>{product.priceFormatted}</div>
-                {product.priceRubFormatted && (
-                  <span className={styles.priceRub}>{product.priceRubFormatted}</span>
-                )}
+                <div className={styles.priceRow}>
+                  <div className={styles.price}>{product.priceFormatted}</div>
+                  {product.priceRubFormatted && (
+                    <span className={styles.priceRub}>{product.priceRubFormatted}</span>
+                  )}
+                </div>
                 <span className={styles.priceNote}>Итоговая цена для заказа</span>
               </div>
               {product.discountBadge && (
