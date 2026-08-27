@@ -72,6 +72,10 @@
     overflow-wrap: anywhere;
 }
 
+.itemSku {
+    font-weight: 700;
+}
+
 .unitPrice {
     display: flex;
     flex-direction: column;

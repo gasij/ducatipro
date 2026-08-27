@@ -4,7 +4,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Copy, Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
-import {getProductHref, type Product} from '@/src/fsd/entities/product';
+import {getProductArticle, getProductHref, type Product} from '@/src/fsd/entities/product';
 import {
   calculateDeliveryPriceEur,
   CART_STORAGE_KEY,
@@ -326,6 +326,7 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
                     </Link>
 
                     <Link href={getProductHref(line.product)} className={styles.itemTitle}>
+                      <span className={styles.itemSku}>{getProductArticle(line.product)}</span>{' '}
                       {line.product.title}
                     </Link>
 
