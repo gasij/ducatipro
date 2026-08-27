@@ -273,6 +273,7 @@ export default function ProductView({product}: {product: Product}) {
             </div>
           )}
 
+          {/* Блок отзывов временно скрыт
           <div className={styles.reviewsBlock}>
             <h3 className={`${styles.blockTitle} ${styles.reviewTitle}`}>Отзывы</h3>
             <p className={styles.reviewText}>Отзывов еще никто не оставлял</p>
@@ -280,6 +281,7 @@ export default function ProductView({product}: {product: Product}) {
               Написать отзыв
             </button>
           </div>
+          */}
         </div>
       </div>
     </div>
