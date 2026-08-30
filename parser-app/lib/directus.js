@@ -246,7 +246,9 @@ async function upsertMotorcycles(motorcycles, relations, settings) {
 }
 
 module.exports = {
+  directusRequest,
   fetchExistingMap,
+  runWithConcurrency,
   upsertProducts,
   upsertMotorcycles,
 };

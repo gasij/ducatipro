@@ -36,9 +36,10 @@ type Props = {
   items: CreateOrderInputItem[];
   checkoutItems: Array<{product: Product; quantity: number}>;
   eurToRubRate: number;
+  rateMarkupPercent: number;
 };
 
-export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props) {
+export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMarkupPercent}: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -276,11 +277,12 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
       <div className={styles.formColumn}>
         <section className={styles.recipientBlock}>
           <h1 className={styles.sectionTitle}>Получатель и адрес доставки</h1>
+          <p className={styles.requiredHint}>* — обязательные поля</p>
           <div className={styles.fieldGrid}>
             <input
               type="text"
               required
-              placeholder="Имя и Фамилия"
+              placeholder="Имя и Фамилия *"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className={`${styles.input} ${styles.fullField}`}
@@ -288,7 +290,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
             <input
               type="tel"
               required
-              placeholder="Телефон для связи"
+              placeholder="Телефон для связи *"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className={styles.input}
@@ -296,7 +298,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
             <input
               type="email"
               required
-              placeholder="Email"
+              placeholder="Email *"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={styles.input}
@@ -317,7 +319,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
             <input
               type="text"
               required
-              placeholder="Город"
+              placeholder="Город *"
               value={city}
               onChange={(e) => setCity(e.target.value)}
               className={styles.input}
@@ -325,7 +327,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
             <input
               type="text"
               required
-              placeholder="Индекс и адрес удобного отделения Почты России"
+              placeholder="Индекс и адрес удобного отделения Почты России *"
               value={postalAddress}
               onChange={(e) => setPostalAddress(e.target.value)}
               className={`${styles.input} ${styles.fullField}`}
@@ -360,9 +362,13 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
             <span className={styles.radioCircle} />
             <span className={styles.paymentName}>{PAYMENT_METHOD}</span>
             <span className={styles.paymentIcons} aria-hidden="true">
-              <span className={styles.bankIcon}>$</span>
-              <span className={styles.tIcon}>T</span>
-              <span className={styles.tonIcon}>◈</span>
+              <Image
+                src="/payment-icons/bankwire-payment.png"
+                alt=""
+                width={144}
+                height={58}
+                className={styles.paymentIconsImage}
+              />
             </span>
           </div>
           <div className={styles.paymentText}>
@@ -374,7 +380,10 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
               Мы принимаем оплаты в Евро на расчетный счет свифт-переводом, по ссылке или PayPal
               (если у вас есть счет за границей).
             </p>
-            <p>Также принимаем тезерами на кошелек или рублями по курсу ЦБ +6%</p>
+            <p>
+              Также принимаем тезерами на кошелек или рублями по курсу ЦБ +
+              {Number.isInteger(rateMarkupPercent) ? rateMarkupPercent : rateMarkupPercent.toFixed(2)}%
+            </p>
             <p className={styles.greenText}>
               Завершите оформление заявки в корзине, подтвердите заказ, после чего мы свяжемся с
               вами и обсудим дальнейшие действия
@@ -424,8 +433,6 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
 
           <div className={styles.deliveryInfo}>
             <p>Метод доставки: {DELIVERY_METHOD}</p>
-            <p>Фикс. сбор за обработку заказа: {ORDER_PROCESSING_FEE}</p>
-            <p>Доставка EMS: €{deliveryPriceEur}</p>
             <p>Ожидаемая дата доставки: {EXPECTED_DELIVERY_DATE}</p>
             <div className={styles.totalRows}>
               <div className={styles.totalRow}>
@@ -444,12 +451,21 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate}: Props
                   </span>
                 </div>
               </div>
-              <div className={`${styles.totalRow} ${styles.grandTotal}`}>
-                <span>Итого без доставки EMS:</span>
+              <div className={styles.totalRow}>
+                <span>Доставка EMS:</span>
                 <div className={styles.totalValue}>
-                  <strong>{formatEurPrice(totalWithProcessingFee)}</strong>
+                  <strong>{formatEurPrice(deliveryPriceEur)}</strong>
                   <span className={styles.totalValueRub}>
-                    {formatRubHint(totalWithProcessingFee, eurToRubRate)}
+                    {formatRubHint(deliveryPriceEur, eurToRubRate)}
+                  </span>
+                </div>
+              </div>
+              <div className={`${styles.totalRow} ${styles.grandTotal}`}>
+                <span>Итого:</span>
+                <div className={styles.totalValue}>
+                  <strong>{formatEurPrice(grandTotal)}</strong>
+                  <span className={styles.totalValueRub}>
+                    {formatRubHint(grandTotal, eurToRubRate)}
                   </span>
                 </div>
               </div>

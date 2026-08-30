@@ -266,3 +266,112 @@ importForm.addEventListener('submit', async (event) => {
     importButton.disabled = false;
   }
 });
+
+const photosParseForm = document.querySelector('#photosParseForm');
+const photosImportForm = document.querySelector('#photosImportForm');
+const photosImportButton = document.querySelector('#photosImportButton');
+const photosImportLog = document.querySelector('#photosImportLog');
+const photosFilesHint = document.querySelector('#photosFilesHint');
+const photosInput = photosParseForm.querySelector('input[name="photos"]');
+let currentPhotosRunId = '';
+
+photosInput.addEventListener('change', () => {
+  photosFilesHint.textContent = formatFileSelection(photosInput, 'Можно выбрать сразу много файлов.');
+});
+
+photosParseForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const {url, token} = getDirectusCreds();
+  if (!url || !token) {
+    photosImportLog.textContent = 'Сначала укажи URL и token в блоке Directus выше.';
+    return;
+  }
+
+  setStatus('Сопоставляю фото с товарами...', 'busy');
+  photosImportLog.textContent = '';
+
+  const formData = new FormData(photosParseForm);
+  formData.set('url', url);
+  formData.set('token', token);
+
+  try {
+    const response = await fetch('/api/photos/parse', {method: 'POST', body: formData});
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || 'Ошибка проверки');
+    }
+
+    currentPhotosRunId = payload.id;
+    const matchedTotal = payload.summary.mainCount + payload.summary.galleryCount;
+    setMetric('#photosMetricMatched', matchedTotal);
+    setMetric('#photosMetricUnmatched', payload.summary.unmatchedCount);
+
+    photosImportLog.textContent = [
+      `Файлов выбрано: ${payload.summary.filesTotal}`,
+      `Товаров в базе: ${payload.summary.productsLoaded}`,
+      `Главных фото: ${payload.summary.mainCount}`,
+      `Доп. фото в галерею: ${payload.summary.galleryCount}`,
+      `Без совпадения: ${payload.summary.unmatchedCount}`,
+      '',
+      ...payload.unmatched.map((filename) => `нет товара: ${filename}`),
+    ].join('\n');
+    photosImportButton.disabled = matchedTotal === 0;
+    setStatus('Готово', 'ok');
+  } catch (error) {
+    setStatus('Ошибка', 'error');
+    photosImportLog.textContent = error.message;
+  }
+});
+
+photosImportForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  if (!currentPhotosRunId) {
+    photosImportLog.textContent = 'Сначала проверь соответствие фото и товаров.';
+    return;
+  }
+
+  const {url, token} = getDirectusCreds();
+  if (!url || !token) {
+    photosImportLog.textContent = 'Сначала укажи URL и token в блоке Directus выше.';
+    return;
+  }
+
+  const formData = new FormData(photosParseForm);
+  setStatus('Загружаю фото...', 'busy');
+  photosImportButton.disabled = true;
+
+  try {
+    const response = await fetch('/api/photos/import', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        runId: currentPhotosRunId,
+        url,
+        token,
+        productsCollection: formData.get('productsCollection'),
+        galleryJunctionCollection: formData.get('galleryJunctionCollection'),
+      }),
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || 'Ошибка загрузки');
+    }
+
+    photosImportLog.textContent = [
+      `Главных фото загружено: ${payload.stats.mainUploaded}`,
+      `Доп. фото загружено: ${payload.stats.galleryUploaded}`,
+      `Пропущено (ошибки): ${payload.stats.skipped}`,
+      '',
+      ...payload.log.slice(0, 300),
+    ].join('\n');
+    setStatus('Загрузка завершена', 'ok');
+  } catch (error) {
+    setStatus('Ошибка', 'error');
+    photosImportLog.textContent = error.message;
+  } finally {
+    photosImportButton.disabled = false;
+  }
+});

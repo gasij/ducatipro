@@ -17,7 +17,7 @@
 .sectionTitle {
     margin: 0;
     color: #333333;
-    font-size: 1.75rem;
+    font-size: 1.05rem;
     font-weight: 900;
     line-height: 1.2;
 }
@@ -331,7 +331,7 @@
 
 .deliveryDisclaimer {
     margin-bottom: 1.25rem;
-    color: #6b6b70;
+    color: #333333;
     font-size: 0.8125rem;
     line-height: 1.4;
 }

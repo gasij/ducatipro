@@ -104,6 +104,37 @@
     padding: 25%;
 }
 
+.thumbnailRow {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: auto;
+}
+
+.thumbnailButton {
+    position: relative;
+    flex-shrink: 0;
+    width: 4.5rem;
+    height: 4.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 160ms ease;
+}
+
+.thumbnailButton:hover,
+.thumbnailButtonActive {
+    border-color: var(--color-accent);
+}
+
+.thumbnailImage {
+    object-fit: contain;
+    padding: 0.35rem;
+    mix-blend-mode: multiply;
+}
+
 .info {
     display: flex;
     width: 100%;
@@ -141,7 +172,7 @@
 .title {
     margin: 0 0 1rem;
     color: var(--color-text);
-    font-size: clamp(1.15rem, 5vw, 1.875rem);
+    font-size: 1.05rem;
     font-weight: 900;
     line-height: 1.15;
     letter-spacing: 0;
@@ -662,9 +693,6 @@
     .gallery {
         gap: 1rem;
     }
-    .title {
-        font-size: 1.5rem;
-    }
     .ratingRow {
         gap: 1.5rem;
     }
@@ -700,7 +728,6 @@
         max-width: none;
     }
     .gallery {
-        flex-direction: row;
         gap: 1.5rem;
     }
     .contentBlock {
@@ -757,9 +784,6 @@
     }
     .mainImageBox {
         min-height: min(60vw, 260px);
-    }
-    .title {
-        font-size: 1.25rem;
     }
     .ratingRow {
         align-items: flex-start;

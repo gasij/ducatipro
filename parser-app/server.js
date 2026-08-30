@@ -6,11 +6,13 @@ const {readTableFromUpload} = require('./lib/table-reader');
 const {parseProducts} = require('./lib/product-parser');
 const {prepareMotorcycleImport} = require('./lib/motorcycles');
 const {fetchExistingMap, upsertProducts, upsertMotorcycles} = require('./lib/directus');
+const {preparePhotoUpload, commitPhotoUpload} = require('./lib/photos');
 
 const PORT = Number(process.env.PORT) || 4177;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const runs = new Map();
 const motorcycleRuns = new Map();
+const photoRuns = new Map();
 
 function send(res, status, body, headers = {}) {
   res.writeHead(status, headers);
@@ -251,6 +253,74 @@ async function handleMotorcyclesImport(req, res) {
   sendJson(res, 200, result);
 }
 
+async function handlePhotosParse(req, res) {
+  const body = await collectRequest(req);
+  const {fields, files} = parseMultipart(body, req.headers['content-type'] || '');
+
+  if (!fields.url || !fields.token) {
+    sendJson(res, 400, {error: 'Нужны Directus URL и token.'});
+    return;
+  }
+
+  const photoFiles = getUploadFiles(files, 'photos');
+  if (photoFiles.length === 0) {
+    sendJson(res, 400, {error: 'Выбери хотя бы один файл с фото.'});
+    return;
+  }
+
+  const config = {url: fields.url, token: fields.token, collection: fields.productsCollection};
+  const {plan, unmatched, productsLoaded, mainCount, galleryCount} = await preparePhotoUpload(
+    photoFiles,
+    config,
+  );
+
+  const id = crypto.randomUUID();
+  photoRuns.set(id, {plan, galleryJunctionCollection: fields.galleryJunctionCollection});
+
+  sendJson(res, 200, {
+    id,
+    summary: {
+      filesTotal: photoFiles.length,
+      productsLoaded,
+      mainCount,
+      galleryCount,
+      unmatchedCount: unmatched.length,
+    },
+    matched: plan.slice(0, 200).map((item) => ({
+      filename: item.file.filename,
+      sku: item.sku,
+      mode: item.mode,
+    })),
+    unmatched: unmatched.slice(0, 200),
+  });
+}
+
+async function handlePhotosImport(req, res) {
+  const body = await collectRequest(req);
+  const settings = JSON.parse(body.toString('utf8') || '{}');
+  const run = photoRuns.get(settings.runId);
+
+  if (!run) {
+    sendJson(res, 404, {error: 'Результат разбора не найден. Сначала загрузи и проверь фото.'});
+    return;
+  }
+
+  if (!settings.url || !settings.token) {
+    sendJson(res, 400, {error: 'Нужны Directus URL и token.'});
+    return;
+  }
+
+  const result = await commitPhotoUpload(run.plan, {
+    url: settings.url,
+    token: settings.token,
+    collection: settings.productsCollection,
+    galleryJunctionCollection: settings.galleryJunctionCollection || run.galleryJunctionCollection,
+  });
+
+  photoRuns.delete(settings.runId);
+  sendJson(res, 200, result);
+}
+
 function handleDownload(req, res, url) {
   const id = url.searchParams.get('id');
   const format = url.searchParams.get('format') || 'json';
@@ -315,6 +385,16 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && url.pathname === '/api/motorcycles/import') {
       await handleMotorcyclesImport(req, res);
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/photos/parse') {
+      await handlePhotosParse(req, res);
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/photos/import') {
+      await handlePhotosImport(req, res);
       return;
     }
 

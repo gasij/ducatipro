@@ -159,6 +159,53 @@
         <pre class="log" id="motoImportLog"></pre>
       </section>
 
+      <section class="panel import-panel">
+        <div class="section-heading">
+          <h2>Фото товаров</h2>
+          <p>
+            Название файла — это артикул товара (например <code>19410711A.jpg</code>). Первое фото на
+            артикул становится главным, файлы вида <code>19410711A-2.jpg</code>/<code>19410711A_2.jpg</code>
+            добавляются в галерею. Используй URL/token из блока выше.
+          </p>
+        </div>
+        <form class="controls" id="photosParseForm">
+          <label class="file-control">
+            <span>Файлы фото</span>
+            <input name="photos" type="file" accept="image/*" multiple required />
+            <small id="photosFilesHint">Можно выбрать сразу много файлов.</small>
+          </label>
+          <div class="grid">
+            <label>
+              Коллекция товаров
+              <input name="productsCollection" value="products" />
+            </label>
+            <label>
+              Коллекция галереи
+              <input name="galleryJunctionCollection" value="products_files_1" />
+            </label>
+          </div>
+          <button class="primary" type="submit">Проверить соответствие</button>
+        </form>
+
+        <div class="metric-row">
+          <div class="metric">
+            <span>Совпало по артикулу</span>
+            <strong id="photosMetricMatched">0</strong>
+          </div>
+          <div class="metric">
+            <span>Не найдено товара</span>
+            <strong id="photosMetricUnmatched">0</strong>
+          </div>
+        </div>
+
+        <form id="photosImportForm">
+          <button class="primary danger" type="submit" disabled id="photosImportButton">
+            Загрузить фото
+          </button>
+        </form>
+        <pre class="log" id="photosImportLog"></pre>
+      </section>
+
       <section class="panel table-panel">
         <div class="section-heading">
           <h2>Предпросмотр</h2>

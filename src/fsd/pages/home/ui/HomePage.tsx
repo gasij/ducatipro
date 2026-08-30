@@ -10,10 +10,11 @@ import styles from './HomePage.module.css';
 
 type Props = {
   newArrivals: Product[];
+  sectionTitle?: string;
   siteTexts?: SiteTextsMap;
 };
 
-export default function HomePage({newArrivals, siteTexts = {}}: Props) {
+export default function HomePage({newArrivals, sectionTitle = 'Новинки в продаже', siteTexts = {}}: Props) {
   const italyCoffeePromo = pickSiteText(
     siteTexts,
     'home.italy_coffee_promo',
@@ -115,7 +116,7 @@ export default function HomePage({newArrivals, siteTexts = {}}: Props) {
         />
       </section>
 
-      <ProductSection title="Новинки в продаже" items={newArrivals} />
+      <ProductSection title={sectionTitle} items={newArrivals} />
 
       <section className={`${styles.container} ${styles.promoBlock}`}>
         <div className={styles.promoHeader}>

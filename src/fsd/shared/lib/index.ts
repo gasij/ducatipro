@@ -13,7 +13,7 @@ export {
   ORDER_PROCESSING_FEE_EUR,
 } from './delivery';
 export type {DeliverySettings, DeliveryTier} from './delivery';
-export {getCurrentEurToRubRate} from './exchangeRate';
+export {getCurrentEurToRubRate, getRateMarkupPercent} from './exchangeRate';
 export {gsap, registerGsap, ScrollTrigger} from './gsap';
 export {
   convertPriceToRub,

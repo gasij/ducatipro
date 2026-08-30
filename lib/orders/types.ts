@@ -6,6 +6,7 @@ export type OrderItem = {
   product_sku: string;
   quantity: number;
   price: number | string;
+  date_created?: string;
 };
 
 export type CreateOrderInputItem = {

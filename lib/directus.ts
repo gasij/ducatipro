@@ -1,4 +1,4 @@
-import {createDirectus, createItem, readItem, rest, staticToken, updateItem} from '@directus/sdk';
+import {createDirectus, createItem, readItem, readItems, rest, staticToken, updateItem} from '@directus/sdk';
 import type {CreateOrderPayload, DirectusOrder, OrderItem} from './orders/types';
 import {getProduct, getProductArticle} from '@/src/fsd/entities/product';
 import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib/exchangeRate';
@@ -103,6 +103,48 @@ export async function getOrderFromDirectus(id: string) {
       fields: ['*', {items: ['*']}],
     }),
   );
+}
+
+/**
+ * Product ids from the most recent order line items, newest first and
+ * de-duplicated (a product ordered several times only counts once, at its
+ * most recent occurrence). Used to power the "Недавно заказанные" homepage
+ * section instead of a fixed "new arrivals" list.
+ */
+export async function getRecentlyOrderedProductIds(limit = 20): Promise<string[]> {
+  if (!isDirectusConfigured()) {
+    return [];
+  }
+
+  try {
+    const client = getClient();
+    const rows = await client.request(
+      readItems('order_items', {
+        fields: ['product_id', 'date_created'],
+        sort: ['-date_created'],
+        limit: 200,
+      }),
+    );
+
+    const seen = new Set<string>();
+    const ids: string[] = [];
+
+    for (const row of rows) {
+      const productId = row.product_id;
+      if (!productId || seen.has(productId)) {
+        continue;
+      }
+      seen.add(productId);
+      ids.push(productId);
+      if (ids.length >= limit) {
+        break;
+      }
+    }
+
+    return ids;
+  } catch {
+    return [];
+  }
 }
 
 export async function markOrderEmailSent(id: string) {

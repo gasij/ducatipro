@@ -30,6 +30,9 @@ export default function ProductView({product}: {product: Product}) {
   const [quantity, setQuantity] = useState(1);
   const [imageSrc, setImageSrc] = useState(product.image);
   const compatibleModels = product.models || [];
+  const galleryImages = [product.image, ...(product.gallery || [])].filter(
+    (url, index, all) => all.indexOf(url) === index,
+  );
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -114,6 +117,31 @@ export default function ProductView({product}: {product: Product}) {
 
       <div className={styles.summary}>
         <div className={styles.gallery}>
+          {galleryImages.length > 1 && (
+            <div className={styles.thumbnailRow}>
+              {galleryImages.map((url, index) => (
+                <button
+                  key={`${url}-${index}`}
+                  type="button"
+                  onClick={() => setImageSrc(url)}
+                  className={`${styles.thumbnailButton} ${
+                    imageSrc === url ? styles.thumbnailButtonActive : ''
+                  }`}
+                  aria-label={`Фото ${index + 1}`}
+                >
+                  <Image
+                    src={url}
+                    fill
+                    alt=""
+                    className={styles.thumbnailImage}
+                    sizes="72px"
+                    referrerPolicy="no-referrer"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className={styles.mainImageBox}>
             <Image
               src={imageSrc}

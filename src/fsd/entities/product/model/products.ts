@@ -33,6 +33,7 @@ export type Product = {
   models?: string[];
   description?: string;
   specs?: {label: string; value: string}[];
+  gallery?: string[];
 };
 
 type DirectusProduct = Record<string, unknown>;
@@ -231,6 +232,23 @@ function getAssetUrl(asset: unknown) {
   return undefined;
 }
 
+function getGalleryUrls(item: DirectusProduct): string[] {
+  const raw = item.products_gallery ?? item.gallery;
+
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  return raw
+    .map((entry) => {
+      if (entry && typeof entry === 'object' && 'directus_files_id' in entry) {
+        return getAssetUrl((entry as DirectusProduct).directus_files_id);
+      }
+      return getAssetUrl(entry);
+    })
+    .filter((url): url is string => Boolean(url));
+}
+
 function normalizeCategory(value?: string): Product['category'] | undefined {
   const category = value?.trim().toLowerCase();
 
@@ -370,6 +388,7 @@ function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: nu
     ]),
     description: getString(item, ['description', 'full_description']),
     specs,
+    gallery: getGalleryUrls(item),
   };
 }
 
@@ -503,7 +522,10 @@ async function getProductByIdentifier(identifier: string, eurToRubRate: number):
   }
 
   const url = new URL(`/items/${collection}`, directusUrl);
-  url.searchParams.set('fields', '*,primary_category.*,categories.*');
+  url.searchParams.set(
+    'fields',
+    '*,primary_category.*,categories.*,products_gallery.directus_files_id.*',
+  );
   url.searchParams.set('filter', JSON.stringify({_or: orConditions}));
   url.searchParams.set('limit', '1');
 
