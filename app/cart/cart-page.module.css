@@ -38,7 +38,7 @@
 
 .cartItem {
     display: grid;
-    grid-template-columns: 84px minmax(0, 1fr) auto auto auto 24px;
+    grid-template-columns: 84px minmax(0, 1fr) 110px 90px 110px 24px;
     gap: 1rem;
     align-items: center;
     min-height: 66px;
@@ -79,10 +79,12 @@
 .unitPrice {
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 0.1rem;
     color: #333333;
     font-size: 1rem;
     font-weight: 500;
+    text-align: right;
     white-space: nowrap;
 }
 
@@ -125,10 +127,12 @@
 .lineTotal {
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 0.1rem;
     color: #333333;
     font-size: 1.05rem;
     font-weight: 700;
+    text-align: right;
     white-space: nowrap;
 }
 
@@ -486,6 +490,8 @@
     .unitPrice {
         grid-column: 2;
         grid-row: 2;
+        align-items: flex-start;
+        text-align: left;
     }
 
     .quantity {
@@ -497,6 +503,8 @@
     .lineTotal {
         grid-column: 2;
         grid-row: 4;
+        align-items: flex-start;
+        text-align: left;
     }
 
     .removeButton {
