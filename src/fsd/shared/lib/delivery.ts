@@ -1,5 +1,23 @@
 export const ORDER_PROCESSING_FEE_EUR = 15;
 
+const DELIVERY_WINDOW_MIN_DAYS = 28;
+const DELIVERY_WINDOW_MAX_DAYS = 42;
+
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+export function getExpectedDeliveryDateRange() {
+  const formatter = new Intl.DateTimeFormat('ru-RU', {day: 'numeric', month: 'long'});
+  const now = new Date();
+  const from = formatter.format(addDays(now, DELIVERY_WINDOW_MIN_DAYS));
+  const to = formatter.format(addDays(now, DELIVERY_WINDOW_MAX_DAYS));
+
+  return `${from} - ${to}`;
+}
+
 const DELIVERY_TIERS_COLLECTION = 'delivery_tiers';
 const DELIVERY_SETTINGS_COLLECTION = 'delivery_settings';
 const DELIVERY_CACHE_SECONDS = 60;

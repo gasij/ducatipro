@@ -3,6 +3,8 @@
 import {useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {Truck} from 'lucide-react';
+import {getExpectedDeliveryDateRange} from '@/src/fsd/shared/lib';
 import {getProductHref, type Product} from '../model/products';
 import styles from './ProductCard.module.css';
 
@@ -32,6 +34,7 @@ export default function ProductCard({
 >) {
   const href = getProductHref({id, sku, title});
   const [imageSrc, setImageSrc] = useState(image);
+  const expectedDeliveryDate = getExpectedDeliveryDateRange();
   const titleWithArticle =
     sku && !title.toUpperCase().includes(sku.toUpperCase()) ? `${sku} ${title}` : title;
 
@@ -66,6 +69,11 @@ export default function ProductCard({
               <span className={styles.price}>{priceFormatted}</span>
               {priceRubFormatted && <span className={styles.priceRub}>{priceRubFormatted}</span>}
             </div>
+          </div>
+
+          <div className={styles.deliveryNotice}>
+            <Truck className={styles.deliveryIcon} />
+            <span>Доставка: {expectedDeliveryDate}</span>
           </div>
         </div>
       </Link>

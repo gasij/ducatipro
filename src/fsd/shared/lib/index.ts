@@ -10,6 +10,7 @@ export {
   calculateDeliveryPriceEur,
   getDeliverySettings,
   getDeliveryTiers,
+  getExpectedDeliveryDateRange,
   ORDER_PROCESSING_FEE_EUR,
 } from './delivery';
 export type {DeliverySettings, DeliveryTier} from './delivery';

@@ -11,6 +11,7 @@ import {
   calculateDeliveryPriceEur,
   formatEurPrice,
   formatRubHint,
+  getExpectedDeliveryDateRange,
   notifyCartUpdated,
   ORDER_PROCESSING_FEE_EUR,
 } from '@/src/fsd/shared/lib';
@@ -21,24 +22,6 @@ const DELIVERY_METHOD = 'EMS / СДЭК';
 const PAYMENT_METHOD = 'Универсальный платеж';
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
-// Matches the "Доставка: 4-6 недель" note shown on the product page.
-const DELIVERY_WINDOW_MIN_DAYS = 28;
-const DELIVERY_WINDOW_MAX_DAYS = 42;
-
-function addDays(date: Date, days: number) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
-function getExpectedDeliveryDateRange() {
-  const formatter = new Intl.DateTimeFormat('ru-RU', {day: 'numeric', month: 'long'});
-  const now = new Date();
-  const from = formatter.format(addDays(now, DELIVERY_WINDOW_MIN_DAYS));
-  const to = formatter.format(addDays(now, DELIVERY_WINDOW_MAX_DAYS));
-
-  return `${from} - ${to}`;
-}
 // The pixel offset `.summaryInner` tries to stick to, mimicking what
 // `position: sticky; top: 11.5rem` would do — must clear the sticky header's
 // height (~174px) so the sidebar's top never renders underneath it.

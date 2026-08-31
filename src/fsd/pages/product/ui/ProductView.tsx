@@ -8,6 +8,7 @@ import {Bike, ChevronRight, Heart, Star, Truck} from 'lucide-react';
 import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {
   CART_STORAGE_KEY,
+  getExpectedDeliveryDateRange,
   gsap,
   notifyCartUpdated,
   registerGsap,
@@ -25,6 +26,7 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
 };
 
 export default function ProductView({product}: {product: Product}) {
+  const expectedDeliveryDate = getExpectedDeliveryDateRange();
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
@@ -226,7 +228,7 @@ export default function ProductView({product}: {product: Product}) {
 
             <div className={styles.deliveryNotice}>
               <Truck className={styles.deliveryIcon} />
-              <span>Доставка: 4-6 недель</span>
+              <span>Ожидаемая дата доставки: {expectedDeliveryDate}</span>
             </div>
 
             <div className={styles.summaryDescriptionCard}>
