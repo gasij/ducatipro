@@ -18,6 +18,7 @@ import styles from './Header.module.css';
 
 const TICKER_TEXT_FALLBACK =
   'Весь экип (шлема, куртки, штаны, перчи, боты, защиты и все что угодно), а также повседневка в полном ассортименте в любом европейском магазине за нашу символическую комиссию 10%';
+const TICKER_TEXT_COLOR_FALLBACK = '#e30613';
 
 const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
 const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
@@ -25,6 +26,7 @@ const CONSUMABLES_URL = 'https://ducatiparts.pro/collection/consumables';
 
 export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
   const tickerText = pickSiteText(siteTexts, 'header.ticker_text', TICKER_TEXT_FALLBACK);
+  const tickerTextColor = pickSiteText(siteTexts, 'header.ticker_text_color', TICKER_TEXT_COLOR_FALLBACK);
   const navLinks = [
     {
       href: pickSiteTextUrl(siteTexts, 'header.nav_catalog', CATALOG_URL),
@@ -319,7 +321,7 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
         </form>
       </div>
 
-      <div className={styles.ticker}>
+      <div className={styles.ticker} style={{color: tickerTextColor}}>
         <div ref={tickerRef} className={styles.tickerViewport}>
           <div className={styles.tickerTrack}>
             <div className={styles.tickerContent}>
