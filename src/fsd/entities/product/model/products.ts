@@ -333,10 +333,12 @@ function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: nu
   const isNew = getBoolean(item, ['isNew', 'is_new']);
   const isDiscounted = getBoolean(item, ['isDiscounted', 'is_discounted']);
   const isOutlet = getBoolean(item, ['isOutlet', 'is_outlet']);
+  const gallery = getGalleryUrls(item);
   const image =
     getAssetUrl(item.image) ||
     getAssetUrl(item.main_image) ||
     getAssetUrl(item.photo) ||
+    gallery[0] ||
     DEFAULT_PRODUCT_IMAGE;
   const specs = getSpecs(item);
   const brand =
@@ -388,7 +390,7 @@ function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: nu
     ]),
     description: getString(item, ['description', 'full_description']),
     specs,
-    gallery: getGalleryUrls(item),
+    gallery,
   };
 }
 
@@ -513,10 +515,14 @@ async function getProductByIdentifier(identifier: string, eurToRubRate: number):
     return null;
   }
 
-  const orConditions: Array<Record<string, unknown>> = [
-    {sku: {_eq: identifier}},
-    {slug: {_eq: identifier}},
-  ];
+  // Directus has no case-insensitive equality operator, and article numbers are
+  // stored uppercase — so match the identifier as typed as well as fully
+  // upper/lower-cased, letting a lowercase-typed SKU still resolve exactly.
+  const identifierVariants = [...new Set([identifier, identifier.toUpperCase(), identifier.toLowerCase()])];
+  const orConditions: Array<Record<string, unknown>> = identifierVariants.flatMap((variant) => [
+    {sku: {_eq: variant}},
+    {slug: {_eq: variant}},
+  ]);
   if (isUuidLike(identifier)) {
     orConditions.push({id: {_eq: identifier}});
   }
@@ -571,6 +577,7 @@ async function getProductsFromDirectusPage(
     'compatible_motorcycles.*',
     'compatible_motorcycles.motorcycles_id.*',
     'compatible_motorcycles.motorcycle_id.*',
+    'products_gallery.directus_files_id.*',
   ].join(',');
 
   const fetchPage = async (fieldsParam: string) => {
@@ -583,7 +590,9 @@ async function getProductsFromDirectusPage(
     return fetchDirectusJson<{data?: DirectusProduct[]; meta?: {filter_count?: number}}>(url);
   };
 
-  const payload = (await fetchPage(fields)) || (await fetchPage('*,primary_category.*,categories.*'));
+  const payload =
+    (await fetchPage(fields)) ||
+    (await fetchPage('*,primary_category.*,categories.*,products_gallery.directus_files_id.*'));
   if (!payload) {
     return null;
   }

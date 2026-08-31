@@ -21,7 +21,24 @@ const DELIVERY_METHOD = 'EMS / СДЭК';
 const PAYMENT_METHOD = 'Универсальный платеж';
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
-const EXPECTED_DELIVERY_DATE = '29 июня - 13 июля';
+// Matches the "Доставка: 4-6 недель" note shown on the product page.
+const DELIVERY_WINDOW_MIN_DAYS = 28;
+const DELIVERY_WINDOW_MAX_DAYS = 42;
+
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function getExpectedDeliveryDateRange() {
+  const formatter = new Intl.DateTimeFormat('ru-RU', {day: 'numeric', month: 'long'});
+  const now = new Date();
+  const from = formatter.format(addDays(now, DELIVERY_WINDOW_MIN_DAYS));
+  const to = formatter.format(addDays(now, DELIVERY_WINDOW_MAX_DAYS));
+
+  return `${from} - ${to}`;
+}
 // The pixel offset `.summaryInner` tries to stick to, mimicking what
 // `position: sticky; top: 11.5rem` would do — must clear the sticky header's
 // height (~174px) so the sidebar's top never renders underneath it.
@@ -40,6 +57,7 @@ type Props = {
 };
 
 export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMarkupPercent}: Props) {
+  const expectedDeliveryDate = getExpectedDeliveryDateRange();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -148,7 +166,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
       `Фикс. сбор за обработку заказа: ${ORDER_PROCESSING_FEE}`,
       `Доставка EMS: €${deliveryPriceEur} (вес: ${totalWeightKg} кг)`,
       `Итоговая цена без доставки EMS: ${formatEurPrice(totalWithProcessingFee)} (${formatRubHint(totalWithProcessingFee, eurToRubRate)})`,
-      `Ожидаемая дата доставки: ${EXPECTED_DELIVERY_DATE}`,
+      `Ожидаемая дата доставки: ${expectedDeliveryDate}`,
     ]
       .filter(Boolean)
       .join('\n');
@@ -433,7 +451,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
 
           <div className={styles.deliveryInfo}>
             <p>Метод доставки: {DELIVERY_METHOD}</p>
-            <p>Ожидаемая дата доставки: {EXPECTED_DELIVERY_DATE}</p>
+            <p>Ожидаемая дата доставки: {expectedDeliveryDate}</p>
             <div className={styles.totalRows}>
               <div className={styles.totalRow}>
                 <span>Сумма товаров:</span>
