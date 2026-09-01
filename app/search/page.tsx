@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import {ProductCard, getProductArticle, getProductHref, getProducts, type Product} from '@/src/fsd/entities/product';
+import {ProductCard, getProduct, getProductHref, type Product} from '@/src/fsd/entities/product';
 import styles from './search-page.module.css';
 
 type Props = {
@@ -12,13 +12,13 @@ function getRequestedArticles(params?: Record<string, string | string[] | undefi
   const seen = new Set<string>();
 
   return articles
-    .map((article) => article.trim())
+    .map((article) => decodeURIComponent(article).trim())
     .filter((article) => {
       if (!article) {
         return false;
       }
 
-      const normalized = normalizeLookupValue(article);
+      const normalized = article.toLowerCase();
       if (seen.has(normalized)) {
         return false;
       }
@@ -28,27 +28,18 @@ function getRequestedArticles(params?: Record<string, string | string[] | undefi
     });
 }
 
-function normalizeLookupValue(value: string) {
-  return decodeURIComponent(value).trim().toLowerCase();
-}
-
-function findProduct(products: Product[], article: string) {
-  const normalizedArticle = normalizeLookupValue(article);
-
-  return products.find((product) =>
-    [product.id, product.sku, product.slug, getProductArticle(product)]
-      .filter((value): value is string => Boolean(value))
-      .some((value) => normalizeLookupValue(value) === normalizedArticle),
-  );
-}
-
 export default async function SearchPage({searchParams}: Props) {
   const params = await searchParams;
   const requestedArticles = getRequestedArticles(params);
-  const products = await getProducts();
-  const matches = requestedArticles.map((article) => ({
+  // Resolve each article directly by id/sku/slug — a bulk `getProducts()` list
+  // is capped to a page of the catalog, so an article outside that page
+  // would otherwise show up as "not found".
+  const resolvedProducts = await Promise.all(
+    requestedArticles.map((article) => getProduct(article).catch(() => undefined)),
+  );
+  const matches = requestedArticles.map((article, index) => ({
     article,
-    product: findProduct(products, article),
+    product: resolvedProducts[index],
   }));
   const foundProducts = matches
     .map((match) => match.product)
@@ -71,7 +62,7 @@ export default async function SearchPage({searchParams}: Props) {
       {foundProducts.length > 0 ? (
         <div className={styles.grid}>
           {foundProducts.map((product) => (
-            <ProductCard key={product.id} {...product} />
+            <ProductCard key={product.id} {...product} showAddToCart />
           ))}
         </div>
       ) : (

@@ -1,4 +1,5 @@
 export {
+  addToStoredCart,
   CART_STORAGE_KEY,
   CART_UPDATED_EVENT,
   getStoredCartQuantity,

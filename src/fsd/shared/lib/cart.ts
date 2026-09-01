@@ -43,6 +43,20 @@ export function getStoredCartQuantity() {
   return readStoredCart().reduce((sum, item) => sum + item.quantity, 0);
 }
 
+export function addToStoredCart(productId: string, quantity = 1) {
+  const cart = readStoredCart();
+  const existing = cart.find((item) => item.product_id === productId);
+
+  if (existing) {
+    existing.quantity = Math.min(existing.quantity + quantity, 99);
+  } else {
+    cart.push({product_id: productId, quantity});
+  }
+
+  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  notifyCartUpdated();
+}
+
 export function notifyCartUpdated() {
   window.dispatchEvent(new Event(CART_UPDATED_EVENT));
 }

@@ -7,15 +7,13 @@ import {useRouter} from 'next/navigation';
 import {Bike, ChevronRight, Heart, Star, Truck} from 'lucide-react';
 import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {
-  CART_STORAGE_KEY,
+  addToStoredCart,
   getExpectedDeliveryDateRange,
   gsap,
-  notifyCartUpdated,
   pickSiteText,
   recordRecentlyViewed,
   registerGsap,
   type SiteTextsMap,
-  type StoredCartItem,
 } from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
 
@@ -105,24 +103,7 @@ export default function ProductView({product, siteTexts = {}}: Props) {
       : product.title;
 
   function addToCart() {
-    const rawCart = window.localStorage.getItem(CART_STORAGE_KEY);
-    let cart: StoredCartItem[] = [];
-
-    try {
-      cart = rawCart ? (JSON.parse(rawCart) as StoredCartItem[]) : [];
-    } catch {
-      cart = [];
-    }
-    const existing = cart.find((item) => item.product_id === product.id);
-
-    if (existing) {
-      existing.quantity = Math.min(existing.quantity + quantity, 99);
-    } else {
-      cart.push({product_id: product.id, quantity});
-    }
-
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-    notifyCartUpdated();
+    addToStoredCart(product.id, quantity);
     router.push('/cart');
   }
 

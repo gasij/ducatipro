@@ -1,14 +1,30 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, type MouseEvent} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {Bike, Truck} from 'lucide-react';
-import {getExpectedDeliveryDateRange} from '@/src/fsd/shared/lib';
+import {Bike, Check, Plus, Truck} from 'lucide-react';
+import {addToStoredCart, getExpectedDeliveryDateRange} from '@/src/fsd/shared/lib';
 import {getProductHref, type Product} from '../model/products';
 import styles from './ProductCard.module.css';
 
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
+
+type Props = Pick<
+  Product,
+  | 'id'
+  | 'sku'
+  | 'image'
+  | 'title'
+  | 'desc'
+  | 'priceFormatted'
+  | 'priceRubFormatted'
+  | 'oldPrice'
+  | 'discountBadge'
+  | 'models'
+> & {
+  showAddToCart?: boolean;
+};
 
 export default function ProductCard({
   id,
@@ -21,25 +37,21 @@ export default function ProductCard({
   image,
   sku,
   models,
-}: Pick<
-  Product,
-  | 'id'
-  | 'sku'
-  | 'image'
-  | 'title'
-  | 'desc'
-  | 'priceFormatted'
-  | 'priceRubFormatted'
-  | 'oldPrice'
-  | 'discountBadge'
-  | 'models'
->) {
+  showAddToCart = false,
+}: Props) {
   const href = getProductHref({id, sku, title});
   const [imageSrc, setImageSrc] = useState(image);
+  const [added, setAdded] = useState(false);
   const expectedDeliveryDate = getExpectedDeliveryDateRange();
   const modelsCount = models?.length ?? 0;
   const titleWithArticle =
     sku && !title.toUpperCase().includes(sku.toUpperCase()) ? `${sku} ${title}` : title;
+
+  function handleAddToCart(event: MouseEvent) {
+    event.preventDefault();
+    addToStoredCart(id);
+    setAdded(true);
+  }
 
   return (
     <article className={styles.card}>
@@ -89,6 +101,20 @@ export default function ProductCard({
           )}
         </div>
       </Link>
+
+      {showAddToCart && (
+        <button type="button" onClick={handleAddToCart} className={styles.addToCartButton}>
+          {added ? (
+            <>
+              <Check className={styles.addToCartIcon} />В корзине
+            </>
+          ) : (
+            <>
+              <Plus className={styles.addToCartIcon} />В корзину
+            </>
+          )}
+        </button>
+      )}
     </article>
   );
 }
