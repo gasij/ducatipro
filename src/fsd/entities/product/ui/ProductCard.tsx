@@ -3,8 +3,8 @@
 import {useState, type MouseEvent} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {Bike, Check, Plus, Truck} from 'lucide-react';
-import {addToStoredCart, getExpectedDeliveryDateRange} from '@/src/fsd/shared/lib';
+import {Check, Plus} from 'lucide-react';
+import {addToStoredCart} from '@/src/fsd/shared/lib';
 import {getProductHref, type Product} from '../model/products';
 import styles from './ProductCard.module.css';
 
@@ -21,7 +21,6 @@ type Props = Pick<
   | 'priceRubFormatted'
   | 'oldPrice'
   | 'discountBadge'
-  | 'models'
 > & {
   showAddToCart?: boolean;
 };
@@ -36,14 +35,11 @@ export default function ProductCard({
   discountBadge,
   image,
   sku,
-  models,
   showAddToCart = false,
 }: Props) {
   const href = getProductHref({id, sku, title});
   const [imageSrc, setImageSrc] = useState(image);
   const [added, setAdded] = useState(false);
-  const expectedDeliveryDate = getExpectedDeliveryDateRange();
-  const modelsCount = models?.length ?? 0;
   const titleWithArticle =
     sku && !title.toUpperCase().includes(sku.toUpperCase()) ? `${sku} ${title}` : title;
 
@@ -85,20 +81,6 @@ export default function ProductCard({
               {priceRubFormatted && <span className={styles.priceRub}>{priceRubFormatted}</span>}
             </div>
           </div>
-
-          <div className={styles.deliveryNotice}>
-            <Truck className={styles.deliveryIcon} />
-            <span>Доставка: {expectedDeliveryDate}</span>
-          </div>
-
-          {modelsCount > 0 && (
-            <div className={styles.deliveryNotice}>
-              <Bike className={styles.deliveryIcon} />
-              <span>
-                Подходит для {modelsCount} {modelsCount === 1 ? 'модели' : 'моделей'} Ducati
-              </span>
-            </div>
-          )}
         </div>
       </Link>
 
