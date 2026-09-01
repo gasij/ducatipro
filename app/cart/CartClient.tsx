@@ -3,7 +3,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {Copy, Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
+import {ChevronLeft, ChevronRight, Copy, Minus, Plus, Share2, ShoppingCart, X} from 'lucide-react';
 import {getProductArticle, getProductHref, type Product} from '@/src/fsd/entities/product';
 import {
   calculateDeliveryPriceEur,
@@ -150,7 +150,7 @@ export default function CartClient({
   const total = Math.max(subtotal - discountAmount, 0) + processingFeeEur + deliveryPriceEur;
   const lineProductIds = useMemo(() => new Set(lines.map((line) => line.product.id)), [lines]);
   const recentItems = useMemo(() => {
-    const viewed = recentlyViewedProducts.filter((product) => !lineProductIds.has(product.id)).slice(0, 2);
+    const viewed = recentlyViewedProducts.filter((product) => !lineProductIds.has(product.id));
 
     if (viewed.length > 0) {
       return viewed;
@@ -158,6 +158,11 @@ export default function CartClient({
 
     return products.filter((product) => !lineProductIds.has(product.id)).slice(0, 2);
   }, [products, recentlyViewedProducts, lineProductIds]);
+  const recentGridRef = useRef<HTMLDivElement>(null);
+
+  function scrollRecentItems(direction: -1 | 1) {
+    recentGridRef.current?.scrollBy({left: direction * 320, behavior: 'smooth'});
+  }
   const checkoutHref = lines.length > 0
     ? `/checkout?items=${encodeURIComponent(
         JSON.stringify(
@@ -501,8 +506,30 @@ export default function CartClient({
           )}
 
           <div className={styles.recent}>
-            <h2 className={styles.sectionTitle}>{recentTitle}</h2>
-            <div className={styles.recentGrid}>
+            <div className={styles.recentHeader}>
+              <h2 className={styles.sectionTitle}>{recentTitle}</h2>
+              {recentItems.length > 2 && (
+                <div className={styles.recentControls}>
+                  <button
+                    type="button"
+                    onClick={() => scrollRecentItems(-1)}
+                    className={styles.recentControl}
+                    aria-label="Предыдущие товары"
+                  >
+                    <ChevronLeft className={styles.recentControlIcon} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollRecentItems(1)}
+                    className={styles.recentControl}
+                    aria-label="Следующие товары"
+                  >
+                    <ChevronRight className={styles.recentControlIcon} />
+                  </button>
+                </div>
+              )}
+            </div>
+            <div ref={recentGridRef} className={styles.recentGrid}>
               {recentItems.map((product) => (
                 <Link key={product.id} href={getProductHref(product)} className={styles.recentCard}>
                   <div className={styles.recentImageBox}>

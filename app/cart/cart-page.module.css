@@ -219,19 +219,60 @@
     margin-top: 9.6rem;
 }
 
-.sectionTitle {
+.recentHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     margin-bottom: 1.35rem;
 }
 
+.recentControls {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.recentControl {
+    display: flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 4px;
+    background: #f3f4f6;
+    color: #4b5563;
+    transition: background-color 160ms ease, color 160ms ease, transform 180ms ease;
+}
+
+.recentControl:hover {
+    background: #e5e7eb;
+    color: #111827;
+    transform: translateY(-1px);
+}
+
+.recentControlIcon {
+    width: 1rem;
+    height: 1rem;
+}
+
 .recentGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    display: flex;
+    align-items: stretch;
     gap: 1.25rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.75rem;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
 }
 
 .recentCard {
     display: flex;
     min-width: 0;
+    flex: 0 0 180px;
     flex-direction: column;
     border: 1px solid #e9e9e9;
     border-radius: 6px;
@@ -239,6 +280,7 @@
     padding: 0.9rem;
     color: #4b4b4f;
     text-decoration: none;
+    scroll-snap-align: start;
     transition: border-color 160ms ease, box-shadow 180ms ease;
 }
 
