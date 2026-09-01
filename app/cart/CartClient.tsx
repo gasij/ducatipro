@@ -13,6 +13,7 @@ import {
   notifyCartUpdated,
   ORDER_PROCESSING_FEE_EUR,
   pickSiteText,
+  readRecentlyViewedIds,
   type SiteTextsMap,
 } from '@/src/fsd/shared/lib';
 import emptyStyles from '@/app/empty-state.module.css';
@@ -96,6 +97,7 @@ export default function CartClient({
     '* Некоторые товары (их уже не менее половины) могут быть запрещены санкциями к отправке в РФ. В этом случае мы используем доставку через «третьи страны» в п.в. СДЭК в вашем городе. Возможные дополнительные расходы и сроки обсудим отдельно при согласовании доставки и оплаты.',
   );
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
   const [promoMessage, setPromoMessage] = useState('');
@@ -112,6 +114,33 @@ export default function CartClient({
     };
   }, []);
 
+  useEffect(() => {
+    const ids = readRecentlyViewedIds();
+
+    if (ids.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    fetch('/api/products/by-ids', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ids}),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: {items?: Product[]} | null) => {
+        if (!cancelled && data?.items) {
+          setRecentlyViewedProducts(data.items);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const quantity = lines.reduce((sum, line) => sum + line.quantity, 0);
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const discountAmount = appliedPromo ? Math.round((subtotal * appliedPromo.discount) / 100) : 0;
@@ -120,10 +149,15 @@ export default function CartClient({
   const processingFeeEur = lines.length > 0 ? ORDER_PROCESSING_FEE_EUR : 0;
   const total = Math.max(subtotal - discountAmount, 0) + processingFeeEur + deliveryPriceEur;
   const lineProductIds = useMemo(() => new Set(lines.map((line) => line.product.id)), [lines]);
-  const recentItems = useMemo(
-    () => products.filter((product) => !lineProductIds.has(product.id)).slice(0, 2),
-    [products, lineProductIds],
-  );
+  const recentItems = useMemo(() => {
+    const viewed = recentlyViewedProducts.filter((product) => !lineProductIds.has(product.id)).slice(0, 2);
+
+    if (viewed.length > 0) {
+      return viewed;
+    }
+
+    return products.filter((product) => !lineProductIds.has(product.id)).slice(0, 2);
+  }, [products, recentlyViewedProducts, lineProductIds]);
   const checkoutHref = lines.length > 0
     ? `/checkout?items=${encodeURIComponent(
         JSON.stringify(
@@ -136,12 +170,29 @@ export default function CartClient({
     : '/checkout';
 
   const resolveCartLines = useCallback(
-    (items: Array<{product_id: string; quantity: number}>) =>
-      items
-        .map((item) => {
-          const product = products.find((candidate) => candidate.id === item.product_id);
+    async (items: Array<{product_id: string; quantity: number}>): Promise<CartLine[]> => {
+      const validItems = items.filter((item) => item.quantity >= 1);
 
-          if (!product || item.quantity < 1) {
+      if (validItems.length === 0) {
+        return [];
+      }
+
+      // Resolve by id directly (not from `products`, which is capped to a
+      // page of the catalog) so a cart item outside that page still resolves.
+      const res = await fetch('/api/products/by-ids', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids: validItems.map((item) => item.product_id)}),
+      }).catch(() => null);
+
+      const data = res && res.ok ? ((await res.json()) as {items?: Product[]}) : null;
+      const productById = new Map((data?.items || []).map((product) => [product.id, product]));
+
+      return validItems
+        .map((item) => {
+          const product = productById.get(item.product_id);
+
+          if (!product) {
             return null;
           }
 
@@ -150,16 +201,18 @@ export default function CartClient({
             quantity: Math.min(Math.max(Math.floor(item.quantity), 1), 99),
           };
         })
-        .filter((item): item is CartLine => Boolean(item)),
-    [products],
+        .filter((item): item is CartLine => Boolean(item));
+    },
+    [],
   );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (sharedItems.length > 0) {
-        const nextLines = resolveCartLines(sharedItems);
-        setLines(nextLines);
-        persistLines(nextLines);
+        resolveCartLines(sharedItems).then((nextLines) => {
+          setLines(nextLines);
+          persistLines(nextLines);
+        });
         return;
       }
 
@@ -170,10 +223,11 @@ export default function CartClient({
 
       try {
         const cart = JSON.parse(rawCart) as Array<{product_id: string; quantity: number}>;
-        const nextLines = resolveCartLines(cart);
 
-        setLines(nextLines);
-        notifyCartUpdated();
+        resolveCartLines(cart).then((nextLines) => {
+          setLines(nextLines);
+          notifyCartUpdated();
+        });
       } catch {
         window.localStorage.removeItem(CART_STORAGE_KEY);
         notifyCartUpdated();
@@ -181,7 +235,7 @@ export default function CartClient({
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [products, resolveCartLines, sharedItems]);
+  }, [resolveCartLines, sharedItems]);
 
   function persistLines(nextLines: CartLine[]) {
     if (nextLines.length === 0) {

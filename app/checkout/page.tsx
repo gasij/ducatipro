@@ -1,4 +1,4 @@
-import {getProducts} from '@/src/fsd/entities/product';
+import {getProduct, getProducts, type Product} from '@/src/fsd/entities/product';
 import {getCurrentEurToRubRate, getRateMarkupPercent, getSiteTexts} from '@/src/fsd/shared/lib';
 import CheckoutForm from './CheckoutForm';
 import styles from './checkout-page.module.css';
@@ -57,12 +57,17 @@ export default async function CheckoutPage({
     getSiteTexts(),
   ]);
   const cartItems = parseCartItems(params?.items);
+  // Resolve each cart item directly by id — `products` below is capped to a
+  // page of the catalog, so a product outside that page still resolves.
+  const resolvedProducts = await Promise.all(
+    cartItems.map((item) => getProduct(item.product_id).catch(() => undefined)),
+  );
   const resolvedItems = cartItems
-    .map((item) => {
-      const product = products.find((candidate) => candidate.id === item.product_id);
+    .map((item, index) => {
+      const product = resolvedProducts[index];
       return product ? {product, quantity: item.quantity} : null;
     })
-    .filter((item): item is {product: (typeof products)[number]; quantity: number} => Boolean(item));
+    .filter((item): item is {product: Product; quantity: number} => Boolean(item));
   const fallbackItem = products.find((product) => product.id === '1') ?? products[0];
   const checkoutItems =
     resolvedItems.length > 0

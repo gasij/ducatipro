@@ -12,6 +12,7 @@ import {
   gsap,
   notifyCartUpdated,
   pickSiteText,
+  recordRecentlyViewed,
   registerGsap,
   type SiteTextsMap,
   type StoredCartItem,
@@ -49,6 +50,10 @@ export default function ProductView({product, siteTexts = {}}: Props) {
   const galleryImages = [product.image, ...(product.gallery || [])].filter(
     (url, index, all) => all.indexOf(url) === index,
   );
+
+  useEffect(() => {
+    recordRecentlyViewed(product.id);
+  }, [product.id]);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
