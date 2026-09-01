@@ -1,7 +1,7 @@
 import {getProducts, hasProductCategory} from '@/src/fsd/entities/product';
 import {getRecentlyOrderedProductIds} from '@/lib/directus';
 import {HomePage} from '@/src/fsd/pages/home';
-import {getSiteTexts} from '@/src/fsd/shared/lib';
+import {getSiteTexts, pickSiteText} from '@/src/fsd/shared/lib';
 
 const HOME_SECTION_SIZE = 20;
 // Fall back to new arrivals only when there's no order history at all yet.
@@ -19,14 +19,14 @@ export default async function Home() {
     .map((id) => productById.get(id))
     .filter((product): product is (typeof products)[number] => Boolean(product));
 
-  let sectionTitle = 'Недавно заказанные';
+  let sectionTitle = pickSiteText(siteTexts, 'home.recently_ordered_title', 'Недавно заказанные');
   let sectionItems = recentlyOrdered;
 
   if (recentlyOrdered.length < MIN_RECENTLY_ORDERED) {
     const newArrivals = products.filter((product) => hasProductCategory(product, 'new'));
     const uncategorized = products.filter((product) => hasProductCategory(product, 'unsorted'));
 
-    sectionTitle = 'Новинки в продаже';
+    sectionTitle = pickSiteText(siteTexts, 'home.new_arrivals_title', 'Новинки в продаже');
     sectionItems = (newArrivals.length > 0 ? newArrivals : uncategorized).slice(0, HOME_SECTION_SIZE);
   }
 

@@ -20,6 +20,12 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
     'home.italy_coffee_promo',
     'Итальянский #кофевкофр в посылку при заказе из Италии гарантирован',
   );
+  const feedbackTitle = pickSiteText(siteTexts, 'home.feedback_title', 'Обратная связь');
+  const agreementText = pickSiteText(
+    siteTexts,
+    'home.agreement_text',
+    'Настоящим подтверждаю, что я ознакомлен и согласен с условиями',
+  );
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -143,7 +149,7 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
       </section>
 
       <section className={styles.feedback}>
-        <h2 className={styles.feedbackTitle}>Обратная связь</h2>
+        <h2 className={styles.feedbackTitle}>{feedbackTitle}</h2>
         <form className={styles.contactForm}>
           <div className={styles.formRow}>
             <input type="text" placeholder="Имя*" className={styles.field} />
@@ -160,7 +166,7 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
               <Check className={styles.checkboxIcon} />
             </div>
             <span className={styles.agreementText}>
-              Настоящим подтверждаю, что я ознакомлен и согласен с условиями{' '}
+              {agreementText}{' '}
               <Link href="/offer" className={styles.agreementLink}>
                 оферты и политики конфиденциальности
               </Link>{' '}

@@ -14,6 +14,8 @@ import {
   getExpectedDeliveryDateRange,
   notifyCartUpdated,
   ORDER_PROCESSING_FEE_EUR,
+  pickSiteText,
+  type SiteTextsMap,
 } from '@/src/fsd/shared/lib';
 import styles from './checkout-page.module.css';
 
@@ -37,10 +39,68 @@ type Props = {
   checkoutItems: Array<{product: Product; quantity: number}>;
   eurToRubRate: number;
   rateMarkupPercent: number;
+  siteTexts?: SiteTextsMap;
 };
 
-export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMarkupPercent}: Props) {
+export default function CheckoutForm({
+  items,
+  checkoutItems,
+  eurToRubRate,
+  rateMarkupPercent,
+  siteTexts = {},
+}: Props) {
   const expectedDeliveryDate = getExpectedDeliveryDateRange();
+  const recipientSectionTitle = pickSiteText(
+    siteTexts,
+    'checkout.recipient_section_title',
+    'Получатель и адрес доставки',
+  );
+  const contactHint = pickSiteText(
+    siteTexts,
+    'checkout.contact_hint',
+    'Укажите пожалуйста в комментарии к заказу, в каком мессенджере мы можем с вами связаться для оперативного общения. Если используете ТГ, напишите по возможности имя пользователя!?',
+  );
+  const paymentSectionTitle = pickSiteText(siteTexts, 'checkout.payment_section_title', 'Варианты оплаты');
+  const paymentTextLine1 = pickSiteText(
+    siteTexts,
+    'checkout.payment_text_line1',
+    'К сожалению банковские переводы из России в Европу временно заблокированы, но не беспокойтесь. Варианты оплаты есть.',
+  );
+  const paymentTextLine2 = pickSiteText(
+    siteTexts,
+    'checkout.payment_text_line2',
+    'Мы принимаем оплаты в Евро на расчетный счет свифт-переводом, по ссылке или PayPal (если у вас есть счет за границей).',
+  );
+  const paymentTextLine3Prefix = pickSiteText(
+    siteTexts,
+    'checkout.payment_text_line3_prefix',
+    'Также принимаем тезерами на кошелек или рублями по курсу ЦБ +',
+  );
+  const paymentTextLine4 = pickSiteText(
+    siteTexts,
+    'checkout.payment_text_line4',
+    'Завершите оформление заявки в корзине, подтвердите заказ, после чего мы свяжемся с вами и обсудим дальнейшие действия',
+  );
+  const successTitle = pickSiteText(
+    siteTexts,
+    'checkout.success_title',
+    'Спасибо за ваш заказ на ducatiparts.ru',
+  );
+  const successTextLine1 = pickSiteText(
+    siteTexts,
+    'checkout.success_text_line1',
+    'Ваш заказ будет принят в обработку только после оплаты.',
+  );
+  const successTextLine2 = pickSiteText(
+    siteTexts,
+    'checkout.success_text_line2',
+    'В ближайшее время мы свяжемся с вами для обсуждения дальнейших действий.',
+  );
+  const successFooter = pickSiteText(
+    siteTexts,
+    'checkout.success_footer',
+    'Благодарим вас за интерес к товарам в нашем интернет-магазине! Мы обязательно уведомим вас об изменении статуса вашего заказа.',
+  );
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -199,7 +259,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
 
     return (
       <div className={styles.success}>
-        <h1 className={styles.successTitle}>Спасибо за ваш заказ на ducatiparts.ru</h1>
+        <h1 className={styles.successTitle}>{successTitle}</h1>
         <h2 className={styles.successSubtitle}>Информация о заказе</h2>
 
         <div className={styles.successInfoGrid}>
@@ -220,10 +280,8 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
           </div>
         </div>
 
-        <p className={styles.successText}>Ваш заказ будет принят в обработку только после оплаты.</p>
-        <p className={styles.successText}>
-          В ближайшее время мы свяжемся с вами для обсуждения дальнейших действий.
-        </p>
+        <p className={styles.successText}>{successTextLine1}</p>
+        <p className={styles.successText}>{successTextLine2}</p>
 
         <table className={styles.successTable}>
           <thead>
@@ -259,8 +317,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
         </table>
 
         <p className={styles.successFooter}>
-          Благодарим вас за интерес к товарам в нашем интернет-магазине! Мы обязательно уведомим вас
-          об изменении статуса вашего заказа.
+          {successFooter}
           <br />
           Если у вас возникли вопросы, пишите нам в сообщении к заказу в кабинете или на{' '}
           orders@ducatiparts.ru
@@ -277,7 +334,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
     <form className={styles.checkout} onSubmit={handleSubmit} ref={checkoutRootRef}>
       <div className={styles.formColumn}>
         <section className={styles.recipientBlock}>
-          <h1 className={styles.sectionTitle}>Получатель и адрес доставки</h1>
+          <h1 className={styles.sectionTitle}>{recipientSectionTitle}</h1>
           <p className={styles.requiredHint}>* — обязательные поля</p>
           <div className={styles.fieldGrid}>
             <input
@@ -342,11 +399,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
             />
           </div>
 
-          <p className={styles.contactHint}>
-            Укажите пожалуйста в комментарии к заказу, в каком мессенджере мы можем с вами
-            связаться для оперативного общения. Если используете ТГ, напишите по возможности имя
-            пользователя!?
-          </p>
+          <p className={styles.contactHint}>{contactHint}</p>
 
           <textarea
             rows={4}
@@ -358,7 +411,7 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
         </section>
 
         <section className={styles.paymentBlock}>
-          <h2 className={styles.sectionTitle}>Варианты оплаты</h2>
+          <h2 className={styles.sectionTitle}>{paymentSectionTitle}</h2>
           <div className={styles.paymentChoice}>
             <span className={styles.radioCircle} />
             <span className={styles.paymentName}>{PAYMENT_METHOD}</span>
@@ -373,22 +426,13 @@ export default function CheckoutForm({items, checkoutItems, eurToRubRate, rateMa
             </span>
           </div>
           <div className={styles.paymentText}>
+            <p>{paymentTextLine1}</p>
+            <p>{paymentTextLine2}</p>
             <p>
-              К сожалению банковские переводы из России в Европу временно заблокированы, но не
-              беспокойтесь. Варианты оплаты есть.
-            </p>
-            <p>
-              Мы принимаем оплаты в Евро на расчетный счет свифт-переводом, по ссылке или PayPal
-              (если у вас есть счет за границей).
-            </p>
-            <p>
-              Также принимаем тезерами на кошелек или рублями по курсу ЦБ +
+              {paymentTextLine3Prefix}
               {Number.isInteger(rateMarkupPercent) ? rateMarkupPercent : rateMarkupPercent.toFixed(2)}%
             </p>
-            <p className={styles.greenText}>
-              Завершите оформление заявки в корзине, подтвердите заказ, после чего мы свяжемся с
-              вами и обсудим дальнейшие действия
-            </p>
+            <p className={styles.greenText}>{paymentTextLine4}</p>
           </div>
         </section>
 

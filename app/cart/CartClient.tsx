@@ -12,6 +12,8 @@ import {
   formatRubHint,
   notifyCartUpdated,
   ORDER_PROCESSING_FEE_EUR,
+  pickSiteText,
+  type SiteTextsMap,
 } from '@/src/fsd/shared/lib';
 import emptyStyles from '@/app/empty-state.module.css';
 import styles from './cart-page.module.css';
@@ -58,6 +60,7 @@ type Props = {
   products: Product[];
   sharedItems: Array<{product_id: string; quantity: number}>;
   eurToRubRate: number;
+  siteTexts?: SiteTextsMap;
 };
 
 const PROMO_CODES: Record<string, number> = {
@@ -65,7 +68,33 @@ const PROMO_CODES: Record<string, number> = {
   COFFEE: 5,
 };
 
-export default function CartClient({initialItem, products, sharedItems, eurToRubRate}: Props) {
+export default function CartClient({
+  initialItem,
+  products,
+  sharedItems,
+  eurToRubRate,
+  siteTexts = {},
+}: Props) {
+  const title = pickSiteText(siteTexts, 'cart.title', 'Корзина');
+  const recentTitle = pickSiteText(siteTexts, 'cart.recent_title', 'Ранее просмотренные');
+  const emptyTitle = pickSiteText(siteTexts, 'cart.empty_title', 'Корзина пуста');
+  const emptyDescription = pickSiteText(siteTexts, 'cart.empty_description', 'Товар удален из корзины.');
+  const emptyAction = pickSiteText(siteTexts, 'cart.empty_action', 'Вернуть товар');
+  const deliveryDisclaimerLine1 = pickSiteText(
+    siteTexts,
+    'cart.delivery_disclaimer_line1',
+    'Прямая доставка EMS в почтовое отделение.',
+  );
+  const deliveryDisclaimerLine2 = pickSiteText(
+    siteTexts,
+    'cart.delivery_disclaimer_line2',
+    'Общий срок доставки около 4 недель с момента оплаты.',
+  );
+  const deliveryDisclaimerNote = pickSiteText(
+    siteTexts,
+    'cart.delivery_disclaimer_note',
+    '* Некоторые товары (их уже не менее половины) могут быть запрещены санкциями к отправке в РФ. В этом случае мы используем доставку через «третьи страны» в п.в. СДЭК в вашем городе. Возможные дополнительные расходы и сроки обсудим отдельно при согласовании доставки и оплаты.',
+  );
   const [lines, setLines] = useState<CartLine[]>([]);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
@@ -309,7 +338,7 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
     <div className={styles.page}>
       <div className={styles.layout}>
         <main className={styles.mainColumn}>
-          <h1 className={styles.title}>Корзина</h1>
+          <h1 className={styles.title}>{title}</h1>
 
           {lines.length > 0 ? (
             <>
@@ -409,16 +438,16 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
           ) : (
             <div className={emptyStyles.page}>
               <ShoppingCart className={emptyStyles.icon} />
-              <h2 className={emptyStyles.title}>Корзина пуста</h2>
-              <p className={emptyStyles.description}>Товар удален из корзины.</p>
+              <h2 className={emptyStyles.title}>{emptyTitle}</h2>
+              <p className={emptyStyles.description}>{emptyDescription}</p>
               <button type="button" onClick={restoreItem} className={emptyStyles.action}>
-                Вернуть товар
+                {emptyAction}
               </button>
             </div>
           )}
 
           <div className={styles.recent}>
-            <h2 className={styles.sectionTitle}>Ранее просмотренные</h2>
+            <h2 className={styles.sectionTitle}>{recentTitle}</h2>
             <div className={styles.recentGrid}>
               {recentItems.map((product) => (
                 <Link key={product.id} href={getProductHref(product)} className={styles.recentCard}>
@@ -489,16 +518,11 @@ export default function CartClient({initialItem, products, sharedItems, eurToRub
 
             <div className={styles.deliveryDisclaimer}>
               <p>
-                Прямая доставка EMS в почтовое отделение.
+                {deliveryDisclaimerLine1}
                 <br />
-                Общий срок доставки около 4 недель с момента оплаты.
+                {deliveryDisclaimerLine2}
               </p>
-              <p className={styles.deliveryDisclaimerNote}>
-                * Некоторые товары (их уже не менее половины) могут быть запрещены санкциями к
-                отправке в РФ. В этом случае мы используем доставку через «третьи страны» в п.в.
-                СДЭК в вашем городе. Возможные дополнительные расходы и сроки обсудим отдельно при
-                согласовании доставки и оплаты.
-              </p>
+              <p className={styles.deliveryDisclaimerNote}>{deliveryDisclaimerNote}</p>
             </div>
 
             {lines.length > 0 ? (

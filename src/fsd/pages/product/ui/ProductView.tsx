@@ -11,7 +11,9 @@ import {
   getExpectedDeliveryDateRange,
   gsap,
   notifyCartUpdated,
+  pickSiteText,
   registerGsap,
+  type SiteTextsMap,
   type StoredCartItem,
 } from '@/src/fsd/shared/lib';
 import styles from './ProductView.module.css';
@@ -25,8 +27,20 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
   unsorted: 'Без сортировки',
 };
 
-export default function ProductView({product}: {product: Product}) {
+type Props = {
+  product: Product;
+  siteTexts?: SiteTextsMap;
+};
+
+export default function ProductView({product, siteTexts = {}}: Props) {
   const expectedDeliveryDate = getExpectedDeliveryDateRange();
+  const compatibilityTitle = pickSiteText(siteTexts, 'product.compatibility_title', 'Совместимость');
+  const compatibilityEmptyText = pickSiteText(
+    siteTexts,
+    'product.compatibility_empty_text',
+    'Совместимость с моделями не указана',
+  );
+  const descriptionTitle = pickSiteText(siteTexts, 'product.description_title', 'Описание');
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
@@ -232,7 +246,7 @@ export default function ProductView({product}: {product: Product}) {
             </div>
 
             <div className={styles.summaryDescriptionCard}>
-              <h2 className={styles.summaryDescriptionTitle}>Описание</h2>
+              <h2 className={styles.summaryDescriptionTitle}>{descriptionTitle}</h2>
               <dl className={styles.summaryDescriptionMeta}>
                 <div className={styles.summaryDescriptionMetaRow}>
                   <dt>Название</dt>
@@ -262,7 +276,7 @@ export default function ProductView({product}: {product: Product}) {
       <div className={styles.details}>
         <div className={styles.detailsInner}>
           <div className={`${styles.contentBlock} ${styles.descriptionBlock}`}>
-            <h3 className={styles.blockTitle}>Совместимость</h3>
+            <h3 className={styles.blockTitle}>{compatibilityTitle}</h3>
             <div className={styles.compatibilityBox}>
               <div className={styles.compatibilityHeader}>
                 <span className={styles.compatibilityIconWrap}>
@@ -272,7 +286,7 @@ export default function ProductView({product}: {product: Product}) {
                   <p className={styles.compatibilitySubtitle}>
                     {compatibleModels.length > 0
                       ? `Подходит для ${compatibleModels.length} ${compatibleModels.length === 1 ? 'модели' : 'моделей'} Ducati`
-                      : 'Совместимость с моделями не указана'}
+                      : compatibilityEmptyText}
                   </p>
                 </div>
               </div>

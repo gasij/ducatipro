@@ -1,5 +1,5 @@
 import {getProducts} from '@/src/fsd/entities/product';
-import {getCurrentEurToRubRate, getRateMarkupPercent} from '@/src/fsd/shared/lib';
+import {getCurrentEurToRubRate, getRateMarkupPercent, getSiteTexts} from '@/src/fsd/shared/lib';
 import CheckoutForm from './CheckoutForm';
 import styles from './checkout-page.module.css';
 
@@ -50,10 +50,11 @@ export default async function CheckoutPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const [products, eurToRubRate, rateMarkupPercent] = await Promise.all([
+  const [products, eurToRubRate, rateMarkupPercent, siteTexts] = await Promise.all([
     getProducts(),
     getCurrentEurToRubRate(),
     getRateMarkupPercent(),
+    getSiteTexts(),
   ]);
   const cartItems = parseCartItems(params?.items);
   const resolvedItems = cartItems
@@ -85,6 +86,7 @@ export default async function CheckoutPage({
         checkoutItems={checkoutItems}
         eurToRubRate={eurToRubRate}
         rateMarkupPercent={rateMarkupPercent}
+        siteTexts={siteTexts}
       />
     </div>
   );
