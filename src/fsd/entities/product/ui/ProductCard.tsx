@@ -3,7 +3,7 @@
 import {useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {Truck} from 'lucide-react';
+import {Bike, Truck} from 'lucide-react';
 import {getExpectedDeliveryDateRange} from '@/src/fsd/shared/lib';
 import {getProductHref, type Product} from '../model/products';
 import styles from './ProductCard.module.css';
@@ -20,6 +20,7 @@ export default function ProductCard({
   discountBadge,
   image,
   sku,
+  models,
 }: Pick<
   Product,
   | 'id'
@@ -31,10 +32,12 @@ export default function ProductCard({
   | 'priceRubFormatted'
   | 'oldPrice'
   | 'discountBadge'
+  | 'models'
 >) {
   const href = getProductHref({id, sku, title});
   const [imageSrc, setImageSrc] = useState(image);
   const expectedDeliveryDate = getExpectedDeliveryDateRange();
+  const modelsCount = models?.length ?? 0;
   const titleWithArticle =
     sku && !title.toUpperCase().includes(sku.toUpperCase()) ? `${sku} ${title}` : title;
 
@@ -75,6 +78,15 @@ export default function ProductCard({
             <Truck className={styles.deliveryIcon} />
             <span>Доставка: {expectedDeliveryDate}</span>
           </div>
+
+          {modelsCount > 0 && (
+            <div className={styles.deliveryNotice}>
+              <Bike className={styles.deliveryIcon} />
+              <span>
+                Подходит для {modelsCount} {modelsCount === 1 ? 'модели' : 'моделей'} Ducati
+              </span>
+            </div>
+          )}
         </div>
       </Link>
     </article>

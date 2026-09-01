@@ -52,6 +52,7 @@
   font-weight: 900;
   line-height: 1.15;
   letter-spacing: 0;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
   transition: color 160ms ease;
 }
@@ -185,6 +186,7 @@ a.sectionTitle:hover {
   font-size: 1.05rem;
   font-weight: 900;
   letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .contactForm {

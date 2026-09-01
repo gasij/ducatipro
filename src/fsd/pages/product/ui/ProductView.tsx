@@ -195,7 +195,7 @@ export default function ProductView({product}: {product: Product}) {
                     <span className={styles.priceRub}>{product.priceRubFormatted}</span>
                   )}
                 </div>
-                <span className={styles.priceNote}>Итоговая цена для заказа</span>
+                <span className={styles.priceNote}>Цена без учета доставки</span>
               </div>
               {product.discountBadge && (
                 <span className={styles.saleBadge}>{product.discountBadge}</span>
@@ -244,7 +244,7 @@ export default function ProductView({product}: {product: Product}) {
                 </div>
                 {product.brand && (
                   <div className={styles.summaryDescriptionMetaRow}>
-                    <dt>Бренд</dt>
+                    <dt>Брэнд</dt>
                     <dd>{product.brand}</dd>
                   </div>
                 )}

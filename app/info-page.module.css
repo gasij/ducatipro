@@ -40,6 +40,7 @@
   font-size: 1.05rem;
   font-weight: 900;
   line-height: 1.15;
+  text-transform: uppercase;
   letter-spacing: 0;
   overflow-wrap: anywhere;
 }

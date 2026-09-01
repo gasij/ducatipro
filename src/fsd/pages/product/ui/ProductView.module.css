@@ -352,7 +352,7 @@
     background: #000000;
     color: #ffffff;
     padding: 0 1.5rem;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 0;
     line-height: 1;
     text-align: center;
@@ -377,7 +377,7 @@
     gap: 0.5rem;
     color: var(--color-text);
     font-size: 0.875rem;
-    font-weight: 700;
+    font-weight: 400;
 }
 
 .deliveryIcon {
@@ -397,6 +397,7 @@
     color: var(--color-text);
     font-size: 0.875rem;
     font-weight: 900;
+    text-transform: uppercase;
 }
 
 .summaryDescriptionMeta {
@@ -420,7 +421,7 @@
 .summaryDescriptionMetaRow dd {
     margin: 0;
     color: var(--color-text);
-    font-weight: 600;
+    font-weight: 400;
     overflow-wrap: anywhere;
 }
 
@@ -609,6 +610,7 @@
     font-size: 1.25rem;
     font-weight: 900;
     letter-spacing: 0;
+    text-transform: uppercase;
 }
 
 .reviewTitle {
