@@ -46,10 +46,54 @@ function parseEurRateFromCbrXml(xml: string) {
   return Number.isFinite(nominal) && nominal > 0 && Number.isFinite(value) ? value / nominal : null;
 }
 
-/** Raw EUR→RUB rate from the Bank of Russia, cached for an hour; falls back to a static rate if unreachable. */
-async function getBaseCbrRate(): Promise<number> {
+function getDirectusHeaders() {
+  return process.env.DIRECTUS_TOKEN
+    ? {
+        Authorization: `Bearer ${process.env.DIRECTUS_TOKEN}`,
+      }
+    : undefined;
+}
+
+/** So the admin can see, in Directus, exactly what rate the site last pulled from the CBR. */
+async function recordCbrRateInDirectus(rate: number) {
+  const directusUrl = process.env.DIRECTUS_URL;
+
+  if (!directusUrl) {
+    return;
+  }
+
   try {
-    const response = await fetch(CBR_DAILY_RATES_URL, {next: {revalidate: RATE_CACHE_SECONDS}});
+    const url = new URL(`/items/${PRICING_SETTINGS_COLLECTION}`, directusUrl);
+    await fetch(url, {
+      method: 'PATCH',
+      headers: {...getDirectusHeaders(), 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        last_cbr_rate: rate,
+        last_cbr_rate_updated_at: new Date().toISOString(),
+      }),
+    });
+  } catch {
+    // best-effort — not fetching this value shouldn't break pricing
+  }
+}
+
+let cachedCbrRate: {rate: number; fetchedAt: number} | null = null;
+
+/**
+ * Raw EUR→RUB rate from the Bank of Russia, cached in-process for an hour;
+ * falls back to a static rate if unreachable. Each time a fresh rate is
+ * actually fetched, it's also written back to Directus (`pricing_settings.
+ * last_cbr_rate`) so an admin can see what the site is currently using.
+ */
+async function getBaseCbrRate(): Promise<number> {
+  const now = Date.now();
+
+  if (cachedCbrRate && now - cachedCbrRate.fetchedAt < RATE_CACHE_SECONDS * 1000) {
+    return cachedCbrRate.rate;
+  }
+
+  try {
+    const response = await fetch(CBR_DAILY_RATES_URL);
 
     if (!response.ok) {
       return getFallbackRate();
@@ -57,18 +101,17 @@ async function getBaseCbrRate(): Promise<number> {
 
     const rate = parseEurRateFromCbrXml(await response.text());
 
-    return rate ?? getFallbackRate();
+    if (rate === null) {
+      return getFallbackRate();
+    }
+
+    cachedCbrRate = {rate, fetchedAt: now};
+    void recordCbrRateInDirectus(rate);
+
+    return rate;
   } catch {
     return getFallbackRate();
   }
-}
-
-function getDirectusHeaders() {
-  return process.env.DIRECTUS_TOKEN
-    ? {
-        Authorization: `Bearer ${process.env.DIRECTUS_TOKEN}`,
-      }
-    : undefined;
 }
 
 function toFiniteNumber(value: unknown): number | undefined {
