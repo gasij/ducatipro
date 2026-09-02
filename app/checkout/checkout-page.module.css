@@ -402,8 +402,12 @@
 
 .successTitle {
   margin: 0 0 1.5rem;
-  font-size: 1.5rem;
+  color: #333333;
+  font-size: 1.05rem;
   font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .successSubtitle {
