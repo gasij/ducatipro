@@ -33,6 +33,31 @@ const SUMMARY_BOTTOM_BUFFER_PX = 24;
 // `max-width: 1100px` media query in checkout-page.module.css), where the
 // sidebar is intentionally not sticky at all — skip the JS override there.
 const DESKTOP_LAYOUT_MIN_WIDTH_PX = 1100;
+const PHONE_DIGITS_COUNT = 10;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function formatPhoneInput(rawValue: string): string {
+  let digits = rawValue.replace(/\D/g, '');
+  if (digits.startsWith('7') || digits.startsWith('8')) {
+    digits = digits.slice(1);
+  }
+  digits = digits.slice(0, PHONE_DIGITS_COUNT);
+
+  if (digits.length === 0) return '';
+
+  let formatted = '+7';
+  formatted += '-' + digits.slice(0, 3);
+  if (digits.length > 3) formatted += '-' + digits.slice(3, 6);
+  if (digits.length > 6) formatted += '-' + digits.slice(6, 8);
+  if (digits.length > 8) formatted += '-' + digits.slice(8, 10);
+  return formatted;
+}
+
+function isPhoneComplete(formattedValue: string): boolean {
+  const digits = formattedValue.replace(/\D/g, '');
+  const nationalDigits = digits.startsWith('7') ? digits.slice(1) : digits;
+  return nationalDigits.length === PHONE_DIGITS_COUNT;
+}
 
 type Props = {
   items: CreateOrderInputItem[];
@@ -103,7 +128,9 @@ export default function CheckoutForm({
   );
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [telegramUsername, setTelegramUsername] = useState('');
   const [city, setCity] = useState('');
   const [postalAddress, setPostalAddress] = useState('');
@@ -193,9 +220,40 @@ export default function CheckoutForm({
     };
   }, []);
 
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setPhone(formatPhoneInput(e.target.value));
+    if (phoneError) setPhoneError('');
+  }
+
+  function handlePhoneBlur() {
+    if (phone && !isPhoneComplete(phone)) {
+      setPhoneError('Введите номер телефона полностью, например +7-999-999-99-99');
+    } else {
+      setPhoneError('');
+    }
+  }
+
+  function handleEmailBlur() {
+    if (email && !EMAIL_PATTERN.test(email.trim())) {
+      setEmailError('Введите корректный email, например name@example.com');
+    } else {
+      setEmailError('');
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError('');
+
+    const phoneInvalid = !isPhoneComplete(phone);
+    const emailInvalid = !EMAIL_PATTERN.test(email.trim());
+    setPhoneError(
+      phoneInvalid ? 'Введите номер телефона полностью, например +7-999-999-99-99' : '',
+    );
+    setEmailError(emailInvalid ? 'Введите корректный email, например name@example.com' : '');
+    if (phoneInvalid || emailInvalid) {
+      return;
+    }
 
     if (!agreed) {
       setError('Подтвердите согласие с офертой');
@@ -345,22 +403,33 @@ export default function CheckoutForm({
               onChange={(e) => setName(e.target.value)}
               className={`${styles.input} ${styles.fullField}`}
             />
-            <input
-              type="tel"
-              required
-              placeholder="Телефон для связи *"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className={styles.input}
-            />
-            <input
-              type="email"
-              required
-              placeholder="Email *"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={styles.input}
-            />
+            <div className={styles.fieldWrapper}>
+              <input
+                type="tel"
+                required
+                placeholder="Телефон для связи *"
+                value={phone}
+                onChange={handlePhoneChange}
+                onBlur={handlePhoneBlur}
+                className={styles.input}
+              />
+              {phoneError && <p className={styles.fieldError}>{phoneError}</p>}
+            </div>
+            <div className={styles.fieldWrapper}>
+              <input
+                type="email"
+                required
+                placeholder="Email *"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError('');
+                }}
+                onBlur={handleEmailBlur}
+                className={styles.input}
+              />
+              {emailError && <p className={styles.fieldError}>{emailError}</p>}
+            </div>
             <input
               type="text"
               placeholder="Username Telegram"
