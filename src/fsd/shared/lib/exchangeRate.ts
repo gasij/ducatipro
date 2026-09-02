@@ -6,6 +6,21 @@ const PRICING_SETTINGS_COLLECTION = 'pricing_settings';
 const PRICING_SETTINGS_CACHE_SECONDS = 60;
 /** Used only when Directus is unreachable or the setting isn't published. */
 const DEFAULT_RATE_MARKUP_PERCENT = 6;
+const DEFAULT_PRODUCT_PRICE_MARKUP_PERCENT = 0;
+
+type PricingSettings = {
+  rateMarkupPercent: number;
+  productPriceMarkupPercent: number;
+  useManualRate: boolean;
+  manualEurToRubRate: number;
+};
+
+const DEFAULT_PRICING_SETTINGS: PricingSettings = {
+  rateMarkupPercent: DEFAULT_RATE_MARKUP_PERCENT,
+  productPriceMarkupPercent: DEFAULT_PRODUCT_PRICE_MARKUP_PERCENT,
+  useManualRate: false,
+  manualEurToRubRate: FALLBACK_EUR_TO_RUB_RATE,
+};
 
 function getFallbackRate() {
   const rawRate = process.env.NEXT_PUBLIC_EUR_TO_RUB_RATE;
@@ -56,17 +71,31 @@ function getDirectusHeaders() {
     : undefined;
 }
 
-/** Markup (in percent) applied on top of the raw CBR rate, editable in Directus (`pricing_settings`). */
-export async function getRateMarkupPercent(): Promise<number> {
+function toFiniteNumber(value: unknown): number | undefined {
+  const num = typeof value === 'string' ? Number(value) : value;
+  return typeof num === 'number' && Number.isFinite(num) ? num : undefined;
+}
+
+/**
+ * All admin-configurable pricing knobs, read together from Directus
+ * (`pricing_settings`, a singleton collection) and cached for a minute.
+ * Falls back to sane defaults if Directus is unreachable or unconfigured —
+ * this is also the fallback path if the CBR rate ever becomes unreachable,
+ * since an admin can flip `use_manual_rate` on to bypass it entirely.
+ */
+async function getPricingSettings(): Promise<PricingSettings> {
   const directusUrl = process.env.DIRECTUS_URL;
 
   if (!directusUrl) {
-    return DEFAULT_RATE_MARKUP_PERCENT;
+    return DEFAULT_PRICING_SETTINGS;
   }
 
   try {
     const url = new URL(`/items/${PRICING_SETTINGS_COLLECTION}`, directusUrl);
-    url.searchParams.set('fields', 'rate_markup_percent,status');
+    url.searchParams.set(
+      'fields',
+      'rate_markup_percent,product_price_markup_percent,use_manual_rate,manual_eur_to_rub_rate,status',
+    );
 
     const res = await fetch(url, {
       headers: getDirectusHeaders(),
@@ -74,29 +103,58 @@ export async function getRateMarkupPercent(): Promise<number> {
     });
 
     if (!res.ok) {
-      return DEFAULT_RATE_MARKUP_PERCENT;
+      return DEFAULT_PRICING_SETTINGS;
     }
 
     const payload = (await res.json()) as {
-      data?: {rate_markup_percent?: unknown; status?: unknown};
+      data?: {
+        rate_markup_percent?: unknown;
+        product_price_markup_percent?: unknown;
+        use_manual_rate?: unknown;
+        manual_eur_to_rub_rate?: unknown;
+        status?: unknown;
+      };
     };
     const item = payload.data;
 
     if (!item || item.status !== 'published') {
-      return DEFAULT_RATE_MARKUP_PERCENT;
+      return DEFAULT_PRICING_SETTINGS;
     }
 
-    const markup = Number(item.rate_markup_percent);
+    const manualRate = toFiniteNumber(item.manual_eur_to_rub_rate);
 
-    return Number.isFinite(markup) ? markup : DEFAULT_RATE_MARKUP_PERCENT;
+    return {
+      rateMarkupPercent: toFiniteNumber(item.rate_markup_percent) ?? DEFAULT_RATE_MARKUP_PERCENT,
+      productPriceMarkupPercent:
+        toFiniteNumber(item.product_price_markup_percent) ?? DEFAULT_PRODUCT_PRICE_MARKUP_PERCENT,
+      useManualRate: item.use_manual_rate === true,
+      manualEurToRubRate: manualRate && manualRate > 0 ? manualRate : FALLBACK_EUR_TO_RUB_RATE,
+    };
   } catch {
-    return DEFAULT_RATE_MARKUP_PERCENT;
+    return DEFAULT_PRICING_SETTINGS;
   }
 }
 
-/** Current EUR→RUB rate: the live Bank of Russia rate plus the markup configured in Directus. */
-export async function getCurrentEurToRubRate(): Promise<number> {
-  const [baseRate, markupPercent] = await Promise.all([getBaseCbrRate(), getRateMarkupPercent()]);
+/** Markup (in percent) applied on top of the CBR/manual base rate, editable in Directus (`pricing_settings`). */
+export async function getRateMarkupPercent(): Promise<number> {
+  const settings = await getPricingSettings();
+  return settings.rateMarkupPercent;
+}
 
-  return baseRate * (1 + markupPercent / 100);
+/** Markup (in percent) applied to product prices themselves, editable in Directus (`pricing_settings`). */
+export async function getProductPriceMarkupPercent(): Promise<number> {
+  const settings = await getPricingSettings();
+  return settings.productPriceMarkupPercent;
+}
+
+/**
+ * Current EUR→RUB rate: either the live Bank of Russia rate or an
+ * admin-entered manual rate (`use_manual_rate` in Directus — a safety net
+ * for when the CBR endpoint is unreachable), plus the configured markup.
+ */
+export async function getCurrentEurToRubRate(): Promise<number> {
+  const settings = await getPricingSettings();
+  const baseRate = settings.useManualRate ? settings.manualEurToRubRate : await getBaseCbrRate();
+
+  return baseRate * (1 + settings.rateMarkupPercent / 100);
 }

@@ -1,4 +1,4 @@
-import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib/exchangeRate';
+import {getCurrentEurToRubRate, getProductPriceMarkupPercent} from '@/src/fsd/shared/lib/exchangeRate';
 import {
   convertRubToEur,
   formatEurPrice,
@@ -324,8 +324,14 @@ function normalizeLocation(value?: string) {
   return undefined;
 }
 
-function normalizeProduct(item: DirectusProduct, index: number, eurToRubRate: number): Product {
-  const price = getNumber(item, ['price', 'amount', 'total']) || 0;
+function normalizeProduct(
+  item: DirectusProduct,
+  index: number,
+  eurToRubRate: number,
+  priceMarkupPercent: number,
+): Product {
+  const basePrice = getNumber(item, ['price', 'amount', 'total']) || 0;
+  const price = basePrice * (1 + priceMarkupPercent / 100);
   const oldPriceRaw = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
   const sku = getString(item, ['sku', 'article', 'vendor_code']);
   const slug = getString(item, ['slug']);
@@ -507,7 +513,11 @@ function isUuidLike(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-async function getProductByIdentifier(identifier: string, eurToRubRate: number): Promise<Product | null> {
+async function getProductByIdentifier(
+  identifier: string,
+  eurToRubRate: number,
+  priceMarkupPercent: number,
+): Promise<Product | null> {
   const directusUrl = process.env.DIRECTUS_URL;
   const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
 
@@ -541,7 +551,7 @@ async function getProductByIdentifier(identifier: string, eurToRubRate: number):
     return null;
   }
 
-  const product = normalizeProduct(item, 0, eurToRubRate);
+  const product = normalizeProduct(item, 0, eurToRubRate, priceMarkupPercent);
   const compatibilityByProductId = await fetchProductCompatibilityFromJunction(directusUrl, [product.id]);
   return addCompatibilityModels(product, compatibilityByProductId.get(product.id) || []);
 }
@@ -550,6 +560,7 @@ async function getProductsFromDirectusPage(
   page: number,
   pageSize: number,
   eurToRubRate: number,
+  priceMarkupPercent: number,
   options: {skipCompatibility?: boolean} = {},
 ) {
   const directusUrl = process.env.DIRECTUS_URL;
@@ -602,7 +613,9 @@ async function getProductsFromDirectusPage(
   }
 
   const total = typeof payload.meta?.filter_count === 'number' ? payload.meta.filter_count : payload.data.length;
-  const items = payload.data.map((item, index) => normalizeProduct(item, index, eurToRubRate));
+  const items = payload.data.map((item, index) =>
+    normalizeProduct(item, index, eurToRubRate, priceMarkupPercent),
+  );
 
   if (options.skipCompatibility) {
     return {items, total};
@@ -843,10 +856,19 @@ export async function getProductsPage(
 ): Promise<ProductsPageResult> {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const eurToRubRate = await getCurrentEurToRubRate();
+  const [eurToRubRate, priceMarkupPercent] = await Promise.all([
+    getCurrentEurToRubRate(),
+    getProductPriceMarkupPercent(),
+  ]);
 
   try {
-    const directusPage = await getProductsFromDirectusPage(safePage, safePageSize, eurToRubRate, options);
+    const directusPage = await getProductsFromDirectusPage(
+      safePage,
+      safePageSize,
+      eurToRubRate,
+      priceMarkupPercent,
+      options,
+    );
 
     if (directusPage && directusPage.items.length > 0) {
       const totalPages = Math.max(1, Math.ceil(directusPage.total / safePageSize));
@@ -885,8 +907,11 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
-  const eurToRubRate = await getCurrentEurToRubRate();
-  const direct = await getProductByIdentifier(id, eurToRubRate).catch(() => null);
+  const [eurToRubRate, priceMarkupPercent] = await Promise.all([
+    getCurrentEurToRubRate(),
+    getProductPriceMarkupPercent(),
+  ]);
+  const direct = await getProductByIdentifier(id, eurToRubRate, priceMarkupPercent).catch(() => null);
   if (direct) {
     return direct;
   }
