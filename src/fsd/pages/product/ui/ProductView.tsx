@@ -44,7 +44,11 @@ export default function ProductView({product, siteTexts = {}}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
   const [imageSrc, setImageSrc] = useState(product.image);
-  const compatibleModels = product.models || [];
+  const compatibleModels = [...(product.models || [])].sort((a, b) => {
+    const yearA = Number(a.match(/(\d{4})\s*$/)?.[1]) || 0;
+    const yearB = Number(b.match(/(\d{4})\s*$/)?.[1]) || 0;
+    return yearB - yearA;
+  });
   const galleryImages = [product.image, ...(product.gallery || [])].filter(
     (url, index, all) => all.indexOf(url) === index,
   );
