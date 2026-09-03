@@ -64,7 +64,7 @@
 .contactLink {
     color: #ffffff;
     font-size: clamp(1.125rem, 5vw, 1.5rem);
-    font-weight: 900;
+    font-weight: 700;
     letter-spacing: 0;
     overflow-wrap: anywhere;
 }
@@ -72,7 +72,7 @@
 .contactNote {
     margin-top: 0.25rem;
     color: #71717a;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
 }
 
 .bottom {
