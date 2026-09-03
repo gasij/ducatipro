@@ -3,9 +3,10 @@
 import {useEffect, useRef} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {ChevronLeft, ChevronRight, Check} from 'lucide-react';
+import {ChevronLeft, ChevronRight} from 'lucide-react';
 import {ProductCard, type Product} from '@/src/fsd/entities/product';
 import {gsap, pickSiteText, registerGsap, type SiteTextsMap} from '@/src/fsd/shared/lib';
+import {FeedbackForm} from '@/src/fsd/widgets/feedback-form';
 import styles from './HomePage.module.css';
 
 type Props = {
@@ -19,12 +20,6 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
     siteTexts,
     'home.italy_coffee_promo',
     'Итальянский #кофевкофр в посылку при заказе из Италии гарантирован',
-  );
-  const feedbackTitle = pickSiteText(siteTexts, 'home.feedback_title', 'Обратная связь');
-  const agreementText = pickSiteText(
-    siteTexts,
-    'home.agreement_text',
-    'Настоящим подтверждаю, что я ознакомлен и согласен с условиями',
   );
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -95,14 +90,6 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
         scrollTrigger: {trigger: `.${styles.instagramGrid}`, start: 'top 88%', once: true},
       });
 
-      gsap.from(`.${styles.contactForm} > *`, {
-        y: 18,
-        opacity: 0,
-        duration: 0.48,
-        stagger: 0.1,
-        ease: 'power2.out',
-        scrollTrigger: {trigger: `.${styles.contactForm}`, start: 'top 85%', once: true},
-      });
     }, rootRef);
 
     return () => ctx.revert();
@@ -148,36 +135,7 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
         </div>
       </section>
 
-      <section className={styles.feedback}>
-        <h2 className={styles.feedbackTitle}>{feedbackTitle}</h2>
-        <form className={styles.contactForm}>
-          <div className={styles.formRow}>
-            <input type="text" placeholder="Имя*" className={styles.field} />
-            <input type="email" placeholder="Ваша почта*" className={styles.field} />
-          </div>
-          <textarea
-            placeholder="Ваш вопрос, отзыв или пожелание*"
-            rows={4}
-            className={styles.message}
-          />
-          <label className={styles.agreement}>
-            <div className={styles.checkboxBox}>
-              <input type="checkbox" className={styles.checkbox} />
-              <Check className={styles.checkboxIcon} />
-            </div>
-            <span className={styles.agreementText}>
-              {agreementText}{' '}
-              <Link href="/offer" className={styles.agreementLink}>
-                оферты и политики конфиденциальности
-              </Link>{' '}
-              *
-            </span>
-          </label>
-          <button type="button" className={styles.submitButton}>
-            Отправить
-          </button>
-        </form>
-      </section>
+      <FeedbackForm siteTexts={siteTexts} />
     </div>
   );
 }
