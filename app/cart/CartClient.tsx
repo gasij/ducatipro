@@ -97,6 +97,7 @@ export default function CartClient({
     '* Некоторые товары (их уже не менее половины) могут быть запрещены санкциями к отправке в РФ. В этом случае мы используем доставку через «третьи страны» в п.в. СДЭК в вашем городе. Возможные дополнительные расходы и сроки обсудим отдельно при согласовании доставки и оплаты.',
   );
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [cartLoaded, setCartLoaded] = useState(false);
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
@@ -217,12 +218,14 @@ export default function CartClient({
         resolveCartLines(sharedItems).then((nextLines) => {
           setLines(nextLines);
           persistLines(nextLines);
+          setCartLoaded(true);
         });
         return;
       }
 
       const rawCart = window.localStorage.getItem(CART_STORAGE_KEY);
       if (!rawCart) {
+        setCartLoaded(true);
         return;
       }
 
@@ -232,10 +235,12 @@ export default function CartClient({
         resolveCartLines(cart).then((nextLines) => {
           setLines(nextLines);
           notifyCartUpdated();
+          setCartLoaded(true);
         });
       } catch {
         window.localStorage.removeItem(CART_STORAGE_KEY);
         notifyCartUpdated();
+        setCartLoaded(true);
       }
     }, 0);
 
@@ -399,7 +404,13 @@ export default function CartClient({
         <main className={styles.mainColumn}>
           <h1 className={styles.title}>{title}</h1>
 
-          {lines.length > 0 ? (
+          {!cartLoaded ? (
+            <div className={styles.cartList}>
+              {[...Array(2)].map((_, index) => (
+                <div key={index} className={`${styles.cartItem} ${styles.cartItemSkeleton}`} />
+              ))}
+            </div>
+          ) : lines.length > 0 ? (
             <>
               <div className={styles.cartList}>
                 {lines.map((line) => (
