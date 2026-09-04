@@ -51,7 +51,15 @@ export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
                   href={pickSiteTextUrl(siteTexts, 'footer.link_offer', '/offer')}
                   className={styles.footerLink}
                 >
-                  {pickSiteText(siteTexts, 'footer.link_offer', 'Оферта и политика конфиденциальности')}
+                  {pickSiteText(siteTexts, 'footer.link_offer', 'Оферта и условия поставки')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_privacy', '/privacy')}
+                  className={styles.footerLink}
+                >
+                  {pickSiteText(siteTexts, 'footer.link_privacy', 'Политика конфиденциальности')}
                 </Link>
               </li>
               <li>
@@ -59,23 +67,7 @@ export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
                   href={pickSiteTextUrl(siteTexts, 'footer.link_returns', '/returns')}
                   className={styles.footerLink}
                 >
-                  {pickSiteText(siteTexts, 'footer.link_returns', 'Условия обмена и возврата')}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={pickSiteTextUrl(siteTexts, 'footer.link_delivery', '/delivery')}
-                  className={styles.footerLink}
-                >
-                  {pickSiteText(siteTexts, 'footer.link_delivery', 'Оплата и доставка')}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={pickSiteTextUrl(siteTexts, 'footer.link_loyalty', '/loyalty')}
-                  className={styles.footerLink}
-                >
-                  {pickSiteText(siteTexts, 'footer.link_loyalty', 'Программа лояльности')}
+                  {pickSiteText(siteTexts, 'footer.link_returns', 'Условия возвратов и обменов')}
                 </Link>
               </li>
             </ul>

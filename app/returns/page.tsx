@@ -9,10 +9,10 @@ export default function ReturnsPage() {
           Главная
         </Link>
         <span>/</span>
-        <span className={styles.current}>Условия обмена и возврата</span>
+        <span className={styles.current}>Условия возвратов и обменов</span>
       </div>
       <h1 className={styles.title}>
-        Условия обмена и возврата
+        Условия возвратов и обменов
       </h1>
       <div className={styles.content}>
         <p>

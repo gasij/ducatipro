@@ -47,7 +47,7 @@ export default async function OfferPage() {
   );
 
   return (
-    <InfoPage title="Оферта и политика конфиденциальности">
+    <InfoPage title="Оферта и условия поставки">
       <p>{intro}</p>
       <p>{consent}</p>
       <p>
