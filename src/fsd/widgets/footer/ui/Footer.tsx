@@ -82,16 +82,26 @@ export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
           </div>
           <div className={styles.contacts}>
             <div className={styles.contactGroup}>
-              <a href="tel:+79025565242" className={styles.contactLink}>
-                +79025565242
+              <a
+                href={pickSiteTextUrl(siteTexts, 'footer.contact_phone', 'tel:+79025565242')}
+                className={styles.contactLink}
+              >
+                {pickSiteText(siteTexts, 'footer.contact_phone', '+79025565242')}
               </a>
-              <div className={styles.contactNote}>только Max (не для звонков)</div>
+              <div className={styles.contactNote}>
+                {pickSiteText(siteTexts, 'footer.contact_phone_note', 'только Max (не для звонков)')}
+              </div>
             </div>
             <div className={styles.contactGroup}>
-              <a href="https://t.me/ducatiparts" className={styles.contactLink}>
-                @ducatiparts
+              <a
+                href={pickSiteTextUrl(siteTexts, 'footer.contact_telegram', 'https://t.me/ducatiparts')}
+                className={styles.contactLink}
+              >
+                {pickSiteText(siteTexts, 'footer.contact_telegram', '@ducatiparts')}
               </a>
-              <div className={styles.contactNote}>наш Telegram для связи</div>
+              <div className={styles.contactNote}>
+                {pickSiteText(siteTexts, 'footer.contact_telegram_note', 'наш Telegram для связи')}
+              </div>
             </div>
           </div>
         </div>
