@@ -513,8 +513,10 @@ export default function CheckoutForm({
             className={styles.nativeCheckbox}
           />
           <span>
-            Я ознакомлен и согласен с условиями{' '}
-            <Link href="/offer" className={styles.offerLink}>оферты и политики конфиденциальности</Link>
+            Я согласен с{' '}
+            <Link href="/offer" className={styles.offerLink}>условиями поставки</Link>{' '}
+            и{' '}
+            <Link href="/privacy" className={styles.offerLink}>политикой конфиденциальности</Link>
           </span>
         </label>
 
