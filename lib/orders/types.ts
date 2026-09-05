@@ -29,6 +29,7 @@ export type CreateOrderPayload = {
 
 export type DirectusOrder = {
   id: string;
+  order_number: string | null;
   status: OrderStatus;
   customer_name: string;
   phone: string;

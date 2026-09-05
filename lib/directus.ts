@@ -46,6 +46,26 @@ function calcTotal(items: OrderItem[]) {
   return items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 }
 
+const ORDER_NUMBER_STEP = 3;
+const ORDER_NUMBER_START = 1001;
+
+async function getNextOrderNumber(client: ReturnType<typeof getClient>): Promise<string> {
+  const ordersCollection = getOrdersCollection();
+  const year = new Date().getFullYear();
+  const [latest] = await client.request(
+    readItems(ordersCollection, {
+      fields: ['order_number'],
+      sort: ['-date_created'],
+      limit: 1,
+    }),
+  );
+
+  const lastSeq = Number(latest?.order_number?.split('-')[1]);
+  const nextSeq = Number.isFinite(lastSeq) && lastSeq > 0 ? lastSeq + ORDER_NUMBER_STEP : ORDER_NUMBER_START;
+
+  return `${year}-${nextSeq}`;
+}
+
 async function buildOrderItems(items: CreateOrderPayload['items']): Promise<OrderItem[]> {
   const eurToRubRate = await getCurrentEurToRubRate();
   const snapshots = await Promise.all(
@@ -74,9 +94,11 @@ export async function createOrderInDirectus(payload: CreateOrderPayload) {
   const ordersCollection = getOrdersCollection();
   const items = await buildOrderItems(payload.items);
   const total = calcTotal(items);
+  const orderNumber = await getNextOrderNumber(client);
 
   const order = await client.request(
     createItem(ordersCollection, {
+      order_number: orderNumber,
       status: 'pending',
       customer_name: payload.customer_name,
       phone: payload.phone,

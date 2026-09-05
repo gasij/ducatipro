@@ -139,7 +139,7 @@ export default function CheckoutForm({
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<{orderId: string} | null>(null);
+  const [success, setSuccess] = useState<{orderId: string; orderNumber: string} | null>(null);
   const subtotal = checkoutItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0,
@@ -300,7 +300,7 @@ export default function CheckoutForm({
 
       window.localStorage.removeItem(CART_STORAGE_KEY);
       notifyCartUpdated();
-      setSuccess({orderId: data.id});
+      setSuccess({orderId: data.id, orderNumber: data.order_number});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось оформить заказ');
     } finally {
@@ -322,7 +322,7 @@ export default function CheckoutForm({
 
         <div className={styles.successInfoGrid}>
           <div className={styles.successInfoColumn}>
-            <p>Номер заказа: {success.orderId}</p>
+            <p>Номер заказа: {success.orderNumber}</p>
             <p>Дата оформления: {orderDate}</p>
             <p>Способ оплаты: {PAYMENT_METHOD}</p>
             <p>Способ доставки: {DELIVERY_METHOD}</p>

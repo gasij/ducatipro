@@ -95,6 +95,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       id: order.id,
+      order_number: order.order_number,
     });
   } catch (error) {
     console.error('Create order error:', error);
