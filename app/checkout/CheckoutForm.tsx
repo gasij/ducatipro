@@ -123,7 +123,7 @@ export default function CheckoutForm({
   const successFooter = pickSiteText(
     siteTexts,
     'checkout.success_footer',
-    'Благодарим вас за интерес к товарам в нашем интернет-магазине! Мы обязательно уведомим вас об изменении статуса вашего заказа.',
+    'Мы – небольшая, но исключительно ответственных ребят команда. Однажды доверив нам решение вашей задачи, Вы обязательно или почти обязательно снова обратитесь к нам в будущем.',
   );
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -362,15 +362,15 @@ export default function CheckoutForm({
               </tr>
             ))}
             <tr>
-              <td colSpan={3}>Express Mail Service (EMS):</td>
+              <td colSpan={3} className={styles.successTableSummaryLabel}>Express Mail Service (EMS):</td>
               <td>{formatEurPrice(deliveryPriceEur)}</td>
             </tr>
             <tr>
-              <td colSpan={3}>Фикс. сбор за обработку заказа:</td>
+              <td colSpan={3} className={styles.successTableSummaryLabel}>Фикс. сбор за обработку заказа:</td>
               <td>{formatEurPrice(ORDER_PROCESSING_FEE_EUR)}</td>
             </tr>
             <tr className={styles.successTableTotalRow}>
-              <td colSpan={3}>Итого:</td>
+              <td colSpan={3} className={styles.successTableSummaryLabel}>Итого:</td>
               <td>{formatEurPrice(grandTotal)}</td>
             </tr>
           </tbody>
@@ -383,8 +383,8 @@ export default function CheckoutForm({
           orders@ducatiparts.ru
         </p>
 
-        <Link href="/catalog-oem" className={styles.successLink}>
-          Вернуться в каталог
+        <Link href="/" className={styles.successLink}>
+          На главную
         </Link>
       </div>
     );

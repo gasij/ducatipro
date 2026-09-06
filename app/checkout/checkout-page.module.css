@@ -467,6 +467,10 @@
   font-weight: 900;
 }
 
+.successTableSummaryLabel {
+  text-align: right;
+}
+
 .successFooter {
   margin: 1.5rem 0;
   color: var(--color-muted);
