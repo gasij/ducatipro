@@ -431,7 +431,7 @@
 
 .successText {
   margin: 0 0 0.5rem;
-  color: #374151;
+  color: #cc0000;
   font-size: 0.9375rem;
   line-height: 1.6;
 }
@@ -464,7 +464,7 @@
   padding-top: 0.75rem;
   border-bottom: 0;
   font-size: 1.05rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .successTableSummaryLabel {
@@ -473,7 +473,7 @@
 
 .successFooter {
   margin: 1.5rem 0;
-  color: var(--color-muted);
+  color: #333333;
   font-size: 0.875rem;
   line-height: 1.6;
 }
