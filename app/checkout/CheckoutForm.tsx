@@ -331,14 +331,17 @@ export default function CheckoutForm({
             <p>Получатель:</p>
             <p>{name}</p>
             <p>{postalAddress}</p>
-            <p>{city}</p>
+            <p>{city.replace(/[,\s]+$/, '')}</p>
             <p>{COUNTRY}</p>
             <p>{phone}</p>
           </div>
         </div>
 
-        <p className={styles.successText}>{successTextLine1}</p>
-        <p className={styles.successText}>{successTextLine2}</p>
+        <p className={styles.successText}>
+          {successTextLine1}
+          <br />
+          {successTextLine2}
+        </p>
 
         <table className={styles.successTable}>
           <thead>
