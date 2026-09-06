@@ -31,11 +31,10 @@ export default function OfferPage() {
     <InfoPage title="Оферта и условия поставки">
 
       <p>
-        Базовые правила и условия нашей работы регламентируются в публичном договоре-оферте
-      </p>
-
-      <p>
-        Оформить покупку без согласия с ним Вы не сможете.
+        <strong>
+          Базовые правила и условия нашей работы регламентируются в публичном договоре-оферте.
+          Оформить покупку без согласия с ним Вы не сможете.
+        </strong>
       </p>
 
       <h2>Публичный договор-оферта</h2>
@@ -48,7 +47,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>1. Предмет договора</h2>
+      <h3>1. Предмет договора</h3>
 
       <p>
         <strong>1.1.</strong> Поставщик обязуется передать в собственность
@@ -74,7 +73,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>2. Качество и комплектность</h2>
+      <h3>2. Качество и комплектность</h3>
 
       <p>
         <strong>2.1.</strong> Поставщик гарантирует, что товар ранее не
@@ -94,7 +93,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>3. Цена и порядок расчетов</h2>
+      <h3>3. Цена и порядок расчетов</h3>
 
       <p>
         <strong>3.1.</strong> Цена товара устанавливается в валюте ЕС
@@ -137,7 +136,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>4. Сроки и порядок поставки</h2>
+      <h3>4. Сроки и порядок поставки</h3>
 
       <p>
         <strong>4.1.</strong> Товар поставляется в срок, согласованный
@@ -176,7 +175,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>5. Имущественная ответственность и порядок разрешения споров</h2>
+      <h3>5. Имущественная ответственность и порядок разрешения споров</h3>
 
       <p>
         <strong>5.1.</strong> Право собственности на Товар переходит
@@ -206,7 +205,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>6. Форс-мажор</h2>
+      <h3>6. Форс-мажор</h3>
 
       <p>
         <strong>6.1.</strong> Ни одна из Сторон не будет нести
@@ -244,7 +243,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>7. Персональные данные</h2>
+      <h3>7. Персональные данные</h3>
 
       <p>
         <strong>7.1.</strong> Поставщик принимает и обрабатывает
@@ -266,7 +265,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>8. Возврат и обмен</h2>
+      <h3>8. Возврат и обмен</h3>
 
       <p>
         <strong>8.1.</strong> Покупатель вправе требовать замены Товара,
@@ -291,7 +290,7 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>9. Заключительные условия</h2>
+      <h3>9. Заключительные условия</h3>
 
       <p>
         <strong>9.1.</strong> Все изменения и дополнения настоящего
@@ -312,33 +311,39 @@ export default function OfferPage() {
       </p>
 
 
-      <h2>10. Реквизиты Поставщика</h2>
+      <h3>10. Реквизиты Поставщика</h3>
 
-      <p>
-        <strong>MITSUEFU D.O.O.</strong>
-      </p>
+      <div className={styles.requisitesGrid}>
+        <div>
+          <p>
+            <strong>MITSUEFU D.O.O.</strong>
+          </p>
 
-      <p>
-        SLOVENIA, SI-1000 LJUBLJANA
-        <br />
-        PODUTISKA CESTA 94
-      </p>
+          <p>
+            SLOVENIA, SI-1000 LJUBLJANA
+            <br />
+            PODUTISKA CESTA 94
+          </p>
+        </div>
 
-      <p>
-        <strong>BANK DETAILS:</strong>
-        <br />
-        UNICREDIT BANK SLOVENIA D.D.
-        <br />
-        SI-1000 LJUBLJANA
-        <br />
-        SWIFT: BACXSI22
-        <br />
-        ACCOUNT NO. SI56290000052386065
-      </p>
+        <div>
+          <p>
+            <strong>BANK DETAILS:</strong>
+            <br />
+            UNICREDIT BANK SLOVENIA D.D.
+            <br />
+            SI-1000 LJUBLJANA
+            <br />
+            <strong>SWIFT:</strong> BACXSI22
+            <br />
+            <strong>ACCOUNT NO.</strong> SI56290000052386065
+          </p>
 
-      <p>
-        PAYPAL ACCOUNT: mitsuefu.si@gmail.com
-      </p>
+          <p>
+            <strong>PAYPAL ACCOUNT:</strong> mitsuefu.si@gmail.com
+          </p>
+        </div>
+      </div>
 
     </InfoPage>
   );
