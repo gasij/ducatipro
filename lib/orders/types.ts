@@ -1,4 +1,10 @@
-export type OrderStatus = 'pending' | 'confirmed' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'shipped_to_warehouse'
+  | 'shipped_to_client'
+  | 'cancelled'
+  | 'delivery_agreement';
 
 export type OrderItem = {
   product_id: string;

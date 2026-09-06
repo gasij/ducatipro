@@ -47,8 +47,8 @@ export async function POST(request: Request) {
   try {
     const order = await getOrderFromDirectus(orderId);
 
-    if (order.status !== 'confirmed') {
-      return NextResponse.json({skipped: true, reason: 'Order is not confirmed'});
+    if (order.status !== 'paid') {
+      return NextResponse.json({skipped: true, reason: 'Order is not paid'});
     }
 
     if (order.email_sent_at) {
