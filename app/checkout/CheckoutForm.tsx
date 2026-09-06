@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {Loader2} from 'lucide-react';
 import type {CreateOrderInputItem} from '@/lib/orders/types';
-import type {Product} from '@/src/fsd/entities/product';
+import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {
   CART_STORAGE_KEY,
   calculateDeliveryPriceEur,
@@ -20,6 +20,7 @@ import {
 import styles from './checkout-page.module.css';
 
 const COUNTRY = 'Российская Федерация';
+const COUNTRY_SHORT = 'РФ';
 const DELIVERY_METHOD = 'EMS / СДЭК';
 const PAYMENT_METHOD = 'Универсальный платеж';
 const ORDER_PROCESSING_FEE = `€${ORDER_PROCESSING_FEE_EUR}`;
@@ -35,6 +36,13 @@ const SUMMARY_BOTTOM_BUFFER_PX = 24;
 const DESKTOP_LAYOUT_MIN_WIDTH_PX = 1100;
 const PHONE_DIGITS_COUNT = 10;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getTitleWithArticle(product: Product): string {
+  const sku = getProductArticle(product);
+  return sku && !product.title.toUpperCase().includes(sku.toUpperCase())
+    ? `${sku} ${product.title}`
+    : product.title;
+}
 
 function formatPhoneInput(rawValue: string): string {
   let digits = rawValue.replace(/\D/g, '');
@@ -331,8 +339,9 @@ export default function CheckoutForm({
             <p>Получатель:</p>
             <p>{name}</p>
             <p>{postalAddress}</p>
-            <p>{city.replace(/[,\s]+$/, '')}</p>
-            <p>{COUNTRY}</p>
+            <p>
+              {city.replace(/[,\s]+$/, '')}, {COUNTRY_SHORT}
+            </p>
             <p>{phone}</p>
           </div>
         </div>
@@ -355,7 +364,7 @@ export default function CheckoutForm({
           <tbody>
             {checkoutItems.map(({product, quantity}) => (
               <tr key={product.id}>
-                <td>{product.title}</td>
+                <td>{getTitleWithArticle(product)}</td>
                 <td>{quantity}</td>
                 <td>{formatEurPrice(product.price)}</td>
                 <td>{formatEurPrice(product.price * quantity)}</td>
@@ -633,7 +642,7 @@ function OrderProduct({
           onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}
         />
       </div>
-      <div className={styles.summaryProductTitle}>{product.title}</div>
+      <div className={styles.summaryProductTitle}>{getTitleWithArticle(product)}</div>
       <div className={styles.summaryProductPrice}>
         <div>
           {quantity} x <strong>{formatEurPrice(product.price * quantity)}</strong>

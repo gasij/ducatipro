@@ -24,6 +24,13 @@ function formatEur(amount: number | string | undefined) {
   return `€${Number(amount || 0).toLocaleString('ru-RU', {maximumFractionDigits: 2})}`;
 }
 
+function getTitleWithArticle(item: {product_title: string; product_sku: string}): string {
+  const sku = item.product_sku;
+  return sku && !item.product_title.toUpperCase().includes(sku.toUpperCase())
+    ? `${sku} ${item.product_title}`
+    : item.product_title;
+}
+
 function buildItemsHtml(order: DirectusOrder) {
   const items = order.items || [];
   const rows = items
@@ -31,8 +38,7 @@ function buildItemsHtml(order: DirectusOrder) {
       (item) => `
       <tr>
         <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;">
-          ${item.product_title}
-          <div style="font-size:12px;color:#777;margin-top:4px;">${item.product_sku}</div>
+          ${getTitleWithArticle(item)}
         </td>
         <td style="padding:12px 8px;border-bottom:1px solid #eee;font-size:14px;text-align:center;">${item.quantity}</td>
         <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;text-align:right;white-space:nowrap;">
