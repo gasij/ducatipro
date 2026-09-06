@@ -1,6 +1,7 @@
 import {createDirectus, createItem, readItem, readItems, rest, staticToken, updateItem} from '@directus/sdk';
 import type {CreateOrderPayload, DirectusOrder, OrderItem} from './orders/types';
 import {getProduct, getProductArticle} from '@/src/fsd/entities/product';
+import {calculateDeliveryPriceEur, ORDER_PROCESSING_FEE_EUR} from '@/src/fsd/shared/lib/delivery';
 import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib/exchangeRate';
 import {convertPriceToRub} from '@/src/fsd/shared/lib/money';
 
@@ -67,8 +68,10 @@ async function getNextOrderNumber(client: ReturnType<typeof getClient>): Promise
   return `${year}-${nextSeq}`;
 }
 
-async function buildOrderItems(items: CreateOrderPayload['items']): Promise<OrderItem[]> {
-  const eurToRubRate = await getCurrentEurToRubRate();
+async function buildOrderItems(
+  items: CreateOrderPayload['items'],
+  eurToRubRate: number,
+): Promise<{orderItems: OrderItem[]; totalWeightKg: number}> {
   const snapshots = await Promise.all(
     items.map(async (item) => {
       const product = await getProduct(item.product_id);
@@ -82,20 +85,35 @@ async function buildOrderItems(items: CreateOrderPayload['items']): Promise<Orde
         product_title: product.title,
         product_sku: getProductArticle(product),
         price: convertPriceToRub(product.price, 'EUR', eurToRubRate),
+        price_eur: product.price,
         quantity: item.quantity,
+        weightKg: (product.weight || 0) * item.quantity,
       };
     }),
   );
 
-  return snapshots;
+  const totalWeightKg = snapshots.reduce((sum, item) => sum + item.weightKg, 0);
+  const orderItems = snapshots.map(({weightKg, ...orderItem}) => orderItem);
+
+  return {orderItems, totalWeightKg};
 }
 
 export async function createOrderInDirectus(payload: CreateOrderPayload) {
   const client = getClient();
   const ordersCollection = getOrdersCollection();
-  const items = await buildOrderItems(payload.items);
-  const total = calcTotal(items);
+  const eurToRubRate = await getCurrentEurToRubRate();
+  const {orderItems: items, totalWeightKg} = await buildOrderItems(payload.items, eurToRubRate);
   const orderNumber = await getNextOrderNumber(client);
+
+  const subtotalEur = items.reduce((sum, item) => sum + Number(item.price_eur) * item.quantity, 0);
+  const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
+  const processingFeeEur = ORDER_PROCESSING_FEE_EUR;
+  const totalEur = subtotalEur + processingFeeEur + deliveryPriceEur;
+
+  const subtotalRub = calcTotal(items);
+  const processingFeeRub = convertPriceToRub(processingFeeEur, 'EUR', eurToRubRate);
+  const deliveryPriceRub = convertPriceToRub(deliveryPriceEur, 'EUR', eurToRubRate);
+  const total = subtotalRub + processingFeeRub + deliveryPriceRub;
 
   const order = await client.request(
     createItem(ordersCollection, {
@@ -111,6 +129,9 @@ export async function createOrderInDirectus(payload: CreateOrderPayload) {
       delivery_method: payload.delivery_method,
       agreed_to_terms: payload.agreed_to_terms,
       total,
+      processing_fee_eur: processingFeeEur,
+      delivery_price_eur: deliveryPriceEur,
+      total_eur: totalEur,
       items,
     }),
   );

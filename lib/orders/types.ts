@@ -6,6 +6,7 @@ export type OrderItem = {
   product_sku: string;
   quantity: number;
   price: number | string;
+  price_eur?: number | string;
   date_created?: string;
 };
 
@@ -38,6 +39,9 @@ export type DirectusOrder = {
   postal_address: string;
   comment: string | null;
   total: number | string;
+  processing_fee_eur?: number | string;
+  delivery_price_eur?: number | string;
+  total_eur?: number | string;
   payment_method: string;
   delivery_method: string;
   agreed_to_terms: boolean;
