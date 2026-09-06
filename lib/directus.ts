@@ -47,7 +47,7 @@ function calcTotal(items: OrderItem[]) {
 }
 
 const ORDER_NUMBER_STEP = 3;
-const ORDER_NUMBER_START = 1001;
+const ORDER_NUMBER_START = 7560;
 
 async function getNextOrderNumber(client: ReturnType<typeof getClient>): Promise<string> {
   const ordersCollection = getOrdersCollection();
@@ -55,6 +55,7 @@ async function getNextOrderNumber(client: ReturnType<typeof getClient>): Promise
   const [latest] = await client.request(
     readItems(ordersCollection, {
       fields: ['order_number'],
+      filter: {order_number: {_nnull: true}},
       sort: ['-date_created'],
       limit: 1,
     }),
