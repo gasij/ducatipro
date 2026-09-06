@@ -45,11 +45,10 @@ function formatPhoneInput(rawValue: string): string {
 
   if (digits.length === 0) return '';
 
-  let formatted = '+7';
-  formatted += '-' + digits.slice(0, 3);
-  if (digits.length > 3) formatted += '-' + digits.slice(3, 6);
-  if (digits.length > 6) formatted += '-' + digits.slice(6, 8);
-  if (digits.length > 8) formatted += '-' + digits.slice(8, 10);
+  let formatted = '7';
+  formatted += ' ' + digits.slice(0, 3);
+  if (digits.length > 3) formatted += ' ' + digits.slice(3, 6);
+  if (digits.length > 6) formatted += ' ' + digits.slice(6, 10);
   return formatted;
 }
 
@@ -227,7 +226,7 @@ export default function CheckoutForm({
 
   function handlePhoneBlur() {
     if (phone && !isPhoneComplete(phone)) {
-      setPhoneError('Введите номер телефона полностью, например +7-999-999-99-99');
+      setPhoneError('Введите номер телефона полностью, например 7 999 999 9999');
     } else {
       setPhoneError('');
     }
@@ -248,7 +247,7 @@ export default function CheckoutForm({
     const phoneInvalid = !isPhoneComplete(phone);
     const emailInvalid = !EMAIL_PATTERN.test(email.trim());
     setPhoneError(
-      phoneInvalid ? 'Введите номер телефона полностью, например +7-999-999-99-99' : '',
+      phoneInvalid ? 'Введите номер телефона полностью, например 7 999 999 9999' : '',
     );
     setEmailError(emailInvalid ? 'Введите корректный email, например name@example.com' : '');
     if (phoneInvalid || emailInvalid) {
