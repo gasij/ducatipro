@@ -63,9 +63,12 @@ export function formatPriceStringInRub(value: string) {
 }
 
 export function formatEurPrice(amount: number) {
-  const safeAmount = Number.isFinite(amount) ? Math.round(amount) : 0;
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
 
-  return `€${new Intl.NumberFormat('ru-RU').format(safeAmount)}`;
+  return `€${new Intl.NumberFormat('ru-RU', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(safeAmount)}`;
 }
 
 export function formatPriceStringInEur(value: string) {
