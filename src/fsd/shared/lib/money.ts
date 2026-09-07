@@ -66,8 +66,8 @@ export function formatEurPrice(amount: number) {
   const safeAmount = Number.isFinite(amount) ? amount : 0;
 
   return `€${new Intl.NumberFormat('ru-RU', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
   }).format(safeAmount)}`;
 }
 

@@ -22,8 +22,8 @@ function formatRubles(amount: number | string | undefined) {
 
 function formatEur(amount: number | string | undefined) {
   return `€${Number(amount || 0).toLocaleString('ru-RU', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
   })}`;
 }
 
