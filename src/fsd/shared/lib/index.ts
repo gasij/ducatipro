@@ -2,9 +2,11 @@ export {
   addToStoredCart,
   CART_STORAGE_KEY,
   CART_UPDATED_EVENT,
+  getStoredCartItemQuantity,
   getStoredCartQuantity,
   notifyCartUpdated,
   readStoredCart,
+  setStoredCartQuantity,
 } from './cart';
 export type {StoredCartItem} from './cart';
 export {

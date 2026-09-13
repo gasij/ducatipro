@@ -257,3 +257,39 @@
   height: 1rem;
   flex-shrink: 0;
 }
+
+.addToCartStepper {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.7rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 5px;
+  background: #ffffff;
+  padding: 0.3rem;
+}
+
+.addToCartStepperButton {
+  display: flex;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: #f6f6f7;
+  color: #303033;
+  transition: background-color 160ms ease;
+}
+
+.addToCartStepperButton:hover {
+  background: #e9e9ea;
+}
+
+.addToCartStepperValue {
+  color: #303033;
+  font-size: 0.85rem;
+  font-weight: 700;
+}

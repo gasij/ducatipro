@@ -57,6 +57,23 @@ export function addToStoredCart(productId: string, quantity = 1) {
   notifyCartUpdated();
 }
 
+export function setStoredCartQuantity(productId: string, quantity: number) {
+  const cart = readStoredCart();
+  const safeQuantity = Math.min(Math.max(Math.floor(quantity), 0), 99);
+  const nextCart = cart.filter((item) => item.product_id !== productId);
+
+  if (safeQuantity > 0) {
+    nextCart.push({product_id: productId, quantity: safeQuantity});
+  }
+
+  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(nextCart));
+  notifyCartUpdated();
+}
+
+export function getStoredCartItemQuantity(productId: string) {
+  return readStoredCart().find((item) => item.product_id === productId)?.quantity ?? 0;
+}
+
 export function notifyCartUpdated() {
   window.dispatchEvent(new Event(CART_UPDATED_EVENT));
 }

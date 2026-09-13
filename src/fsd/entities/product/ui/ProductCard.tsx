@@ -1,10 +1,15 @@
 'use client';
 
-import {useState, type MouseEvent} from 'react';
+import {useEffect, useState, type MouseEvent} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {Check, Plus} from 'lucide-react';
-import {addToStoredCart} from '@/src/fsd/shared/lib';
+import {Minus, Plus} from 'lucide-react';
+import {
+  addToStoredCart,
+  CART_UPDATED_EVENT,
+  getStoredCartItemQuantity,
+  setStoredCartQuantity,
+} from '@/src/fsd/shared/lib';
 import {getProductHref, type Product} from '../model/products';
 import styles from './ProductCard.module.css';
 
@@ -39,14 +44,37 @@ export default function ProductCard({
 }: Props) {
   const href = getProductHref({id, sku, title});
   const [imageSrc, setImageSrc] = useState(image);
-  const [added, setAdded] = useState(false);
+  const [cartQuantity, setCartQuantity] = useState(0);
   const titleWithArticle =
     sku && !title.toUpperCase().includes(sku.toUpperCase()) ? `${sku} ${title}` : title;
 
+  useEffect(() => {
+    if (!showAddToCart) {
+      return;
+    }
+
+    function syncQuantity() {
+      setCartQuantity(getStoredCartItemQuantity(id));
+    }
+
+    syncQuantity();
+    window.addEventListener(CART_UPDATED_EVENT, syncQuantity);
+    return () => window.removeEventListener(CART_UPDATED_EVENT, syncQuantity);
+  }, [id, showAddToCart]);
+
   function handleAddToCart(event: MouseEvent) {
     event.preventDefault();
-    addToStoredCart(id);
-    setAdded(true);
+    addToStoredCart(id, 1);
+  }
+
+  function handleIncrease(event: MouseEvent) {
+    event.preventDefault();
+    setStoredCartQuantity(id, cartQuantity + 1);
+  }
+
+  function handleDecrease(event: MouseEvent) {
+    event.preventDefault();
+    setStoredCartQuantity(id, cartQuantity - 1);
   }
 
   return (
@@ -84,19 +112,32 @@ export default function ProductCard({
         </div>
       </Link>
 
-      {showAddToCart && (
-        <button type="button" onClick={handleAddToCart} className={styles.addToCartButton}>
-          {added ? (
-            <>
-              <Check className={styles.addToCartIcon} />В корзине
-            </>
-          ) : (
-            <>
-              <Plus className={styles.addToCartIcon} />В корзину
-            </>
-          )}
-        </button>
-      )}
+      {showAddToCart &&
+        (cartQuantity > 0 ? (
+          <div className={styles.addToCartStepper}>
+            <button
+              type="button"
+              onClick={handleDecrease}
+              className={styles.addToCartStepperButton}
+              aria-label="Уменьшить количество"
+            >
+              <Minus className={styles.addToCartIcon} />
+            </button>
+            <span className={styles.addToCartStepperValue}>{cartQuantity} шт</span>
+            <button
+              type="button"
+              onClick={handleIncrease}
+              className={styles.addToCartStepperButton}
+              aria-label="Увеличить количество"
+            >
+              <Plus className={styles.addToCartIcon} />
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={handleAddToCart} className={styles.addToCartButton}>
+            <Plus className={styles.addToCartIcon} />В корзину
+          </button>
+        ))}
     </article>
   );
 }
