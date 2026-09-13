@@ -355,7 +355,7 @@ export default function CheckoutForm({
         <table className={styles.successTable}>
           <thead>
             <tr>
-              <th>Детализация заказа</th>
+              <th className={styles.successTableTitle}>Детализация заказа</th>
               <th>Кол-во</th>
               <th>Цена</th>
               <th>Итого</th>

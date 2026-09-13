@@ -455,6 +455,10 @@
   text-align: right;
 }
 
+.successTableTitle {
+  font-size: 1.15rem;
+}
+
 .successTable td {
   padding: 0.6rem 0.5rem 0.6rem 0;
   border-bottom: 1px solid #eeeeee;
