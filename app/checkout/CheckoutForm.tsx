@@ -388,7 +388,7 @@ export default function CheckoutForm({
         <p className={styles.successFooter}>
           {successFooter}
           <br />
-          Если у вас возникли вопросы, пишите нам в сообщении к заказу в кабинете или на{' '}
+          Если у вас возникли вопросы, пишите нам в мессенджеры или на{' '}
           orders@ducatiparts.ru
         </p>
 
