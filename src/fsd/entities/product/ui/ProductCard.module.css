@@ -127,6 +127,14 @@
   -webkit-line-clamp: 1;
 }
 
+.oldSku {
+  margin: -0.2rem 0 0.4rem;
+  color: #9a9a9d;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
 .priceBlock {
   display: flex;
   min-height: 32px;

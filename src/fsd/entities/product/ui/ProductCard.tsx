@@ -19,6 +19,7 @@ type Props = Pick<
   Product,
   | 'id'
   | 'sku'
+  | 'oldSku'
   | 'image'
   | 'title'
   | 'desc'
@@ -40,6 +41,7 @@ export default function ProductCard({
   discountBadge,
   image,
   sku,
+  oldSku,
   showAddToCart = false,
 }: Props) {
   const href = getProductHref({id, sku, title});
@@ -100,6 +102,7 @@ export default function ProductCard({
 
         <div className={styles.content}>
           <h3 className={styles.title}>{titleWithArticle}</h3>
+          {oldSku && <p className={styles.oldSku}>Старый артикул: {oldSku}</p>}
           <p className={styles.description}>{desc}</p>
 
           <div className={styles.priceBlock}>

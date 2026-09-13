@@ -246,6 +246,12 @@ export default function ProductView({product, siteTexts = {}}: Props) {
                   <dt>Артикул</dt>
                   <dd>{getProductArticle(product)}</dd>
                 </div>
+                {product.oldSku && (
+                  <div className={styles.summaryDescriptionMetaRow}>
+                    <dt>Старый артикул</dt>
+                    <dd>{product.oldSku}</dd>
+                  </div>
+                )}
                 {product.brand && (
                   <div className={styles.summaryDescriptionMetaRow}>
                     <dt>Брэнд</dt>

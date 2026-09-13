@@ -10,6 +10,7 @@ import {
 export type Product = {
   id: string;
   sku?: string;
+  oldSku?: string;
   slug?: string;
   image: string;
   title: string;
@@ -334,6 +335,7 @@ function normalizeProduct(
   const price = basePrice * (1 + priceMarkupPercent / 100);
   const oldPriceRaw = getString(item, ['oldPrice', 'old_price', 'old_price_formatted']);
   const sku = getString(item, ['sku', 'article', 'vendor_code']);
+  const oldSku = getString(item, ['old_sku']);
   const slug = getString(item, ['slug']);
   const stockLocation = normalizeLocation(getString(item, ['stock_location']));
   const isNew = getBoolean(item, ['isNew', 'is_new']);
@@ -355,6 +357,7 @@ function normalizeProduct(
   return {
     id: getString(item, ['id', 'slug', 'article', 'sku']) || String(index + 1),
     sku,
+    oldSku,
     slug,
     image,
     title: getString(item, ['title', 'name', 'product_name']) || 'Товар Ducati',
@@ -531,6 +534,7 @@ async function getProductByIdentifier(
   const identifierVariants = [...new Set([identifier, identifier.toUpperCase(), identifier.toLowerCase()])];
   const orConditions: Array<Record<string, unknown>> = identifierVariants.flatMap((variant) => [
     {sku: {_eq: variant}},
+    {old_sku: {_eq: variant}},
     {slug: {_eq: variant}},
   ]);
   if (isUuidLike(identifier)) {
@@ -920,7 +924,7 @@ export async function getProduct(id: string): Promise<Product | undefined> {
   const normalizedId = normalizeLookupValue(id);
 
   return items.find((product) =>
-    [product.id, product.sku, product.slug, getProductArticle(product)]
+    [product.id, product.sku, product.oldSku, product.slug, getProductArticle(product)]
       .filter((value): value is string => Boolean(value))
       .some((value) => normalizeLookupValue(value) === normalizedId),
   );

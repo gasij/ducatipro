@@ -48,6 +48,7 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
+  const searchFormRef = useRef<HTMLFormElement>(null);
   const isFirstPathnameRender = useRef(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -95,6 +96,29 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
       return next.length > 0 ? next : [''];
     });
   }
+
+  function handleMainSearchFocus() {
+    const hasFilledExtraArticle = searchArticles.slice(1).some((article) => article.trim());
+    if (hasFilledExtraArticle) {
+      setSearchDropdownCollapsed(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!searchDropdownOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node;
+      if (searchFormRef.current && !searchFormRef.current.contains(target)) {
+        setSearchDropdownCollapsed(true);
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [searchDropdownOpen]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
@@ -257,7 +281,11 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
           </div>
         </div>
 
-        <form className={`${styles.search} ${searchOpen ? styles.searchOpen : ''}`} onSubmit={handleSearch}>
+        <form
+          ref={searchFormRef}
+          className={`${styles.search} ${searchOpen ? styles.searchOpen : ''}`}
+          onSubmit={handleSearch}
+        >
           <div className={styles.searchFields}>
             <div className={styles.searchField}>
               <input
@@ -265,6 +293,7 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
                 placeholder="Поиск по артикулу"
                 value={searchArticles[0]}
                 onChange={(event) => updateSearchArticle(0, event.target.value)}
+                onFocus={handleMainSearchFocus}
                 className={styles.searchInput}
               />
             </div>
