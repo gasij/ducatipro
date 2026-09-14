@@ -101,8 +101,15 @@ export default function ProductCard({
         </div>
 
         <div className={styles.content}>
-          <h3 className={styles.title}>{titleWithArticle}</h3>
-          {oldSku && <p className={styles.oldSku}>Старый артикул: {oldSku}</p>}
+          <h3 className={oldSku ? `${styles.title} ${styles.titleWithOldSku}` : styles.title}>
+            {titleWithArticle}
+            {oldSku && (
+              <>
+                <br />
+                <span className={styles.oldSku}>{oldSku}</span>
+              </>
+            )}
+          </h3>
           <p className={styles.description}>{desc}</p>
 
           <div className={styles.priceBlock}>

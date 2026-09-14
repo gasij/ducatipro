@@ -181,6 +181,12 @@
     overflow-wrap: anywhere;
 }
 
+.oldSku {
+    color: var(--color-muted);
+    font-weight: 700;
+    text-decoration: line-through;
+}
+
 .ratingRow {
     display: flex;
     flex-wrap: wrap;

@@ -172,7 +172,15 @@ export default function ProductView({product, siteTexts = {}}: Props) {
             </div>
           )}
 
-          <h1 className={styles.title}>{titleWithArticle}</h1>
+          <h1 className={styles.title}>
+            {titleWithArticle}
+            {product.oldSku && (
+              <>
+                <br />
+                <span className={styles.oldSku}>{product.oldSku}</span>
+              </>
+            )}
+          </h1>
 
           <div className={styles.ratingRow}>
             <div className={styles.rating}>
@@ -246,12 +254,6 @@ export default function ProductView({product, siteTexts = {}}: Props) {
                   <dt>Артикул</dt>
                   <dd>{getProductArticle(product)}</dd>
                 </div>
-                {product.oldSku && (
-                  <div className={styles.summaryDescriptionMetaRow}>
-                    <dt>Старый артикул</dt>
-                    <dd>{product.oldSku}</dd>
-                  </div>
-                )}
                 {product.brand && (
                   <div className={styles.summaryDescriptionMetaRow}>
                     <dt>Брэнд</dt>
