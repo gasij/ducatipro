@@ -15,6 +15,7 @@ import {
   notifyCartUpdated,
   ORDER_PROCESSING_FEE_EUR,
   pickSiteText,
+  readStoredCart,
   type SiteTextsMap,
 } from '@/src/fsd/shared/lib';
 import styles from './checkout-page.module.css';
@@ -67,16 +68,14 @@ function isPhoneComplete(formattedValue: string): boolean {
 }
 
 type Props = {
-  items: CreateOrderInputItem[];
-  checkoutItems: Array<{product: Product; quantity: number}>;
+  products: Product[];
   eurToRubRate: number;
   rateMarkupPercent: number;
   siteTexts?: SiteTextsMap;
 };
 
 export default function CheckoutForm({
-  items,
-  checkoutItems,
+  products,
   eurToRubRate,
   rateMarkupPercent,
   siteTexts = {},
@@ -147,6 +146,58 @@ export default function CheckoutForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<{orderId: string; orderNumber: string} | null>(null);
+  const [checkoutItems, setCheckoutItems] = useState<Array<{product: Product; quantity: number}>>(
+    [],
+  );
+  const [itemsLoaded, setItemsLoaded] = useState(false);
+  const items: CreateOrderInputItem[] = checkoutItems.map((item) => ({
+    product_id: item.product.id,
+    quantity: item.quantity,
+  }));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCheckoutItems() {
+      const storedCart = readStoredCart();
+
+      if (storedCart.length === 0) {
+        const fallbackProduct = products.find((product) => product.id === '1') ?? products[0];
+        if (!cancelled) {
+          setCheckoutItems(fallbackProduct ? [{product: fallbackProduct, quantity: 1}] : []);
+          setItemsLoaded(true);
+        }
+        return;
+      }
+
+      const res = await fetch('/api/products/by-ids', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids: storedCart.map((item) => item.product_id)}),
+      }).catch(() => null);
+
+      const data = res && res.ok ? ((await res.json()) as {items?: Product[]}) : null;
+      const productById = new Map((data?.items || []).map((product) => [product.id, product]));
+
+      const resolved = storedCart
+        .map((item) => {
+          const product = productById.get(item.product_id);
+          return product ? {product, quantity: item.quantity} : null;
+        })
+        .filter((item): item is {product: Product; quantity: number} => Boolean(item));
+
+      if (!cancelled) {
+        setCheckoutItems(resolved);
+        setItemsLoaded(true);
+      }
+    }
+
+    loadCheckoutItems();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [products]);
   const subtotal = checkoutItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0,
@@ -395,6 +446,14 @@ export default function CheckoutForm({
         <Link href="/" className={styles.successLink}>
           На главную
         </Link>
+      </div>
+    );
+  }
+
+  if (!itemsLoaded) {
+    return (
+      <div className={styles.loadingState}>
+        <Loader2 className={styles.loadingSpinner} />
       </div>
     );
   }

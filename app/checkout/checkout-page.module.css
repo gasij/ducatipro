@@ -246,6 +246,20 @@
   animation: spin 1s linear infinite;
 }
 
+.loadingState {
+  display: flex;
+  min-height: 40vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingSpinner {
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-muted);
+  animation: spin 1s linear infinite;
+}
+
 /* `.summary` itself is a plain (non-sticky) grid cell stretched to the full
    height of the row it shares with `.formColumn` — i.e. a "track" the order
    summary can travel inside. `.summaryInner` (see CheckoutForm.tsx) is what

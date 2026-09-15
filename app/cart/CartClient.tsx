@@ -164,16 +164,7 @@ export default function CartClient({
   function scrollRecentItems(direction: -1 | 1) {
     recentGridRef.current?.scrollBy({left: direction * 320, behavior: 'smooth'});
   }
-  const checkoutHref = lines.length > 0
-    ? `/checkout?items=${encodeURIComponent(
-        JSON.stringify(
-          lines.map((line) => ({
-            product_id: line.product.id,
-            quantity: line.quantity,
-          })),
-        ),
-      )}`
-    : '/checkout';
+  const checkoutHref = '/checkout';
 
   const resolveCartLines = useCallback(
     async (items: Array<{product_id: string; quantity: number}>): Promise<CartLine[]> => {
