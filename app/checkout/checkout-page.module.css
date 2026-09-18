@@ -470,7 +470,7 @@
 }
 
 .successTableTitle {
-  font-size: 1.15rem;
+  font-size: 0.9rem;
 }
 
 .successTable td {
@@ -561,6 +561,10 @@
   }
 
   .successTable {
+    font-size: 0.8125rem;
+  }
+
+  .successTableTitle {
     font-size: 0.8125rem;
   }
 

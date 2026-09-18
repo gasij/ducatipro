@@ -5,10 +5,18 @@ import {calculateDeliveryPriceEur, ORDER_PROCESSING_FEE_EUR} from '@/src/fsd/sha
 import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib/exchangeRate';
 import {convertPriceToRub} from '@/src/fsd/shared/lib/money';
 
+type FeedbackMessage = {
+  id?: string;
+  name: string;
+  email: string;
+  message: string;
+};
+
 type Schema = {
   order: DirectusOrder[];
   orders: DirectusOrder[];
   order_items: OrderItem[];
+  feedback_messages: FeedbackMessage[];
 };
 
 type OrdersCollection = 'order' | 'orders';
@@ -189,6 +197,11 @@ export async function getRecentlyOrderedProductIds(limit = 20): Promise<string[]
   } catch {
     return [];
   }
+}
+
+export async function createFeedbackMessage(payload: FeedbackMessage) {
+  const client = getClient();
+  return client.request(createItem('feedback_messages', payload));
 }
 
 export async function markOrderEmailSent(id: string) {
