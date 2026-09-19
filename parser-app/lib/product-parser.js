@@ -5,6 +5,8 @@ const productAliases = {
   description: ['description', 'full_description', 'full description', 'описание', 'полное описание'],
   price: ['price', 'amount', 'price rub', 'price eur', 'цена', 'стоимость'],
   old_price: ['old_price', 'old price', 'oldPrice', 'старая цена', 'цена до скидки'],
+  old_sku: ['old_sku', 'old sku', 'previous_sku', 'previous sku', 'старый артикул', 'старый номер', 'прежний артикул', 'прежний номер'],
+  new_sku: ['new_sku', 'new sku', 'replacement_sku', 'replacement sku', 'новый артикул', 'артикул замены', 'заменен на', 'заменён на', 'замена на'],
   weight: ['weight', 'wht', 'gross_weight', 'gross weight', 'net_weight', 'net weight', 'вес', 'масса'],
   category: ['category', 'type', 'раздел', 'категория'],
   image: ['image', 'main_image', 'photo', 'image_url', 'image url', 'фото', 'картинка', 'ссылка на фото'],
@@ -170,7 +172,17 @@ function buildCompatibilityMap(rows) {
 }
 
 function buildProductPayload(row, compatibilityMap, options) {
-  const sku = getCell(row, productAliases.sku);
+  const rawSku = getCell(row, productAliases.sku);
+  const oldSkuCell = getCell(row, productAliases.old_sku);
+  const newSkuCell = getCell(row, productAliases.new_sku);
+
+  // A "new sku" column means Ducati has officially superseded this part —
+  // that number takes over as the product's primary sku (it drives the URL
+  // and search), and whatever sku the row currently lists becomes the old one.
+  const isSuperseded = Boolean(newSkuCell);
+  const sku = isSuperseded ? newSkuCell : rawSku;
+  const oldSku = isSuperseded ? (oldSkuCell || rawSku) : oldSkuCell;
+
   const title = getCell(row, productAliases.title) || `Ducati OEM ${sku}`;
   const price = parseNumber(getCell(row, productAliases.price));
   const oldPrice = parseNumber(getCell(row, productAliases.old_price));
@@ -178,7 +190,12 @@ function buildProductPayload(row, compatibilityMap, options) {
   const category = normalizeCategory(getCell(row, productAliases.category));
   const stockLocation = normalizeLocation(getCell(row, productAliases.stock_location));
   const productModels = getRowModels(row);
-  const compatibilityModels = sku ? [...(compatibilityMap.get(sku) || [])] : [];
+  // The compatibility file may still reference the old (pre-supersession)
+  // article, so match on both the current and the original sku.
+  const compatibilityModels = [
+    ...(sku ? compatibilityMap.get(sku) || [] : []),
+    ...(rawSku && rawSku !== sku ? compatibilityMap.get(rawSku) || [] : []),
+  ];
   const models = [...new Set([...productModels, ...compatibilityModels])];
 
   if (!sku) {
@@ -204,6 +221,11 @@ function buildProductPayload(row, compatibilityMap, options) {
   if (image) payload.image = image;
   if (discountBadge) payload.discount_badge = discountBadge;
   if (stockLocation) payload.stock_location = stockLocation;
+  if (oldSku) payload.old_sku = oldSku;
+  // The replacement has just been applied as the primary sku above — clear
+  // any pending new_sku marker so the product doesn't still show as
+  // "awaiting a replacement" after this import.
+  if (isSuperseded) payload.new_sku = null;
   if (models.length > 0) {
     payload[options.modelsField] = options.modelsFormat === 'array' ? models : models.join(', ');
   }
