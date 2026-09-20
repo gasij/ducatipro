@@ -8,11 +8,21 @@ function articleFromFilename(filename) {
     .trim();
 }
 
-// Strips a trailing "-2", "_2", " 2", "(2)" copy-suffix so that e.g.
-// "19410711A-2.jpg" resolves back to the article "19410711A" once the exact
-// filename itself doesn't match any product.
+// Strips a trailing "-2", "_2", " 2", "(2)" copy-suffix, then a trailing
+// "-H" / "_H" / " H" hero-photo marker, so that e.g. "19410711A-2.jpg" or
+// "67621241A-H.jpg" resolve back to the article "19410711A" / "67621241A"
+// once the exact filename itself doesn't match any product.
 function baseArticleFromFilename(filename) {
-  return articleFromFilename(filename).replace(/[\s_-]*\(?\d+\)?$/, '').trim();
+  let name = articleFromFilename(filename);
+  let previous;
+  // Suffixes can stack in either order (e.g. "...-1-H.jpg" or "...-H-1.jpg"),
+  // so keep stripping both patterns until neither matches anymore.
+  do {
+    previous = name;
+    name = name.replace(/[\s_-]*\(?\d+\)?$/, '').trim();
+    name = name.replace(/[\s_-]+H$/i, '').trim();
+  } while (name !== previous);
+  return name;
 }
 
 async function uploadFileToDirectus(config, file) {
@@ -36,27 +46,35 @@ async function uploadFileToDirectus(config, file) {
 }
 
 function planPhotoUploads(files, existingProducts) {
+  // Article numbers should match regardless of case (a filename like
+  // "45613411ab.jpg" must still find product sku "45613411AB").
+  const byUpperSku = new Map();
+  for (const [sku, product] of existingProducts.entries()) {
+    byUpperSku.set(sku.toUpperCase(), product);
+  }
+  const lookup = (article) => byUpperSku.get(String(article || '').toUpperCase());
+
   const plan = [];
   const claimedAsMain = new Set();
   const unmatched = [];
 
   for (const file of files) {
     const article = articleFromFilename(file.filename);
-    const product = existingProducts.get(article);
+    const product = lookup(article);
     if (product) {
       plan.push({file, sku: article, productId: product.id, mode: 'main'});
-      claimedAsMain.add(article);
+      claimedAsMain.add(article.toUpperCase());
     }
   }
 
   for (const file of files) {
     const article = articleFromFilename(file.filename);
-    if (claimedAsMain.has(article) && existingProducts.has(article)) {
+    if (claimedAsMain.has(article.toUpperCase()) && lookup(article)) {
       continue;
     }
 
     const baseArticle = baseArticleFromFilename(file.filename);
-    const product = existingProducts.get(baseArticle);
+    const product = lookup(baseArticle);
     if (baseArticle && product) {
       plan.push({file, sku: baseArticle, productId: product.id, mode: 'gallery'});
     } else {
