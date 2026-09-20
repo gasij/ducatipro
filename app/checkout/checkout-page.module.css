@@ -425,7 +425,7 @@
 
 .successSubtitle {
   margin: 0 0 1rem;
-  font-size: 1.15rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -434,13 +434,16 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem 2rem;
   margin-bottom: 1.5rem;
+  border-radius: 6px;
+  background: #f7f7f7;
+  padding: 1rem;
 }
 
 .successInfoColumn p {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.2rem;
   color: #333333;
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .successText {
