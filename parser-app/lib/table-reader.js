@@ -90,9 +90,16 @@ function readXlsxTable(filePath) {
     .map((rowMatch) => {
       const cells = [];
 
-      for (const cellMatch of rowMatch[1].matchAll(/<c\b([^>]*)>([\s\S]*?)<\/c>/g)) {
-        const attrs = cellMatch[1];
-        const body = cellMatch[2];
+      // Self-closing empty cells (`<c r="B2" s="6"/>`) don't have a body or a
+      // `</c>` — matching them with a single `<c ...>...<\/c>` pattern makes
+      // the lazy body swallow everything up to the *next* real closing tag,
+      // silently stealing the following cell's value. Match the two shapes
+      // separately so an empty cell contributes nothing instead of eating
+      // its neighbour.
+      for (const cellMatch of rowMatch[1].matchAll(/<c\b([^>]*)\/>|<c\b([^>]*)>([\s\S]*?)<\/c>/g)) {
+        const isSelfClosing = cellMatch[1] !== undefined;
+        const attrs = isSelfClosing ? cellMatch[1] : cellMatch[2];
+        const body = isSelfClosing ? '' : cellMatch[3];
         const ref = getXmlAttr(attrs, 'r');
         const type = getXmlAttr(attrs, 't');
         const colIndex = columnIndexFromCellRef(ref);

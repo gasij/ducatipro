@@ -6,7 +6,7 @@ const productAliases = {
   price: ['price', 'amount', 'price rub', 'price eur', 'цена', 'стоимость'],
   old_price: ['old_price', 'old price', 'oldPrice', 'старая цена', 'цена до скидки'],
   old_sku: ['old_sku', 'old sku', 'previous_sku', 'previous sku', 'старый артикул', 'старый номер', 'прежний артикул', 'прежний номер'],
-  new_sku: ['new_sku', 'new sku', 'replacement_sku', 'replacement sku', 'новый артикул', 'артикул замены', 'заменен на', 'заменён на', 'замена на'],
+  new_sku: ['new_sku', 'new sku', 'new oem', 'new_oem', 'replacement_sku', 'replacement sku', 'новый артикул', 'артикул замены', 'заменен на', 'заменён на', 'замена на'],
   weight: ['weight', 'wht', 'gross_weight', 'gross weight', 'net_weight', 'net weight', 'вес', 'масса'],
   category: ['category', 'type', 'раздел', 'категория'],
   image: ['image', 'main_image', 'photo', 'image_url', 'image url', 'фото', 'картинка', 'ссылка на фото'],
