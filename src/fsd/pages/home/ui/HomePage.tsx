@@ -121,17 +121,13 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
         </div>
 
         <div className={styles.instagramGrid}>
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className={styles.instagramItem}>
-              <Image
-                src={`https://picsum.photos/seed/motopart${i}/400/400`}
-                alt="Instagram photo"
-                fill
-                className={styles.instagramImage}
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          ))}
+          {['/instagram/coffee-1.jpg', '/instagram/coffee-2.jpg', '/instagram/coffee-3.jpg', '/instagram/coffee-4.jpg'].map(
+            (src) => (
+              <div key={src} className={styles.instagramItem}>
+                <Image src={src} alt="Оригинальные запчасти Ducati с итальянским кофе в посылке" fill className={styles.instagramImage} />
+              </div>
+            ),
+          )}
         </div>
       </section>
 
