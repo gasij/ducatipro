@@ -37,10 +37,6 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
       label: pickSiteText(siteTexts, 'header.nav_outlet', 'Аутлет в Милане'),
     },
     {href: CONSUMABLES_URL, label: 'Расходники в наличии'},
-    {
-      href: pickSiteTextUrl(siteTexts, 'header.nav_unsorted', '/catalog-oem'),
-      label: pickSiteText(siteTexts, 'header.nav_unsorted', 'Каталог OEM'),
-    },
     {href: '/cart', label: 'Корзина'},
   ];
 
@@ -205,7 +201,7 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
         <div className={styles.container}>
           <div className={styles.desktopTop}>
             <nav className={styles.topNav}>
-              {navLinks.slice(0, 4).map((link) => (
+              {navLinks.slice(0, 3).map((link) => (
                 <Link key={link.href} href={link.href} className={styles.topLink}>
                   {link.label}
                 </Link>

@@ -47,6 +47,10 @@
     transition: color 180ms ease;
 }
 
+.topLink {
+    font-size: 0.875rem;
+}
+
 .topLink:hover {
     color: #ffffff;
 }
@@ -574,7 +578,7 @@
     display: block;
     border-bottom: 1px solid rgb(255 255 255 / 5%);
     padding: 1rem 1.25rem;
-    font-size: 0.9375rem;
+    font-size: 1rem;
     transition: background-color 180ms ease, color 180ms ease;
 }
 

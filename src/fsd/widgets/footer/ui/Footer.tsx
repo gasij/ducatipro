@@ -8,6 +8,7 @@ import styles from './Footer.module.css';
 
 const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
 const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
+const CONSUMABLES_URL = 'https://ducatiparts.pro/collection/consumables';
 
 export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
   return (
@@ -22,7 +23,7 @@ export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
                   href={pickSiteTextUrl(siteTexts, 'footer.link_catalog', CATALOG_URL)}
                   className={styles.footerLink}
                 >
-                  {pickSiteText(siteTexts, 'footer.link_catalog', 'Каталог')}
+                  {pickSiteText(siteTexts, 'footer.link_catalog', 'Каталог афтемаркета')}
                 </Link>
               </li>
               <li>
@@ -35,10 +36,10 @@ export default function Footer({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
               </li>
               <li>
                 <Link
-                  href={pickSiteTextUrl(siteTexts, 'footer.link_unsorted', '/catalog-oem')}
+                  href={pickSiteTextUrl(siteTexts, 'footer.link_consumables', CONSUMABLES_URL)}
                   className={styles.footerLink}
                 >
-                  {pickSiteText(siteTexts, 'footer.link_unsorted', 'Каталог OEM')}
+                  {pickSiteText(siteTexts, 'footer.link_consumables', 'Расходники в наличии')}
                 </Link>
               </li>
             </ul>
