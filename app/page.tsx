@@ -1,4 +1,4 @@
-import {getProducts, hasProductCategory} from '@/src/fsd/entities/product';
+import {getProduct, getProducts, hasProductCategory} from '@/src/fsd/entities/product';
 import {getRecentlyOrderedProductIds} from '@/lib/directus';
 import {HomePage} from '@/src/fsd/pages/home';
 import {getSiteTexts, pickSiteText} from '@/src/fsd/shared/lib';
@@ -14,10 +14,15 @@ export default async function Home() {
     getRecentlyOrderedProductIds(HOME_SECTION_SIZE),
   ]);
 
-  const productById = new Map(products.map((product) => [product.id, product]));
-  const recentlyOrdered = recentlyOrderedIds
-    .map((id) => productById.get(id))
-    .filter((product): product is (typeof products)[number] => Boolean(product));
+  // Resolve each id directly — `products` is capped to a page of the
+  // catalog, so a recently-ordered product outside that page would
+  // otherwise silently disappear from this section.
+  const resolvedRecentlyOrdered = await Promise.all(
+    recentlyOrderedIds.map((id) => getProduct(id).catch(() => undefined)),
+  );
+  const recentlyOrdered = resolvedRecentlyOrdered.filter(
+    (product): product is NonNullable<typeof product> => Boolean(product),
+  );
 
   let sectionTitle = pickSiteText(siteTexts, 'home.recently_ordered_title', 'Недавно заказанные');
   let sectionItems = recentlyOrdered;
