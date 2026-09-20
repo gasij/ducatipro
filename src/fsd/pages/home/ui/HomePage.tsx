@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {ChevronLeft, ChevronRight} from 'lucide-react';
 import {ProductCard, type Product} from '@/src/fsd/entities/product';
-import {gsap, pickSiteText, registerGsap, type SiteTextsMap} from '@/src/fsd/shared/lib';
+import {gsap, pickSiteText, pickSiteTextImage, registerGsap, type SiteTextsMap} from '@/src/fsd/shared/lib';
 import {FeedbackForm} from '@/src/fsd/widgets/feedback-form';
 import styles from './HomePage.module.css';
 
@@ -20,6 +20,10 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
     siteTexts,
     'home.italy_coffee_promo',
     'Итальянский #кофевкофр в посылку при заказе из Италии гарантирован',
+  );
+  const bannerImage = pickSiteTextImage(siteTexts, 'home.banner_image', '/banner.jpg');
+  const instagramImages = [1, 2, 3, 4].map((n) =>
+    pickSiteTextImage(siteTexts, `home.instagram_image_${n}`, `/instagram/coffee-${n}.jpg`),
   );
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -99,7 +103,7 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
     <div ref={rootRef} className={styles.page}>
       <section className={styles.banner}>
         <Image
-          src="/banner.jpg"
+          src={bannerImage}
           alt="FC Moto, Louis, Motostorm — экипировка и запчасти"
           width={1920}
           height={577}
@@ -121,13 +125,11 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
         </div>
 
         <div className={styles.instagramGrid}>
-          {['/instagram/coffee-1.jpg', '/instagram/coffee-2.jpg', '/instagram/coffee-3.jpg', '/instagram/coffee-4.jpg'].map(
-            (src) => (
-              <div key={src} className={styles.instagramItem}>
-                <Image src={src} alt="Оригинальные запчасти Ducati с итальянским кофе в посылке" fill className={styles.instagramImage} />
-              </div>
-            ),
-          )}
+          {instagramImages.map((src) => (
+            <div key={src} className={styles.instagramItem}>
+              <Image src={src} alt="Оригинальные запчасти Ducati с итальянским кофе в посылке" fill className={styles.instagramImage} />
+            </div>
+          ))}
         </div>
       </section>
 

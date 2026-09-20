@@ -5,6 +5,7 @@ export type SiteText = {
   key: string;
   value: string;
   url?: string;
+  image?: string;
 };
 
 export type SiteTextsMap = Record<string, SiteText>;
@@ -13,6 +14,7 @@ type DirectusSiteTextItem = {
   key?: unknown;
   value?: unknown;
   url?: unknown;
+  image?: unknown;
   status?: unknown;
 };
 
@@ -33,7 +35,7 @@ export async function getSiteTexts(): Promise<SiteTextsMap> {
 
   try {
     const url = new URL(`/items/${SITE_TEXTS_COLLECTION}`, directusUrl);
-    url.searchParams.set('fields', 'key,value,url,status');
+    url.searchParams.set('fields', 'key,value,url,image,status');
     url.searchParams.set('filter[status][_eq]', 'published');
     url.searchParams.set('limit', '-1');
 
@@ -61,12 +63,14 @@ export async function getSiteTexts(): Promise<SiteTextsMap> {
 
       const value = typeof item.value === 'string' ? item.value : undefined;
       const url_ = typeof item.url === 'string' && item.url ? item.url : undefined;
+      const imageId = typeof item.image === 'string' && item.image ? item.image : undefined;
+      const image = imageId ? `${directusUrl}/assets/${imageId}` : undefined;
 
-      if (value === undefined) {
+      if (value === undefined && image === undefined) {
         continue;
       }
 
-      map[item.key] = {key: item.key, value, url: url_};
+      map[item.key] = {key: item.key, value: value ?? '', url: url_, image};
     }
 
     return map;
@@ -82,5 +86,10 @@ export function pickSiteText(texts: SiteTextsMap, key: string, fallback: string)
 
 export function pickSiteTextUrl(texts: SiteTextsMap, key: string, fallback: string): string {
   const value = texts[key]?.url;
+  return value && value.trim() ? value : fallback;
+}
+
+export function pickSiteTextImage(texts: SiteTextsMap, key: string, fallback: string): string {
+  const value = texts[key]?.image;
   return value && value.trim() ? value : fallback;
 }
