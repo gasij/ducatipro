@@ -2,6 +2,24 @@ const {directusRequest, fetchExistingMap, runWithConcurrency} = require('./direc
 
 const DEFAULT_GALLERY_JUNCTION_COLLECTION = 'products_files_1';
 
+const MIME_TYPES_BY_EXTENSION = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+};
+
+// `new Blob([buffer])` has no type of its own, so without this Directus
+// stores every upload as application/octet-stream — it then can't tell the
+// file is an image at all, so it skips its own resize/quality transforms
+// and serves the raw original verbatim (looks over-compressed/pixelated on
+// the site, which just requests it through Next's own image optimizer).
+function mimeTypeFromFilename(filename) {
+  const extension = String(filename || '').split('.').pop()?.toLowerCase();
+  return MIME_TYPES_BY_EXTENSION[extension] || 'application/octet-stream';
+}
+
 function articleFromFilename(filename) {
   return String(filename || '')
     .replace(/\.[^.]+$/, '')
@@ -27,7 +45,7 @@ function baseArticleFromFilename(filename) {
 
 async function uploadFileToDirectus(config, file) {
   const form = new FormData();
-  form.append('file', new Blob([file.buffer]), file.filename);
+  form.append('file', new Blob([file.buffer], {type: mimeTypeFromFilename(file.filename)}), file.filename);
 
   const response = await fetch(`${config.url.replace(/\/$/, '')}/files`, {
     method: 'POST',
