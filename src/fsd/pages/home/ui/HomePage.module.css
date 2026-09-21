@@ -21,7 +21,13 @@
 
 .bannerImage {
   width: 100%;
-  min-height: clamp(150px, 30vw, 420px);
+  /* `height` (not `min-height`) pins the box to a fixed size regardless of
+     viewport — otherwise, with only `width: 100%` set, browsers size an
+     `<img>`'s auto height from the actual loaded bitmap's own aspect ratio,
+     not the `width`/`height` props passed to next/image. That let the whole
+     banner block grow or shrink whenever a differently-proportioned image
+     was uploaded through the CMS, instead of always cropping to fit. */
+  height: clamp(150px, 30vw, 420px);
   object-fit: cover;
   object-position: center;
 }
