@@ -109,7 +109,7 @@ export default function HomePage({newArrivals, sectionTitle = 'Новинки в
           height={577}
           className={styles.bannerImage}
           priority
-          sizes="100vw"
+          sizes="(max-width: 1920px) 100vw, 1920px"
         />
       </section>
 
