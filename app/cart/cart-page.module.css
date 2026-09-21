@@ -339,6 +339,13 @@
     -webkit-line-clamp: 3;
 }
 
+.recentPriceRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 2ch;
+}
+
 .recentPrice {
     color: #333333;
     font-size: 1rem;

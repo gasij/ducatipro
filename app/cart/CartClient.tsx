@@ -544,10 +544,12 @@ export default function CartClient({
                   </div>
                   <div className={styles.recentInfo}>
                     <div className={styles.recentTitle}>{product.title}</div>
-                    <div className={styles.recentPrice}>{product.priceFormatted}</div>
-                    {product.priceRubFormatted && (
-                      <div className={styles.priceRubHint}>{product.priceRubFormatted}</div>
-                    )}
+                    <div className={styles.recentPriceRow}>
+                      <span className={styles.recentPrice}>{product.priceFormatted}</span>
+                      {product.priceRubFormatted && (
+                        <span className={styles.priceRubHint}>{product.priceRubFormatted}</span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ))}
