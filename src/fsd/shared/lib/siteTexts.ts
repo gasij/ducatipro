@@ -14,7 +14,7 @@ type DirectusSiteTextItem = {
   key?: unknown;
   value?: unknown;
   url?: unknown;
-  image?: unknown;
+  image?: {id?: unknown; modified_on?: unknown} | null;
   status?: unknown;
 };
 
@@ -35,7 +35,7 @@ export async function getSiteTexts(): Promise<SiteTextsMap> {
 
   try {
     const url = new URL(`/items/${SITE_TEXTS_COLLECTION}`, directusUrl);
-    url.searchParams.set('fields', 'key,value,url,image,status');
+    url.searchParams.set('fields', 'key,value,url,image.id,image.modified_on,status');
     url.searchParams.set('filter[status][_eq]', 'published');
     url.searchParams.set('limit', '-1');
 
@@ -63,8 +63,19 @@ export async function getSiteTexts(): Promise<SiteTextsMap> {
 
       const value = typeof item.value === 'string' ? item.value : undefined;
       const url_ = typeof item.url === 'string' && item.url ? item.url : undefined;
-      const imageId = typeof item.image === 'string' && item.image ? item.image : undefined;
-      const image = imageId ? `${directusUrl}/assets/${imageId}` : undefined;
+      const imageId = typeof item.image?.id === 'string' && item.image.id ? item.image.id : undefined;
+      // Append the file's own modified_on as a cache-busting query param —
+      // Directus serves assets with a 30-day Cache-Control header, and if an
+      // editor replaces a file's content in place (same file id) rather than
+      // uploading a new one, the URL alone wouldn't change and Next's image
+      // optimizer would keep serving the old cached bytes for weeks.
+      const imageModifiedOn =
+        typeof item.image?.modified_on === 'string' && item.image.modified_on
+          ? item.image.modified_on
+          : undefined;
+      const image = imageId
+        ? `${directusUrl}/assets/${imageId}${imageModifiedOn ? `?v=${encodeURIComponent(imageModifiedOn)}` : ''}`
+        : undefined;
 
       if (value === undefined && image === undefined) {
         continue;
