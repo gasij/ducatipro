@@ -350,9 +350,7 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
         <div ref={tickerRef} className={styles.tickerViewport}>
           <div className={styles.tickerTrack}>
             <div className={styles.tickerContent}>
-              <Link href="/catalog-oem" className={styles.tickerLink}>
-                {tickerText}
-              </Link>
+              <span className={styles.tickerLink}>{tickerText}</span>
               <span className={styles.tickerSeparator}>-</span>
             </div>
             <div className={styles.tickerContent} aria-hidden>

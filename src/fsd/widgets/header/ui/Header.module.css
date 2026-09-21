@@ -503,9 +503,6 @@
     padding: 0 1rem;
 }
 
-.tickerLink:hover {
-    text-decoration: underline;
-}
 
 .tickerSeparator {
     color: #4b5563;
