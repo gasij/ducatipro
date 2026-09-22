@@ -21,6 +21,12 @@
   overflow: hidden;
 }
 
+@media (max-width: 639px) {
+  .banner {
+    display: none;
+  }
+}
+
 .bannerImage {
   width: 100%;
   /* `height` (not `min-height`) pins the box to a fixed size regardless of
