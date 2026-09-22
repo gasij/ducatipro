@@ -20,11 +20,15 @@ const TICKER_TEXT_FALLBACK =
   'Весь экип (шлема, куртки, штаны, перчи, боты, защиты и все что угодно), а также повседневка в полном ассортименте в любом европейском магазине за нашу символическую комиссию 10%';
 const TICKER_TEXT_COLOR_FALLBACK = '#e30613';
 
-// Directus editors often paste a hex color without the leading `#` — a bare
-// "ff3333" is an invalid CSS color value and the browser silently ignores
-// it, so the ticker looked "stuck" on the fallback color instead of erroring.
-function normalizeHexColor(value: string): string {
-  return /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(value) ? `#${value}` : value;
+// Directus editors sometimes paste a hex color without the leading `#`, or
+// mistype the digit count — either one is an invalid CSS color value that
+// the browser silently ignores, making the ticker look "stuck" on whatever
+// color happened to be cascading in rather than erroring visibly. Normalize
+// the common "forgot the #" case and fall back to a known-good color for
+// anything else that isn't actually valid hex.
+function normalizeHexColor(value: string, fallback: string): string {
+  const withHash = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(value) ? `#${value}` : value;
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(withHash) ? withHash : fallback;
 }
 
 const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
@@ -35,6 +39,7 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
   const tickerText = pickSiteText(siteTexts, 'header.ticker_text', TICKER_TEXT_FALLBACK);
   const tickerTextColor = normalizeHexColor(
     pickSiteText(siteTexts, 'header.ticker_text_color', TICKER_TEXT_COLOR_FALLBACK),
+    TICKER_TEXT_COLOR_FALLBACK,
   );
   const navLinks = [
     {
