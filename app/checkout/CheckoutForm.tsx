@@ -103,7 +103,7 @@ export default function CheckoutForm({
   const paymentTextLine3 = pickSiteText(
     siteTexts,
     'checkout.payment_text_line3_prefix',
-    'Также принимаем тезерами на кошелек или рублями.',
+    'Также принимаем тезерами на кошелек или рублями по QR-коду.',
   );
   const paymentTextLine4 = pickSiteText(
     siteTexts,
