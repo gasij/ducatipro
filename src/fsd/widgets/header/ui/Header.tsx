@@ -325,6 +325,10 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
                   <Plus className={styles.searchActionIcon} />
                   Еще товар
                 </button>
+                <button type="submit" className={styles.dropdownSearchButton}>
+                  <Search className={styles.searchActionIcon} />
+                  Найти
+                </button>
               </div>
             </div>
           </div>
