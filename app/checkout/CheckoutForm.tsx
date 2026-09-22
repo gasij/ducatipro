@@ -70,14 +70,12 @@ function isPhoneComplete(formattedValue: string): boolean {
 type Props = {
   products: Product[];
   eurToRubRate: number;
-  rateMarkupPercent: number;
   siteTexts?: SiteTextsMap;
 };
 
 export default function CheckoutForm({
   products,
   eurToRubRate,
-  rateMarkupPercent,
   siteTexts = {},
 }: Props) {
   const expectedDeliveryDate = getExpectedDeliveryDateRange();
@@ -102,10 +100,10 @@ export default function CheckoutForm({
     'checkout.payment_text_line2',
     'Мы принимаем оплаты в Евро на расчетный счет свифт-переводом, по ссылке или PayPal (если у вас есть счет за границей).',
   );
-  const paymentTextLine3Prefix = pickSiteText(
+  const paymentTextLine3 = pickSiteText(
     siteTexts,
     'checkout.payment_text_line3_prefix',
-    'Также принимаем тезерами на кошелек или рублями по курсу ЦБ +',
+    'Также принимаем тезерами на кошелек или рублями.',
   );
   const paymentTextLine4 = pickSiteText(
     siteTexts,
@@ -567,10 +565,7 @@ export default function CheckoutForm({
           <div className={styles.paymentText}>
             <p>{paymentTextLine1}</p>
             <p>{paymentTextLine2}</p>
-            <p>
-              {paymentTextLine3Prefix}
-              {Number.isInteger(rateMarkupPercent) ? rateMarkupPercent : rateMarkupPercent.toFixed(2)}%
-            </p>
+            <p>{paymentTextLine3}</p>
             <p className={styles.greenText}>{paymentTextLine4}</p>
           </div>
         </section>
