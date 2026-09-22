@@ -603,9 +603,7 @@ export default function CartClient({
 
             <div className={styles.deliveryDisclaimer}>
               <p>
-                {deliveryDisclaimerLine1}
-                <br />
-                {deliveryDisclaimerLine2}
+                {deliveryDisclaimerLine1} {deliveryDisclaimerLine2}
               </p>
               <p className={styles.deliveryDisclaimerNote}>{deliveryDisclaimerNote}</p>
             </div>
