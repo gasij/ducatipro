@@ -27,6 +27,13 @@
   }
 }
 
+/* Pull the first section up closer to the banner specifically, without
+   touching the same `.page` gap used as the rhythm between every other
+   section further down the page. */
+.banner + .productSection {
+  margin-top: calc(clamp(2rem, 6vw, 4.5rem) * -0.5);
+}
+
 .bannerImage {
   width: 100%;
   /* `height` (not `min-height`) pins the box to a fixed size regardless of
