@@ -20,13 +20,22 @@ const TICKER_TEXT_FALLBACK =
   'Весь экип (шлема, куртки, штаны, перчи, боты, защиты и все что угодно), а также повседневка в полном ассортименте в любом европейском магазине за нашу символическую комиссию 10%';
 const TICKER_TEXT_COLOR_FALLBACK = '#e30613';
 
+// Directus editors often paste a hex color without the leading `#` — a bare
+// "ff3333" is an invalid CSS color value and the browser silently ignores
+// it, so the ticker looked "stuck" on the fallback color instead of erroring.
+function normalizeHexColor(value: string): string {
+  return /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(value) ? `#${value}` : value;
+}
+
 const OUTLET_URL = 'https://ducatiparts.pro/collection/outlet';
 const CATALOG_URL = 'https://ducatiparts.pro/collection/all';
 const CONSUMABLES_URL = 'https://ducatiparts.pro/collection/consumables';
 
 export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
   const tickerText = pickSiteText(siteTexts, 'header.ticker_text', TICKER_TEXT_FALLBACK);
-  const tickerTextColor = pickSiteText(siteTexts, 'header.ticker_text_color', TICKER_TEXT_COLOR_FALLBACK);
+  const tickerTextColor = normalizeHexColor(
+    pickSiteText(siteTexts, 'header.ticker_text_color', TICKER_TEXT_COLOR_FALLBACK),
+  );
   const navLinks = [
     {
       href: pickSiteTextUrl(siteTexts, 'header.nav_catalog', CATALOG_URL),
