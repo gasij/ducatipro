@@ -507,55 +507,6 @@ export default function CartClient({
               </button>
             </div>
           )}
-
-          <div className={styles.recent}>
-            <div className={styles.recentHeader}>
-              <h2 className={styles.sectionTitle}>{recentTitle}</h2>
-              {recentItems.length > 2 && (
-                <div className={styles.recentControls}>
-                  <button
-                    type="button"
-                    onClick={() => scrollRecentItems(-1)}
-                    className={styles.recentControl}
-                    aria-label="Предыдущие товары"
-                  >
-                    <ChevronLeft className={styles.recentControlIcon} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollRecentItems(1)}
-                    className={styles.recentControl}
-                    aria-label="Следующие товары"
-                  >
-                    <ChevronRight className={styles.recentControlIcon} />
-                  </button>
-                </div>
-              )}
-            </div>
-            <div ref={recentGridRef} className={styles.recentGrid}>
-              {recentItems.map((product) => (
-                <Link key={product.id} href={getProductHref(product)} className={styles.recentCard}>
-                  <div className={styles.recentImageBox}>
-                    <CartProductImage
-                      product={product}
-                      imageClassName={styles.recentImage}
-                      fallbackClassName={styles.recentImageFallback}
-                      sizes="196px"
-                    />
-                  </div>
-                  <div className={styles.recentInfo}>
-                    <div className={styles.recentTitle}>{product.title}</div>
-                    <div className={styles.recentPriceRow}>
-                      <span className={styles.recentPrice}>{product.priceFormatted}</span>
-                      {product.priceRubFormatted && (
-                        <span className={styles.priceRubHint}>{product.priceRubFormatted}</span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
         </main>
 
         <aside className={styles.summary}>
@@ -650,6 +601,55 @@ export default function CartClient({
             {shareMessage && <p className={styles.shareMessage}>{shareMessage}</p>}
           </div>
         </aside>
+
+        <div className={styles.recent}>
+          <div className={styles.recentHeader}>
+            <h2 className={styles.sectionTitle}>{recentTitle}</h2>
+            {recentItems.length > 2 && (
+              <div className={styles.recentControls}>
+                <button
+                  type="button"
+                  onClick={() => scrollRecentItems(-1)}
+                  className={styles.recentControl}
+                  aria-label="Предыдущие товары"
+                >
+                  <ChevronLeft className={styles.recentControlIcon} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollRecentItems(1)}
+                  className={styles.recentControl}
+                  aria-label="Следующие товары"
+                >
+                  <ChevronRight className={styles.recentControlIcon} />
+                </button>
+              </div>
+            )}
+          </div>
+          <div ref={recentGridRef} className={styles.recentGrid}>
+            {recentItems.map((product) => (
+              <Link key={product.id} href={getProductHref(product)} className={styles.recentCard}>
+                <div className={styles.recentImageBox}>
+                  <CartProductImage
+                    product={product}
+                    imageClassName={styles.recentImage}
+                    fallbackClassName={styles.recentImageFallback}
+                    sizes="196px"
+                  />
+                </div>
+                <div className={styles.recentInfo}>
+                  <div className={styles.recentTitle}>{product.title}</div>
+                  <div className={styles.recentPriceRow}>
+                    <span className={styles.recentPrice}>{product.priceFormatted}</span>
+                    {product.priceRubFormatted && (
+                      <span className={styles.priceRubHint}>{product.priceRubFormatted}</span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

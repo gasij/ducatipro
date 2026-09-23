@@ -24,6 +24,8 @@
 }
 
 .mainColumn {
+    grid-column: 1;
+    grid-row: 1;
     min-width: 0;
 }
 
@@ -231,6 +233,8 @@
 }
 
 .recent {
+    grid-column: 1;
+    grid-row: 2;
     margin-top: 9.6rem;
 }
 
@@ -357,6 +361,8 @@
 }
 
 .summary {
+    grid-column: 2;
+    grid-row: 1;
     position: sticky;
     top: 5rem;
     margin-top: 3.55rem;
@@ -587,9 +593,24 @@
         grid-template-columns: 1fr;
     }
 
+    .mainColumn {
+        grid-column: 1;
+        grid-row: auto;
+        order: 1;
+    }
+
     .summary {
+        grid-column: 1;
+        grid-row: auto;
+        order: 2;
         position: static;
         margin-top: 0;
+    }
+
+    .recent {
+        grid-column: 1;
+        grid-row: auto;
+        order: 3;
     }
 
     .promoRow {
