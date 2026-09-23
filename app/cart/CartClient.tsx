@@ -45,6 +45,7 @@ function CartProductImage({
       alt={product.title}
       className={imageSrc === FALLBACK_PRODUCT_IMAGE ? `${imageClassName} ${fallbackClassName}` : imageClassName}
       sizes={sizes}
+      quality={90}
       referrerPolicy="no-referrer"
       onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}
     />
@@ -539,7 +540,7 @@ export default function CartClient({
                       product={product}
                       imageClassName={styles.recentImage}
                       fallbackClassName={styles.recentImageFallback}
-                      sizes="96px"
+                      sizes="196px"
                     />
                   </div>
                   <div className={styles.recentInfo}>
