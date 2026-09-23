@@ -58,7 +58,7 @@
 .image {
     object-fit: contain;
     object-position: center top;
-    padding: 0.2rem 0.35rem 0.55rem;
+    padding: 0.05rem 0.1rem 0.25rem;
     mix-blend-mode: multiply;
 }
 
@@ -132,7 +132,7 @@
 
 .oldSku {
     color: #9a9a9d;
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: line-through;
 }
 

@@ -40,8 +40,9 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getTitleWithArticle(product: Product): string {
   const sku = getProductArticle(product);
+  const oldSkuSuffix = product.oldSku ? ` (${product.oldSku})` : '';
   return sku && !product.title.toUpperCase().includes(sku.toUpperCase())
-    ? `${sku} ${product.title}`
+    ? `${sku}${oldSkuSuffix} ${product.title}`
     : product.title;
 }
 

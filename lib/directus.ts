@@ -92,6 +92,7 @@ async function buildOrderItems(
         product_id: product.id,
         product_title: product.title,
         product_sku: getProductArticle(product),
+        product_old_sku: product.oldSku || null,
         price: convertPriceToRub(product.price, 'EUR', eurToRubRate),
         price_eur: product.price,
         quantity: item.quantity,

@@ -287,7 +287,7 @@
 .recentCard {
     display: flex;
     min-width: 0;
-    flex: 0 0 180px;
+    flex: 0 0 225px;
     flex-direction: column;
     border: 1px solid #e9e9e9;
     border-radius: 6px;
@@ -308,7 +308,7 @@
 .recentImageBox {
     position: relative;
     width: 100%;
-    height: 150px;
+    height: 188px;
     margin-bottom: 0.85rem;
 }
 
@@ -322,8 +322,12 @@
     padding: 25%;
 }
 
+/* Fixed (not %) padding on purpose — .recentImageBox grew by 25% for real
+   product photos, but the Ducati-logo placeholder shouldn't grow with it.
+   A percentage padding would scale with the box; this pixel value keeps the
+   placeholder mark pinned to its original visual size. */
 .recentImageFallback {
-    padding: 25%;
+    padding: 40px;
 }
 
 .recentTitle {

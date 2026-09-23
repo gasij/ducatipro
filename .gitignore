@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 exc/
 *.swp
 *~
+redisign/

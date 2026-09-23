@@ -10,6 +10,7 @@ export type OrderItem = {
   product_id: string;
   product_title: string;
   product_sku: string;
+  product_old_sku?: string | null;
   quantity: number;
   price: number | string;
   price_eur?: number | string;
