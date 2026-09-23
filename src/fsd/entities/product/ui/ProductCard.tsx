@@ -95,6 +95,7 @@ export default function ProductCard({
                 : styles.image
             }
             sizes="(max-width: 767px) 100vw, 280px"
+            quality={90}
             referrerPolicy="no-referrer"
             onError={() => setImageSrc(FALLBACK_PRODUCT_IMAGE)}
           />
