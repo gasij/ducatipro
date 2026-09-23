@@ -33,6 +33,8 @@ export {
 export type {PriceCurrency} from './money';
 export {cn} from './utils';
 export {readRecentlyViewedIds, recordRecentlyViewed} from './recentlyViewed';
+export {checkPromoCode, readAppliedPromoCode, writeAppliedPromoCode} from './promo';
+export type {PromoValidationResult} from './promo';
 export {useIsMobile} from './use-mobile';
 export {getSiteTexts, pickSiteText, pickSiteTextUrl, pickSiteTextImage} from './siteTexts';
 export type {SiteText, SiteTextsMap} from './siteTexts';

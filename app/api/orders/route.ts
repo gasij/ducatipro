@@ -90,6 +90,7 @@ export async function POST(request: Request) {
       delivery_method: data.delivery_method.trim(),
       agreed_to_terms: true,
       items,
+      promo_code: typeof data.promo_code === 'string' ? data.promo_code : null,
     });
 
     return NextResponse.json({

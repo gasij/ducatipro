@@ -8,12 +8,15 @@ import {getProductArticle, getProductHref, type Product} from '@/src/fsd/entitie
 import {
   calculateDeliveryPriceEur,
   CART_STORAGE_KEY,
+  checkPromoCode,
   formatEurPrice,
   formatRubHint,
   notifyCartUpdated,
   ORDER_PROCESSING_FEE_EUR,
   pickSiteText,
+  readAppliedPromoCode,
   readRecentlyViewedIds,
+  writeAppliedPromoCode,
   type SiteTextsMap,
 } from '@/src/fsd/shared/lib';
 import emptyStyles from '@/app/empty-state.module.css';
@@ -65,9 +68,10 @@ type Props = {
   siteTexts?: SiteTextsMap;
 };
 
-const PROMO_CODES: Record<string, number> = {
-  DUCATI10: 10,
-  COFFEE: 5,
+type AppliedPromo = {
+  code: string;
+  discountType: 'percent' | 'fixed_eur';
+  discountValue: number;
 };
 
 export default function CartClient({
@@ -101,12 +105,14 @@ export default function CartClient({
   const [cartLoaded, setCartLoaded] = useState(false);
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
   const [promo, setPromo] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<{code: string; discount: number} | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
   const [promoMessage, setPromoMessage] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [copyTooltipVisible, setCopyTooltipVisible] = useState(false);
   const copyTooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const promoRestoreAttemptedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -145,7 +151,11 @@ export default function CartClient({
 
   const quantity = lines.reduce((sum, line) => sum + line.quantity, 0);
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
-  const discountAmount = appliedPromo ? Math.round((subtotal * appliedPromo.discount) / 100) : 0;
+  const discountAmount = appliedPromo
+    ? appliedPromo.discountType === 'percent'
+      ? Math.round(((subtotal * appliedPromo.discountValue) / 100) * 100) / 100
+      : Math.min(appliedPromo.discountValue, subtotal)
+    : 0;
   const totalWeightKg = lines.reduce((sum, line) => sum + (line.product.weight || 0) * line.quantity, 0);
   const deliveryPriceEur = lines.length > 0 ? calculateDeliveryPriceEur(totalWeightKg) : 0;
   const processingFeeEur = lines.length > 0 ? ORDER_PROCESSING_FEE_EUR : 0;
@@ -239,6 +249,27 @@ export default function CartClient({
     return () => window.clearTimeout(timer);
   }, [resolveCartLines, sharedItems]);
 
+  useEffect(() => {
+    if (!cartLoaded || promoRestoreAttemptedRef.current || subtotal <= 0) {
+      return;
+    }
+
+    promoRestoreAttemptedRef.current = true;
+    const storedCode = readAppliedPromoCode();
+
+    if (!storedCode) {
+      return;
+    }
+
+    checkPromoCode(storedCode, subtotal).then((result) => {
+      if (result.valid) {
+        setAppliedPromo({code: result.code, discountType: result.discountType, discountValue: result.discountValue});
+      } else {
+        writeAppliedPromoCode(null);
+      }
+    });
+  }, [cartLoaded, subtotal]);
+
   function persistLines(nextLines: CartLine[]) {
     if (nextLines.length === 0) {
       window.localStorage.removeItem(CART_STORAGE_KEY);
@@ -282,6 +313,7 @@ export default function CartClient({
     if (next.length === 0) {
       setAppliedPromo(null);
       setPromoMessage('');
+      writeAppliedPromoCode(null);
     }
   }
 
@@ -291,9 +323,8 @@ export default function CartClient({
     persistLines(next);
   }
 
-  function applyPromo() {
+  async function applyPromo() {
     const code = promo.trim().toUpperCase();
-    const discount = PROMO_CODES[code];
 
     if (lines.length === 0) {
       setPromoMessage('Добавьте товар, чтобы применить промокод');
@@ -307,14 +338,24 @@ export default function CartClient({
       return;
     }
 
-    if (!discount) {
-      setPromoMessage('Промокод не найден');
+    setPromoLoading(true);
+    const result = await checkPromoCode(code, subtotal);
+    setPromoLoading(false);
+
+    if (!result.valid) {
       setAppliedPromo(null);
+      setPromoMessage(result.message);
+      writeAppliedPromoCode(null);
       return;
     }
 
-    setAppliedPromo({code, discount});
-    setPromoMessage(`Промокод ${code} применен`);
+    setAppliedPromo({
+      code: result.code,
+      discountType: result.discountType,
+      discountValue: result.discountValue,
+    });
+    setPromoMessage(`Промокод ${result.code} применен`);
+    writeAppliedPromoCode(result.code);
   }
 
   async function copyTextToClipboard(text: string): Promise<boolean> {
@@ -487,8 +528,13 @@ export default function CartClient({
                   placeholder="Промокод"
                   className={styles.promoInput}
                 />
-                <button type="button" onClick={applyPromo} className={styles.promoButton}>
-                  Применить
+                <button
+                  type="button"
+                  onClick={applyPromo}
+                  disabled={promoLoading}
+                  className={styles.promoButton}
+                >
+                  {promoLoading ? 'Проверяем...' : 'Применить'}
                 </button>
               </div>
               {promoMessage && (
@@ -520,7 +566,12 @@ export default function CartClient({
             </div>
             {appliedPromo && (
               <div className={styles.summaryRow}>
-                <span>Скидка {appliedPromo.discount}%</span>
+                <span>
+                  Скидка{' '}
+                  {appliedPromo.discountType === 'percent'
+                    ? `${appliedPromo.discountValue}%`
+                    : `€${appliedPromo.discountValue}`}
+                </span>
                 <div className={styles.summaryValue}>
                   <span>-{formatEurPrice(discountAmount)}</span>
                   <div className={styles.priceRubHint}>-{formatRubHint(discountAmount, eurToRubRate)}</div>

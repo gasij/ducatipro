@@ -33,6 +33,19 @@ export type CreateOrderPayload = {
   delivery_method: string;
   agreed_to_terms: boolean;
   items: CreateOrderInputItem[];
+  promo_code?: string | null;
+};
+
+export type PromoCodeRecord = {
+  id: string;
+  code: string;
+  discount_type: 'percent' | 'fixed_eur';
+  discount_value: number;
+  active: boolean;
+  expires_at: string | null;
+  usage_limit: number | null;
+  used_count: number;
+  min_order_eur: number | null;
 };
 
 export type DirectusOrder = {
@@ -49,6 +62,8 @@ export type DirectusOrder = {
   processing_fee_eur?: number | string;
   delivery_price_eur?: number | string;
   total_eur?: number | string;
+  promo_code?: string | null;
+  discount_eur?: number | string | null;
   payment_method: string;
   delivery_method: string;
   agreed_to_terms: boolean;

@@ -9,13 +9,16 @@ import {getProductArticle, type Product} from '@/src/fsd/entities/product';
 import {
   CART_STORAGE_KEY,
   calculateDeliveryPriceEur,
+  checkPromoCode,
   formatEurPrice,
   formatRubHint,
   getExpectedDeliveryDateRange,
   notifyCartUpdated,
   ORDER_PROCESSING_FEE_EUR,
   pickSiteText,
+  readAppliedPromoCode,
   readStoredCart,
+  writeAppliedPromoCode,
   type SiteTextsMap,
 } from '@/src/fsd/shared/lib';
 import styles from './checkout-page.module.css';
@@ -149,6 +152,12 @@ export default function CheckoutForm({
     [],
   );
   const [itemsLoaded, setItemsLoaded] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discountType: 'percent' | 'fixed_eur';
+    discountValue: number;
+  } | null>(null);
+  const promoCheckedRef = useRef(false);
   const items: CreateOrderInputItem[] = checkoutItems.map((item) => ({
     product_id: item.product.id,
     quantity: item.quantity,
@@ -201,12 +210,39 @@ export default function CheckoutForm({
     (sum, item) => sum + item.product.price * item.quantity,
     0,
   );
+
+  useEffect(() => {
+    if (!itemsLoaded || promoCheckedRef.current || subtotal <= 0) {
+      return;
+    }
+
+    promoCheckedRef.current = true;
+    const storedCode = readAppliedPromoCode();
+
+    if (!storedCode) {
+      return;
+    }
+
+    checkPromoCode(storedCode, subtotal).then((result) => {
+      if (result.valid) {
+        setAppliedPromo({code: result.code, discountType: result.discountType, discountValue: result.discountValue});
+      } else {
+        writeAppliedPromoCode(null);
+      }
+    });
+  }, [itemsLoaded, subtotal]);
+
+  const discountAmount = appliedPromo
+    ? appliedPromo.discountType === 'percent'
+      ? Math.round(((subtotal * appliedPromo.discountValue) / 100) * 100) / 100
+      : Math.min(appliedPromo.discountValue, subtotal)
+    : 0;
   const totalWeightKg = checkoutItems.reduce(
     (sum, item) => sum + (item.product.weight || 0) * item.quantity,
     0,
   );
   const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
-  const totalWithProcessingFee = subtotal + ORDER_PROCESSING_FEE_EUR;
+  const totalWithProcessingFee = subtotal - discountAmount + ORDER_PROCESSING_FEE_EUR;
   const grandTotal = totalWithProcessingFee + deliveryPriceEur;
 
   const checkoutRootRef = useRef<HTMLFormElement>(null);
@@ -321,6 +357,7 @@ export default function CheckoutForm({
       `Страна: ${COUNTRY}`,
       telegramUsername ? `Telegram: ${telegramUsername}` : '',
       pvzAddress ? `Адрес ПВЗ СДЭК: ${pvzAddress}` : '',
+      appliedPromo ? `Промокод: ${appliedPromo.code} (-${formatEurPrice(discountAmount)})` : '',
       `Фикс. сбор за обработку заказа: ${ORDER_PROCESSING_FEE}`,
       `Доставка EMS: €${deliveryPriceEur} (вес: ${totalWeightKg} кг)`,
       `Итоговая цена без доставки EMS: ${formatEurPrice(totalWithProcessingFee)} (${formatRubHint(totalWithProcessingFee, eurToRubRate)})`,
@@ -346,6 +383,7 @@ export default function CheckoutForm({
           delivery_method: DELIVERY_METHOD,
           agreed_to_terms: agreed,
           items,
+          promo_code: appliedPromo?.code || null,
         }),
       });
 
@@ -356,6 +394,7 @@ export default function CheckoutForm({
       }
 
       window.localStorage.removeItem(CART_STORAGE_KEY);
+      writeAppliedPromoCode(null);
       notifyCartUpdated();
       setSuccess({orderId: data.id, orderNumber: data.order_number});
     } catch (err) {
@@ -420,6 +459,14 @@ export default function CheckoutForm({
                 <td>{formatEurPrice(product.price * quantity)}</td>
               </tr>
             ))}
+            {appliedPromo && (
+              <tr>
+                <td colSpan={3} className={styles.successTableSummaryLabel}>
+                  Промокод {appliedPromo.code}:
+                </td>
+                <td>-{formatEurPrice(discountAmount)}</td>
+              </tr>
+            )}
             <tr>
               <td colSpan={3} className={styles.successTableSummaryLabel}>Express Mail Service (EMS):</td>
               <td>{formatEurPrice(deliveryPriceEur)}</td>
@@ -624,6 +671,15 @@ export default function CheckoutForm({
                   <span className={styles.totalValueRub}>{formatRubHint(subtotal, eurToRubRate)}</span>
                 </div>
               </div>
+              {appliedPromo && (
+                <div className={styles.totalRow}>
+                  <span>Промокод {appliedPromo.code}:</span>
+                  <div className={styles.totalValue}>
+                    <strong>-{formatEurPrice(discountAmount)}</strong>
+                    <span className={styles.totalValueRub}>-{formatRubHint(discountAmount, eurToRubRate)}</span>
+                  </div>
+                </div>
+              )}
               <div className={styles.totalRow}>
                 <span>Сбор за обработку:</span>
                 <div className={styles.totalValue}>

@@ -1,5 +1,5 @@
 import {createDirectus, createItem, readItem, readItems, rest, staticToken, updateItem} from '@directus/sdk';
-import type {CreateOrderPayload, DirectusOrder, OrderItem} from './orders/types';
+import type {CreateOrderPayload, DirectusOrder, OrderItem, PromoCodeRecord} from './orders/types';
 import {getProduct, getProductArticle} from '@/src/fsd/entities/product';
 import {calculateDeliveryPriceEur, ORDER_PROCESSING_FEE_EUR} from '@/src/fsd/shared/lib/delivery';
 import {getCurrentEurToRubRate} from '@/src/fsd/shared/lib/exchangeRate';
@@ -17,6 +17,7 @@ type Schema = {
   orders: DirectusOrder[];
   order_items: OrderItem[];
   feedback_messages: FeedbackMessage[];
+  promo_codes: PromoCodeRecord[];
 };
 
 type OrdersCollection = 'order' | 'orders';
@@ -107,6 +108,69 @@ async function buildOrderItems(
   return {orderItems, totalWeightKg};
 }
 
+export type PromoValidation =
+  | {valid: true; code: string; discountType: 'percent' | 'fixed_eur'; discountValue: number; discountAmountEur: number}
+  | {valid: false; message: string};
+
+export async function validatePromoCode(rawCode: string, subtotalEur: number): Promise<PromoValidation> {
+  if (!isDirectusConfigured()) {
+    return {valid: false, message: 'Промокоды временно недоступны'};
+  }
+
+  const code = rawCode.trim().toUpperCase();
+  if (!code) {
+    return {valid: false, message: 'Введите промокод'};
+  }
+
+  const client = getClient();
+  const [promo] = await client.request(
+    readItems('promo_codes', {
+      filter: {code: {_eq: code}},
+      limit: 1,
+    }),
+  );
+
+  if (!promo || !promo.active) {
+    return {valid: false, message: 'Промокод не найден'};
+  }
+
+  if (promo.expires_at && new Date(promo.expires_at).getTime() < Date.now()) {
+    return {valid: false, message: 'Срок действия промокода истёк'};
+  }
+
+  if (promo.usage_limit != null && promo.used_count >= promo.usage_limit) {
+    return {valid: false, message: 'Промокод больше не действителен'};
+  }
+
+  if (promo.min_order_eur != null && subtotalEur < promo.min_order_eur) {
+    return {valid: false, message: `Промокод действует при заказе от €${promo.min_order_eur}`};
+  }
+
+  const discountAmountEur =
+    promo.discount_type === 'percent'
+      ? Math.round(((subtotalEur * promo.discount_value) / 100) * 100) / 100
+      : Math.min(promo.discount_value, subtotalEur);
+
+  return {
+    valid: true,
+    code: promo.code,
+    discountType: promo.discount_type,
+    discountValue: promo.discount_value,
+    discountAmountEur,
+  };
+}
+
+async function incrementPromoUsage(code: string) {
+  const client = getClient();
+  const [promo] = await client.request(
+    readItems('promo_codes', {filter: {code: {_eq: code.trim().toUpperCase()}}, limit: 1}),
+  );
+
+  if (promo) {
+    await client.request(updateItem('promo_codes', promo.id, {used_count: (promo.used_count || 0) + 1}));
+  }
+}
+
 export async function createOrderInDirectus(payload: CreateOrderPayload) {
   const client = getClient();
   const ordersCollection = getOrdersCollection();
@@ -117,12 +181,25 @@ export async function createOrderInDirectus(payload: CreateOrderPayload) {
   const subtotalEur = items.reduce((sum, item) => sum + Number(item.price_eur) * item.quantity, 0);
   const deliveryPriceEur = calculateDeliveryPriceEur(totalWeightKg);
   const processingFeeEur = ORDER_PROCESSING_FEE_EUR;
-  const totalEur = subtotalEur + processingFeeEur + deliveryPriceEur;
+
+  let promoCode: string | null = null;
+  let discountEur = 0;
+
+  if (payload.promo_code) {
+    const promoResult = await validatePromoCode(payload.promo_code, subtotalEur);
+    if (promoResult.valid) {
+      promoCode = promoResult.code;
+      discountEur = promoResult.discountAmountEur;
+    }
+  }
+
+  const totalEur = subtotalEur - discountEur + processingFeeEur + deliveryPriceEur;
 
   const subtotalRub = calcTotal(items);
+  const discountRub = convertPriceToRub(discountEur, 'EUR', eurToRubRate);
   const processingFeeRub = convertPriceToRub(processingFeeEur, 'EUR', eurToRubRate);
   const deliveryPriceRub = convertPriceToRub(deliveryPriceEur, 'EUR', eurToRubRate);
-  const total = subtotalRub + processingFeeRub + deliveryPriceRub;
+  const total = subtotalRub - discountRub + processingFeeRub + deliveryPriceRub;
 
   const order = await client.request(
     createItem(ordersCollection, {
@@ -141,9 +218,15 @@ export async function createOrderInDirectus(payload: CreateOrderPayload) {
       processing_fee_eur: processingFeeEur,
       delivery_price_eur: deliveryPriceEur,
       total_eur: totalEur,
+      promo_code: promoCode,
+      discount_eur: discountEur || null,
       items,
     }),
   );
+
+  if (promoCode) {
+    await incrementPromoUsage(promoCode);
+  }
 
   return order;
 }
