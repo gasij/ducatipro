@@ -24,6 +24,15 @@ import styles from './cart-page.module.css';
 
 const FALLBACK_PRODUCT_IMAGE = '/ducati-logo.png';
 
+function pluralizeTovar(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return 'товар';
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'товара';
+  return 'товаров';
+}
+
 function CartProductImage({
   product,
   imageClassName,
@@ -103,6 +112,7 @@ export default function CartClient({
   );
   const [lines, setLines] = useState<CartLine[]>([]);
   const [cartLoaded, setCartLoaded] = useState(false);
+  const [removedItemsNotice, setRemovedItemsNotice] = useState('');
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
@@ -236,7 +246,24 @@ export default function CartClient({
 
         resolveCartLines(cart).then((nextLines) => {
           setLines(nextLines);
-          notifyCartUpdated();
+
+          // Products can be deleted/replaced in Directus after being added to
+          // the cart (e.g. during a catalog SKU migration) — resolveCartLines
+          // silently drops those entries. Persist the corrected list so the
+          // header badge (which sums raw localStorage, not resolved lines)
+          // stops showing a stale count that never matches what's on screen.
+          const resolvedIds = new Set(nextLines.map((line) => line.product.id));
+          const droppedCount = cart.filter((item) => !resolvedIds.has(item.product_id)).length;
+
+          if (droppedCount > 0) {
+            persistLines(nextLines);
+            setRemovedItemsNotice(
+              `Из корзины удал${droppedCount === 1 ? 'ён' : 'ены'} ${droppedCount} ${pluralizeTovar(droppedCount)} — ${droppedCount === 1 ? 'он больше не доступен' : 'они больше не доступны'} на сайте.`,
+            );
+          } else {
+            notifyCartUpdated();
+          }
+
           setCartLoaded(true);
         });
       } catch {
@@ -436,6 +463,8 @@ export default function CartClient({
       <div className={styles.layout}>
         <main className={styles.mainColumn}>
           <h1 className={styles.title}>{title}</h1>
+
+          {removedItemsNotice && <p className={styles.removedItemsNotice}>{removedItemsNotice}</p>}
 
           {!cartLoaded ? (
             <div className={styles.cartList}>
