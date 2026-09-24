@@ -28,6 +28,11 @@ export default function FeedbackForm({siteTexts = {}, className}: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  // Anti-spam: a hidden field real visitors never see or fill, and the
+  // render timestamp — bots typically fill every field and submit instantly,
+  // both checked server-side in /api/feedback.
+  const [website, setWebsite] = useState('');
+  const renderedAtRef = useRef(Date.now());
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !sectionRef.current) {
@@ -74,7 +79,13 @@ export default function FeedbackForm({siteTexts = {}, className}: Props) {
       const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name, email, message}),
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          website,
+          rendered_at: renderedAtRef.current,
+        }),
       });
 
       const data = await response.json();
@@ -104,6 +115,16 @@ export default function FeedbackForm({siteTexts = {}, className}: Props) {
         </p>
       ) : (
         <form className={styles.contactForm} onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="website"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0}}
+          />
           <div className={styles.formRow}>
             <input
               type="text"
