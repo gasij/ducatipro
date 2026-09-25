@@ -9,7 +9,10 @@
 
 .container {
     width: 100%;
-    max-width: var(--container-wide);
+    /* Wider than the site's shared --container-wide (1280px) on purpose —
+       on large screens that cap left huge idle margins outside the header
+       content while barely touching the actual gaps between elements. */
+    max-width: 1600px;
     margin: 0 auto;
     padding-right: var(--safe-page-padding);
     padding-left: var(--safe-page-padding);
