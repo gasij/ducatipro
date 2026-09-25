@@ -13,7 +13,11 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: 'Запчасти в наличии для мотоциклов дукати',
+  metadataBase: new URL('https://ducatiparts.ru'),
+  title: {
+    default: 'Запчасти в наличии для мотоциклов дукати',
+    template: '%s | Ducati Parts',
+  },
   description: 'Аутлет, запчасти, тюнинг для Ducati',
   icons: {
     icon: [

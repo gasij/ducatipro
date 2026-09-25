@@ -666,6 +666,10 @@
 }
 
 @media (min-width: 768px) {
+    .container {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
     .topBar {
         font-size: 0.8125rem;
     }
@@ -682,7 +686,7 @@
         flex-shrink: 0;
     }
     .logo {
-        height: 2.5rem;
+        height: 2.2rem;
     }
     .actions {
         gap: 1.75rem;

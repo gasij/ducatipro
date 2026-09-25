@@ -1,7 +1,16 @@
+import type {Metadata} from 'next';
 import {getProduct, getProducts, hasProductCategory} from '@/src/fsd/entities/product';
 import {getRecentlyOrderedProductIds} from '@/lib/directus';
 import {HomePage} from '@/src/fsd/pages/home';
 import {getSiteTexts, pickSiteText} from '@/src/fsd/shared/lib';
+
+export const metadata: Metadata = {
+  // `absolute` skips the root layout's `%s | Ducati Parts` template — the
+  // homepage title is already fully branded on its own.
+  title: {absolute: 'Оригинальные запчасти Дукати (Ducati) в наличии в России и с доставкой из Италии'},
+  description:
+    'Оригинальные запчасти для мотоциклов Ducati в наличии и под заказ из Европы. Поиск по артикулу, доставка по России.',
+};
 
 const HOME_SECTION_SIZE = 20;
 // Fall back to new arrivals only when there's no order history at all yet.
