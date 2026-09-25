@@ -116,8 +116,6 @@ export default function ProductView({product, siteTexts = {}}: Props) {
       <div className={styles.breadcrumbs}>
         <Link href="/">Главная</Link>
         <ChevronRight className={styles.breadcrumbIcon} />
-        <Link href="/catalog-oem">Каталог OEM</Link>
-        <ChevronRight className={styles.breadcrumbIcon} />
         <span className={styles.breadcrumbCurrent}>{product.title}</span>
       </div>
 
