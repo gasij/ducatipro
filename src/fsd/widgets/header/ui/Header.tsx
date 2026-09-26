@@ -306,6 +306,15 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
                 onFocus={handleMainSearchFocus}
                 className={styles.searchInput}
               />
+              <button type="submit" className={styles.searchButton} aria-label="Поиск">
+                <Image
+                  src="/search-button.png"
+                  alt=""
+                  width={56}
+                  height={48}
+                  className={styles.searchImage}
+                />
+              </button>
             </div>
             <div
               className={`${styles.searchDropdown} ${searchDropdownOpen ? styles.searchDropdownOpen : ''}`}
@@ -350,15 +359,6 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
             <button type="button" onClick={addSearchArticle} className={styles.addSearchButton}>
               <Plus className={styles.searchActionIcon} />
               <span className={styles.searchActionLabel}>Еще товар</span>
-            </button>
-            <button type="submit" className={styles.searchButton} aria-label="Поиск">
-              <Image
-                src="/search-button.png"
-                alt=""
-                width={56}
-                height={48}
-                className={styles.searchImage}
-              />
             </button>
           </div>
         </form>

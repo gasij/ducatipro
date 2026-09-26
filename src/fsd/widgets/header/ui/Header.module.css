@@ -9,10 +9,7 @@
 
 .container {
     width: 100%;
-    /* Wider than the site's shared --container-wide (1280px) on purpose —
-       on large screens that cap left huge idle margins outside the header
-       content while barely touching the actual gaps between elements. */
-    max-width: 1600px;
+    max-width: var(--container-wide);
     margin: 0 auto;
     padding-right: var(--safe-page-padding);
     padding-left: var(--safe-page-padding);
@@ -299,9 +296,7 @@
 }
 
 .searchActions {
-    display: grid;
-    grid-template-columns: auto 2.75rem;
-    gap: 0.5rem;
+    display: flex;
 }
 
 .searchActionLabel {
@@ -364,14 +359,10 @@
     .searchOpen {
         display: grid;
     }
-    .searchActions {
-        grid-template-columns: 2.5rem minmax(0, 1fr);
-        gap: 0.5rem;
-    }
     .searchInput {
         min-height: 2.5rem;
         font-size: 0.8125rem;
-        padding: 0.55rem 1rem 0.55rem 0.9rem;
+        padding: 0.55rem 2.25rem 0.55rem 0.9rem;
     }
     .addSearchButton {
         width: 2.5rem;
@@ -383,9 +374,7 @@
         display: none;
     }
     .searchButton {
-        width: 100%;
-        min-height: 2.5rem;
-        padding: 0.4rem;
+        width: 2.25rem;
     }
     .ticker {
         font-size: 0.75rem;
@@ -398,8 +387,7 @@
 }
 
 .addSearchButton,
-.removeSearchButton,
-.searchButton {
+.removeSearchButton {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -442,21 +430,35 @@
     border-radius: 4px;
 }
 
+/* Sits inside .searchField (position: relative), flush against the input's
+   own right edge — the input reserves space for it via its right padding,
+   so this never overlaps typed text. */
 .searchButton {
-    width: 2.75rem;
-    min-height: 2.75rem;
-    overflow: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    width: 2.5rem;
+    align-items: center;
+    justify-content: center;
     border: 0;
-    border-radius: 4px;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    transition: opacity 180ms ease;
 }
 
 .addSearchButton:hover,
 .dropdownAddButton:hover,
-.removeSearchButton:hover,
-.searchButton:hover {
+.removeSearchButton:hover {
     border-color: rgb(255 255 255 / 36%);
     background: rgb(255 255 255 / 16%);
     opacity: 0.9;
+}
+
+.searchButton:hover {
+    opacity: 0.7;
 }
 
 .searchActionIcon {
@@ -491,9 +493,9 @@
 }
 
 .searchImage {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 1.25rem;
+    height: 1.0625rem;
+    object-fit: contain;
 }
 
 .ticker {
@@ -647,16 +649,13 @@
         min-height: 3rem;
         padding-top: 0.75rem;
         padding-bottom: 0.75rem;
+        padding-right: 3.25rem;
     }
-    .searchActions {
-        grid-template-columns: auto 3.5rem;
-    }
-    .addSearchButton,
-    .searchButton {
+    .addSearchButton {
         min-height: 3rem;
     }
     .searchButton {
-        width: 3.5rem;
+        width: 3.25rem;
     }
     .ticker {
         font-size: 0.9375rem;
@@ -687,6 +686,7 @@
     .brandRow {
         width: auto;
         flex-shrink: 0;
+        gap: 1.5rem;
     }
     .logo {
         height: 2.2rem;
@@ -695,7 +695,7 @@
         gap: 1.75rem;
     }
     .search {
-        flex: 1;
+        flex: 0 1 480px;
     }
     .cartTotal {
         font-size: 1rem;
