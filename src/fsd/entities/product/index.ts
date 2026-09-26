@@ -1,6 +1,7 @@
 export {default as ProductCard} from './ui/ProductCard';
-export type {Product, ProductsPageResult} from './model/products';
+export type {Product, ProductsPageResult, ProductSitemapEntry} from './model/products';
 export {
+  getAllProductArticles,
   getProduct,
   getProductArticle,
   getProductHref,

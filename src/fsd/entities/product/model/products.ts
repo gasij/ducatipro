@@ -910,6 +910,61 @@ export async function getProducts(): Promise<Product[]> {
   return result.items;
 }
 
+export type ProductSitemapEntry = {sku: string; updatedAt?: string};
+
+/**
+ * Every product's sku + last-updated date, for the sitemap — the catalog has
+ * 25k+ products, far past the 1000-item cap of getProducts(), and doesn't
+ * need the full normalizeProduct() cost (price conversion, images,
+ * compatibility joins) just to list URLs.
+ */
+export async function getAllProductArticles(): Promise<ProductSitemapEntry[]> {
+  const directusUrl = process.env.DIRECTUS_URL;
+  const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
+
+  if (!directusUrl) {
+    return [];
+  }
+
+  type Row = {sku?: string; date_updated?: string; date_created?: string};
+  const pageSize = 1000;
+  const filter = JSON.stringify({sku: {_nnull: true}});
+
+  const buildUrl = (offset: number, withCount: boolean) => {
+    const url = new URL(`/items/${collection}`, directusUrl);
+    url.searchParams.set('fields', 'sku,date_updated,date_created');
+    url.searchParams.set('filter', filter);
+    url.searchParams.set('limit', String(pageSize));
+    url.searchParams.set('offset', String(offset));
+    if (withCount) {
+      url.searchParams.set('meta', 'filter_count');
+    }
+    return url;
+  };
+
+  const firstPayload = await fetchDirectusJson<{data?: Row[]; meta?: {filter_count?: number}}>(
+    buildUrl(0, true),
+  );
+
+  if (!firstPayload?.data) {
+    return [];
+  }
+
+  const total = firstPayload.meta?.filter_count ?? firstPayload.data.length;
+  const remainingPages = Math.max(0, Math.ceil(total / pageSize) - 1);
+
+  const restPayloads = await Promise.all(
+    Array.from({length: remainingPages}, (_, i) =>
+      fetchDirectusJson<{data?: Row[]}>(buildUrl((i + 1) * pageSize, false)),
+    ),
+  );
+
+  return [firstPayload, ...restPayloads]
+    .flatMap((payload) => payload?.data || [])
+    .filter((row): row is Row & {sku: string} => Boolean(row.sku))
+    .map((row) => ({sku: row.sku, updatedAt: row.date_updated || row.date_created}));
+}
+
 export async function getProduct(id: string): Promise<Product | undefined> {
   const [eurToRubRate, priceMarkupPercent] = await Promise.all([
     getCurrentEurToRubRate(),
