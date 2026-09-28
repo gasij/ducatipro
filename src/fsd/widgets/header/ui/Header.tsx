@@ -278,16 +278,6 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
             >
               <Menu className={styles.menuIcon} />
             </button>
-
-            <Link href="/cart" className={styles.cartLink}>
-              <div className={styles.iconWithBadge}>
-                <ShoppingCart className={styles.icon} />
-                <span className={styles.badge}>{cartQuantity}</span>
-              </div>
-              <span className={styles.cartTotal}>
-                {cartQuantity > 0 ? `${cartQuantity} шт.` : 'Пусто'}
-              </span>
-            </Link>
           </div>
         </div>
 
@@ -362,6 +352,16 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
             </button>
           </div>
         </form>
+
+        <Link href="/cart" className={styles.cartLink}>
+          <div className={styles.iconWithBadge}>
+            <ShoppingCart className={styles.icon} />
+            <span className={styles.badge}>{cartQuantity}</span>
+          </div>
+          <span className={styles.cartTotal}>
+            {cartQuantity > 0 ? `${cartQuantity} шт.` : 'Пусто'}
+          </span>
+        </Link>
       </div>
 
       <div className={styles.ticker} style={{color: tickerTextColor}}>
