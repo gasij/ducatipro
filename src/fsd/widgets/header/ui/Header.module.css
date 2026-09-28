@@ -9,7 +9,8 @@
 
 .container {
     width: 100%;
-    max-width: var(--container-wide);
+    /* 1408px content with the 1rem desktop padding — matches ducatiparts.pro's header width. */
+    max-width: 1440px;
     margin: 0 auto;
     padding-right: var(--safe-page-padding);
     padding-left: var(--safe-page-padding);
@@ -384,6 +385,10 @@
     .searchButton {
         width: 2.25rem;
     }
+    .searchImage {
+        width: 1.9rem;
+        height: 1.9rem;
+    }
     .ticker {
         font-size: 0.75rem;
         padding: 0.375rem 0;
@@ -443,18 +448,26 @@
    so this never overlaps typed text. */
 .searchButton {
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
     display: flex;
     width: 2.5rem;
     align-items: center;
     justify-content: center;
     border: 0;
-    background: transparent;
+    border-left: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 0 3px 3px 0;
+    background: rgb(255 255 255 / 14%);
     color: #ffffff;
     cursor: pointer;
-    transition: opacity 180ms ease;
+    transition: background-color 180ms ease;
+}
+
+.searchImage {
+    width: 2.5rem;
+    height: 2.5rem;
+    object-fit: contain;
 }
 
 .addSearchButton:hover,
@@ -466,7 +479,7 @@
 }
 
 .searchButton:hover {
-    opacity: 0.7;
+    background: var(--color-accent);
 }
 
 .searchActionIcon {
@@ -498,12 +511,6 @@
 
 .dropdownSearchButton:hover {
     opacity: 0.9;
-}
-
-.searchImage {
-    width: 1.25rem;
-    height: 1.0625rem;
-    object-fit: contain;
 }
 
 .ticker {
@@ -701,10 +708,15 @@
         gap: 1.75rem;
     }
     .search {
-        justify-self: start;
+        grid-template-columns: auto minmax(0, 1fr);
+        justify-self: center;
         width: 100%;
-        max-width: 480px;
+        max-width: 54rem;
         gap: 1.5rem;
+    }
+    /* "+ Еще товар" sits between the logo and the input, where ducatiparts.pro has its "Каталог" button. */
+    .searchActions {
+        order: -1;
     }
     .cartTotal {
         font-size: 1rem;
@@ -720,11 +732,12 @@
     .mobileTop,
     .mobileSearchButton,
     .mobileMenuButton,
-    .mobileOverlay {
+    .mobileOverlay,
+    .actions {
         display: none;
     }
     .mainBar {
-        gap: 2rem;
+        gap: 3rem;
     }
 }
 

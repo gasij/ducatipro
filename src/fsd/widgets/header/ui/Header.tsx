@@ -301,7 +301,7 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
                   src="/search-button.png"
                   alt=""
                   width={56}
-                  height={48}
+                  height={56}
                   className={styles.searchImage}
                 />
               </button>
