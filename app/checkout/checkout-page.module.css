@@ -288,12 +288,14 @@
   gap: 1.25rem;
   /* min-height: 24rem; */
   align-content: start;
+  /* Matches .deliveryInfo's side padding so prices line up with the totals below. */
+  padding-right: 1.6rem;
 }
 
 .summaryProduct {
   display: grid;
-  grid-template-columns: 5.4rem minmax(0, 1fr) auto;
-  gap: 1.2rem;
+  grid-template-columns: 4rem minmax(0, 1fr) auto;
+  gap: 1rem;
   align-items: start;
 }
 
@@ -328,6 +330,7 @@
 .summaryProductPrice {
   color: #5e5e63;
   font-size: 0.98rem;
+  text-align: right;
   white-space: nowrap;
 }
 

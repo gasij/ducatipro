@@ -295,6 +295,12 @@
     color: #6b7280;
 }
 
+/* Browser's native "clear" ✕ — keep it off the embedded search button. */
+.searchInput::-webkit-search-cancel-button {
+    margin-right: 0.75rem;
+    cursor: pointer;
+}
+
 .searchInput:focus {
     border-color: var(--color-accent);
     background: rgb(255 255 255 / 14%);
@@ -684,8 +690,8 @@
 
 @media (min-width: 768px) {
     .container {
-        padding-right: 1rem;
-        padding-left: 1rem;
+        padding-right: 30px;
+        padding-left: 30px;
     }
     .topBar {
         font-size: 0.8125rem;
