@@ -75,13 +75,8 @@ export default function Header({siteTexts = {}}: {siteTexts?: SiteTextsMap}) {
       return;
     }
 
-    if (articles.length === 1) {
-      router.push(`/product/${encodeURIComponent(articles[0])}`);
-      setSearchOpen(false);
-      setSearchDropdownCollapsed(true);
-      return;
-    }
-
+    // Even a single article goes through /search: it finds partial matches
+    // (59810381 → 59810381A, 59810381AA…) and opens the product page itself on an exact hit.
     const params = new URLSearchParams();
     articles.forEach((article) => params.append('article', article));
     router.push(`/search?${params.toString()}`);

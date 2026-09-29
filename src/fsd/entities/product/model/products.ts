@@ -560,6 +560,140 @@ async function getProductByIdentifier(
   return addCompatibilityModels(product, compatibilityByProductId.get(product.id) || []);
 }
 
+/** Shorter queries would match a large part of the 25k catalog — those are looked up exactly. */
+const MIN_PARTIAL_ARTICLE_LENGTH = 4;
+const DEFAULT_ARTICLE_SEARCH_LIMIT = 60;
+/** Rows fetched from Directus before ranking; it can't sort by match quality itself. */
+const ARTICLE_SEARCH_FETCH_LIMIT = 300;
+
+export type ArticleSearchResult = {
+  items: Product[];
+  /** All products matching the query, may exceed `items.length`. */
+  total: number;
+};
+
+function normalizeArticleQuery(value: string) {
+  return value.replace(/\s+/g, '').trim();
+}
+
+/** 0 — exact article, 1 — article starts with the query, 2 — contains it anywhere. */
+function getArticleMatchRank(product: Product, query: string) {
+  const needle = query.toLowerCase();
+  const articles = [product.sku, product.oldSku, getProductArticle(product)]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.toLowerCase());
+
+  if (articles.includes(needle)) {
+    return 0;
+  }
+  if (articles.some((article) => article.startsWith(needle))) {
+    return 1;
+  }
+  return 2;
+}
+
+function sortByArticleMatch(items: Product[], query: string) {
+  return [...items].sort(
+    (a, b) =>
+      getArticleMatchRank(a, query) - getArticleMatchRank(b, query) ||
+      getProductArticle(a).localeCompare(getProductArticle(b)),
+  );
+}
+
+async function searchProductsInDirectus(
+  query: string,
+  eurToRubRate: number,
+  priceMarkupPercent: number,
+): Promise<ArticleSearchResult | null> {
+  const directusUrl = process.env.DIRECTUS_URL;
+  const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
+
+  if (!directusUrl) {
+    return null;
+  }
+
+  const url = new URL(`/items/${collection}`, directusUrl);
+  url.searchParams.set(
+    'fields',
+    '*,primary_category.*,categories.*,products_gallery.directus_files_id.*',
+  );
+  // `_icontains` is case-insensitive and matches the typed characters anywhere in the
+  // article: 59810381 finds 59810381A, 59810381AA, 59810381F and the old article too.
+  url.searchParams.set(
+    'filter',
+    JSON.stringify({_or: [{sku: {_icontains: query}}, {old_sku: {_icontains: query}}]}),
+  );
+  url.searchParams.set('sort', 'sku');
+  url.searchParams.set('limit', String(ARTICLE_SEARCH_FETCH_LIMIT));
+  url.searchParams.set('meta', 'filter_count');
+
+  const payload = await fetchDirectusJson<{data?: DirectusProduct[]; meta?: {filter_count?: number}}>(url);
+  if (!Array.isArray(payload?.data)) {
+    return null;
+  }
+
+  const items = payload.data.map((item, index) =>
+    normalizeProduct(item, index, eurToRubRate, priceMarkupPercent),
+  );
+  const total = typeof payload.meta?.filter_count === 'number' ? payload.meta.filter_count : items.length;
+  return {items, total};
+}
+
+/**
+ * Finds every product whose article (current or old) contains the query, best matches first:
+ * exact article, then articles starting with the query, then the rest.
+ */
+export async function searchProductsByArticle(
+  rawQuery: string,
+  limit = DEFAULT_ARTICLE_SEARCH_LIMIT,
+): Promise<ArticleSearchResult> {
+  const query = normalizeArticleQuery(rawQuery);
+
+  if (!query) {
+    return {items: [], total: 0};
+  }
+
+  if (query.length < MIN_PARTIAL_ARTICLE_LENGTH) {
+    const product = await getProduct(query).catch(() => undefined);
+    return product ? {items: [product], total: 1} : {items: [], total: 0};
+  }
+
+  const [eurToRubRate, priceMarkupPercent] = await Promise.all([
+    getCurrentEurToRubRate(),
+    getProductPriceMarkupPercent(),
+  ]);
+
+  const found = await searchProductsInDirectus(query, eurToRubRate, priceMarkupPercent).catch(() => null);
+
+  if (found) {
+    const items = sortByArticleMatch(found.items, query).slice(0, limit);
+    const directusUrl = process.env.DIRECTUS_URL;
+    const compatibilityByProductId = directusUrl
+      ? await fetchProductCompatibilityFromJunction(
+          directusUrl,
+          items.map((item) => item.id),
+        ).catch(() => new Map<string, string[]>())
+      : new Map<string, string[]>();
+
+    return {
+      items: items.map((item) => addCompatibilityModels(item, compatibilityByProductId.get(item.id) || [])),
+      total: found.total,
+    };
+  }
+
+  // Directus is not configured or unreachable — search the local demo catalog.
+  const needle = query.toLowerCase();
+  const matches = fallbackProducts
+    .filter((product) =>
+      [product.sku, product.oldSku, getProductArticle(product)]
+        .filter((value): value is string => Boolean(value))
+        .some((value) => value.toLowerCase().includes(needle)),
+    )
+    .map((product) => normalizeDisplayPrices(product, eurToRubRate));
+
+  return {items: sortByArticleMatch(matches, query).slice(0, limit), total: matches.length};
+}
+
 async function getProductsFromDirectusPage(
   page: number,
   pageSize: number,

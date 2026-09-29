@@ -1,5 +1,12 @@
 import Link from 'next/link';
-import {ProductCard, getProduct, getProductHref, type Product} from '@/src/fsd/entities/product';
+import {redirect} from 'next/navigation';
+import {
+  ProductCard,
+  getProductArticle,
+  getProductHref,
+  searchProductsByArticle,
+  type Product,
+} from '@/src/fsd/entities/product';
 import styles from './search-page.module.css';
 
 type Props = {
@@ -31,22 +38,42 @@ function getRequestedArticles(params?: Record<string, string | string[] | undefi
 export default async function SearchPage({searchParams}: Props) {
   const params = await searchParams;
   const requestedArticles = getRequestedArticles(params);
-  // Resolve each article directly by id/sku/slug — a bulk `getProducts()` list
-  // is capped to a page of the catalog, so an article outside that page
-  // would otherwise show up as "not found".
-  const resolvedProducts = await Promise.all(
-    requestedArticles.map((article) => getProduct(article).catch(() => undefined)),
+  // Partial match: 59810381 finds 59810381A, 59810381AA, 59810381F and so on.
+  // Each article is searched in Directus directly — a bulk `getProducts()` list
+  // is capped to a page of the catalog.
+  const results = await Promise.all(
+    requestedArticles.map((article) =>
+      searchProductsByArticle(article).catch(() => ({items: [] as Product[], total: 0})),
+    ),
   );
-  const matches = requestedArticles.map((article, index) => ({
-    article,
-    product: resolvedProducts[index],
-  }));
-  const foundProducts = matches
-    .map((match) => match.product)
-    .filter((product): product is Product => Boolean(product));
-  const missingArticles = matches
-    .filter((match) => !match.product)
-    .map((match) => match.article);
+
+  // A single article that resolves to exactly one product with that very article —
+  // open the product page right away, as the header search did before.
+  if (requestedArticles.length === 1 && results[0].total === 1) {
+    const [product] = results[0].items;
+    const article = requestedArticles[0].replace(/\s+/g, '').toLowerCase();
+    const isExactMatch = [product.sku, product.oldSku, getProductArticle(product)].some(
+      (value) => value?.toLowerCase() === article,
+    );
+    if (isExactMatch) {
+      redirect(getProductHref(product));
+    }
+  }
+
+  const seenProductIds = new Set<string>();
+  const foundProducts = results
+    .flatMap((result) => result.items)
+    .filter((product) => {
+      if (seenProductIds.has(product.id)) {
+        return false;
+      }
+      seenProductIds.add(product.id);
+      return true;
+    });
+  const missingArticles = requestedArticles.filter((_, index) => results[index].total === 0);
+  const truncatedArticles = requestedArticles
+    .map((article, index) => ({article, shown: results[index].items.length, total: results[index].total}))
+    .filter((result) => result.total > result.shown);
 
   return (
     <main className={styles.page}>
@@ -54,9 +81,14 @@ export default async function SearchPage({searchParams}: Props) {
         <h1 className={styles.title}>Результаты поиска</h1>
         <p className={styles.description}>
           {requestedArticles.length > 0
-            ? `Проверили артикулов: ${requestedArticles.length}`
+            ? `Проверили артикулов: ${requestedArticles.length}, найдено товаров: ${foundProducts.length}`
             : 'Введите артикулы в поиске в шапке сайта.'}
         </p>
+        {truncatedArticles.map(({article, shown, total}) => (
+          <p key={article} className={styles.description}>
+            По «{article}» показаны первые {shown} из {total} — уточните артикул.
+          </p>
+        ))}
       </div>
 
       {foundProducts.length > 0 ? (
