@@ -291,7 +291,11 @@ export default function CheckoutForm({
 
     function remeasure() {
       if (!formEl) return;
-      rowTopDocRef.current = formEl.getBoundingClientRect().top + window.scrollY;
+      // `top` on the relatively-positioned box offsets it from where it sits in
+      // flow — the track's content edge, i.e. below `.summary`'s top padding.
+      const trackEl = summaryInnerRef.current?.parentElement;
+      const trackPaddingTop = trackEl ? parseFloat(getComputedStyle(trackEl).paddingTop) || 0 : 0;
+      rowTopDocRef.current = formEl.getBoundingClientRect().top + window.scrollY + trackPaddingTop;
       const footerEl = document.querySelector('footer');
       footerTopDocRef.current = footerEl
         ? footerEl.getBoundingClientRect().top + window.scrollY
@@ -311,7 +315,9 @@ export default function CheckoutForm({
       window.removeEventListener('resize', remeasure);
       resizeObserver.disconnect();
     };
-  }, []);
+    // The form (and checkoutRootRef) only mounts once items have loaded —
+    // before that a spinner renders instead and this effect would bail out.
+  }, [itemsLoaded]);
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
     setPhone(formatPhoneInput(e.target.value));

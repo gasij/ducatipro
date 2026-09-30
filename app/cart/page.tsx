@@ -1,4 +1,4 @@
-import {getProducts} from '@/src/fsd/entities/product';
+import {getProductsPage} from '@/src/fsd/entities/product';
 import {getCurrentEurToRubRate, getSiteTexts} from '@/src/fsd/shared/lib';
 import CartClient from './CartClient';
 
@@ -49,8 +49,11 @@ export default async function CartPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const [products, eurToRubRate, siteTexts] = await Promise.all([
-    getProducts(),
+  // Only a handful: CartClient uses these just for the empty-cart "restore"
+  // item and the 2-card fallback when nothing has been viewed yet. Loading the
+  // full 1000-product list here used to ship ~700KB of JSON with every visit.
+  const [{items: products}, eurToRubRate, siteTexts] = await Promise.all([
+    getProductsPage(1, 6, {skipCompatibility: true}),
     getCurrentEurToRubRate(),
     getSiteTexts(),
   ]);
