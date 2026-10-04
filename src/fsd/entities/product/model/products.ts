@@ -560,6 +560,58 @@ async function getProductByIdentifier(
   return addCompatibilityModels(product, compatibilityByProductId.get(product.id) || []);
 }
 
+/**
+ * Resolves many products in a single Directus request (by id or exact sku),
+ * for the cart/checkout — instead of one getProduct() per item, which costs
+ * 2+ Directus round-trips each. Skips compatibility data (not shown there).
+ * Ids that aren't found this way (old_sku/slug/lowercase input) fall back to
+ * getProduct(). Result keeps the input order; missing ids are dropped.
+ */
+export async function getProductsByIds(ids: string[]): Promise<Product[]> {
+  const directusUrl = process.env.DIRECTUS_URL;
+  const collection = process.env.DIRECTUS_PRODUCTS_COLLECTION || DEFAULT_PRODUCTS_COLLECTION;
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+
+  if (!directusUrl || uniqueIds.length === 0) {
+    return [];
+  }
+
+  const [eurToRubRate, priceMarkupPercent] = await Promise.all([
+    getCurrentEurToRubRate(),
+    getProductPriceMarkupPercent(),
+  ]);
+
+  const uuidIds = uniqueIds.filter(isUuidLike);
+  const skuIds = uniqueIds.filter((id) => !isUuidLike(id));
+  const orConditions: Array<Record<string, unknown>> = [];
+  if (uuidIds.length > 0) orConditions.push({id: {_in: uuidIds}});
+  if (skuIds.length > 0) orConditions.push({sku: {_in: skuIds}});
+
+  const url = new URL(`/items/${collection}`, directusUrl);
+  url.searchParams.set('fields', '*,primary_category.*,categories.*,products_gallery.directus_files_id.*');
+  url.searchParams.set('filter', JSON.stringify({_or: orConditions}));
+  url.searchParams.set('limit', String(uniqueIds.length * 2));
+
+  const payload = await fetchDirectusJson<{data?: DirectusProduct[]}>(url).catch(() => null);
+  const byKey = new Map<string, Product>();
+  (payload?.data || []).forEach((item, index) => {
+    const product = normalizeProduct(item, index, eurToRubRate, priceMarkupPercent);
+    byKey.set(product.id, product);
+    if (product.sku) byKey.set(product.sku, product);
+  });
+
+  const missing = uniqueIds.filter((id) => !byKey.has(id));
+  const fallbacks = await Promise.all(missing.map((id) => getProduct(id).catch(() => undefined)));
+  missing.forEach((id, i) => {
+    const product = fallbacks[i];
+    if (product) byKey.set(id, product);
+  });
+
+  return uniqueIds
+    .map((id) => byKey.get(id))
+    .filter((product): product is Product => Boolean(product));
+}
+
 /** Shorter queries would match a large part of the 25k catalog — those are looked up exactly. */
 const MIN_PARTIAL_ARTICLE_LENGTH = 4;
 const DEFAULT_ARTICLE_SEARCH_LIMIT = 60;

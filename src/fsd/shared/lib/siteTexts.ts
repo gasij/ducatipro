@@ -1,6 +1,19 @@
 const SITE_TEXTS_COLLECTION = 'site_texts';
 const SITE_TEXTS_CACHE_SECONDS = 60;
 
+// The only keys still managed from Directus. Every other text on the site
+// lives in the code (the fallback passed to pickSiteText) and is edited there
+// — a Directus row with any other key is ignored.
+const DIRECTUS_MANAGED_KEYS = [
+  'header.ticker_text',
+  'header.ticker_text_color',
+  'home.banner_image',
+  'home.instagram_image_1',
+  'home.instagram_image_2',
+  'home.instagram_image_3',
+  'home.instagram_image_4',
+];
+
 export type SiteText = {
   key: string;
   value: string;
@@ -37,6 +50,7 @@ export async function getSiteTexts(): Promise<SiteTextsMap> {
     const url = new URL(`/items/${SITE_TEXTS_COLLECTION}`, directusUrl);
     url.searchParams.set('fields', 'key,value,url,image.id,image.modified_on,status');
     url.searchParams.set('filter[status][_eq]', 'published');
+    url.searchParams.set('filter[key][_in]', DIRECTUS_MANAGED_KEYS.join(','));
     url.searchParams.set('limit', '-1');
 
     const res = await fetch(url, {

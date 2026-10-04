@@ -4,6 +4,7 @@ export {
   searchProductsByArticle,
   getAllProductArticles,
   getProduct,
+  getProductsByIds,
   getProductArticle,
   getProductHref,
   getProducts,

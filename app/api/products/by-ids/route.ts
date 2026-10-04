@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';
-import {getProduct} from '@/src/fsd/entities/product';
+import {getProductsByIds} from '@/src/fsd/entities/product';
 
 const MAX_IDS = 50;
 
@@ -11,8 +11,7 @@ export async function POST(request: Request) {
     return NextResponse.json({items: []});
   }
 
-  const products = await Promise.all(ids.slice(0, MAX_IDS).map((id) => getProduct(id).catch(() => undefined)));
-  const items = products.filter((product) => Boolean(product));
+  const items = await getProductsByIds(ids.slice(0, MAX_IDS));
 
   return NextResponse.json({items});
 }
