@@ -43,6 +43,7 @@ export default function ProductView({product, siteTexts = {}}: Props) {
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
   const [imageSrc, setImageSrc] = useState(product.image);
   const compatibleModels = [...(product.models || [])].sort((a, b) => {
     const yearA = Number(a.match(/(\d{4})\s*$/)?.[1]) || 0;
@@ -106,9 +107,20 @@ export default function ProductView({product, siteTexts = {}}: Props) {
       ? `${product.sku} ${product.title}`
       : product.title;
 
-  function addToCart() {
+  // First press adds to the cart and stays on the page; the button then turns
+  // into a link to the cart. Changing the quantity re-arms it for adding more.
+  function handleCartButton() {
+    if (added) {
+      router.push('/cart');
+      return;
+    }
     addToStoredCart(product.id, quantity);
-    router.push('/cart');
+    setAdded(true);
+  }
+
+  function changeQuantity(next: number) {
+    setQuantity(next);
+    setAdded(false);
   }
 
   return (
@@ -216,7 +228,7 @@ export default function ProductView({product, siteTexts = {}}: Props) {
               <div className={styles.quantity}>
                 <button
                   type="button"
-                  onClick={() => setQuantity((current) => Math.max(current - 1, 1))}
+                  onClick={() => changeQuantity(Math.max(quantity - 1, 1))}
                   className={styles.quantityButton}
                 >
                   -
@@ -224,15 +236,15 @@ export default function ProductView({product, siteTexts = {}}: Props) {
                 <input type="text" value={quantity} readOnly className={styles.quantityInput} />
                 <button
                   type="button"
-                  onClick={() => setQuantity((current) => Math.min(current + 1, 99))}
+                  onClick={() => changeQuantity(Math.min(quantity + 1, 99))}
                   className={styles.quantityButton}
                 >
                   +
                 </button>
               </div>
-              <button type="button" onClick={addToCart} className={styles.cartButton}>
-                В корзину {quantity} шт
-                <span className={styles.cartHint}>Перейти</span>
+              <button type="button" onClick={handleCartButton} className={styles.cartButton}>
+                {added ? 'Добавлено в корзину' : `В корзину ${quantity} шт`}
+                <span className={styles.cartHint}>{added ? 'Перейти в корзину' : 'Добавить'}</span>
               </button>
             </div>
 
